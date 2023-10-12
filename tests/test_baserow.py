@@ -1,263 +1,338 @@
 import pytest
-from baserowapi.baserow import Baserow
-from pytest_mock import mocker
-import logging
-import requests
 
-def test_get_table_constructor_called_with_correct_arguments(mocker):
-    # Create an instance of Baserow
-    baserow_instance = Baserow()
+from baserowapi import Baserow
+from baserowapi.models.field import FieldList
+from baserowapi.models.filter import Filter
+from baserowapi.models.row import Row
 
-    # Mock the Table class as it is imported in the Baserow class
-    MockedTable = mocker.patch('baserowapi.baserow.Table')
-    print(MockedTable.call_args_list)
 
-    # Call the get_table method
-    table_id = 123
-    table = baserow_instance.get_table(table_id)
+def test_baserow_instantiation(baserow_client):
+    """Test if the Baserow instance is correctly instantiated."""
+    
+    assert isinstance(baserow_client, Baserow), "Baserow client instantiation failed"
 
-    # Assertions
-    MockedTable.assert_called_once_with(123, baserow_instance)
-    assert table is MockedTable.return_value
+def test_table_instantiation(table):
+    """Test that a table can be instantiated using the table fixture."""
+    assert table is not None  # Ensure the table object is instantiated
+    assert table.id == 198958  # Ensure the table ID matches the expected ID
 
-def test_configure_logging_streamhandler_added(mocker):
-    baserow = Baserow()
-    
-    mock_basicConfig = mocker.patch('logging.basicConfig')
-    baserow.configure_logging('DEBUG', None)
-    
-    # Check if StreamHandler was in the handlers list
-    _, kwargs = mock_basicConfig.call_args
-    assert any(isinstance(handler, logging.StreamHandler) for handler in kwargs['handlers'])
+def test_table_primary_field_set(table):
+    """Test that the table's primary field is set."""
+    assert table.primary_field is not None
 
-def test_configure_logging_filehandler_added_when_log_file_provided(mocker):
-    baserow = Baserow()
-    
-    mock_basicConfig = mocker.patch('logging.basicConfig')
-    baserow.configure_logging('DEBUG', 'test.log')
-    
-    # Check if FileHandler was in the handlers list
-    _, kwargs = mock_basicConfig.call_args
-    print(mock_basicConfig.call_args)
-    handlers_arg = mock_basicConfig.call_args.kwargs.get('handlers', [])
-    print(handlers_arg)
+def test_table_fields_type(table):
+    """Test that the table's fields are of type FieldList."""
+    assert isinstance(table.fields, FieldList)
 
-    assert any('test.log' in str(handler) for handler in handlers_arg)
+def test_table_field_names_set(table):
+    """Test that the table's field names are set."""
+    assert table.field_names is not None
+    assert isinstance(table.field_names, list)  # Ensure field_names is a list
+    assert len(table.field_names) > 0  # Ensure the list is not empty
 
-def test_configure_logging_correct_level(mocker):
-    baserow = Baserow()
-    
-    mock_basicConfig = mocker.patch('logging.basicConfig')
-    baserow.configure_logging('DEBUG', None)
-    
-    # Check if the correct logging level was passed
-    _, kwargs = mock_basicConfig.call_args
-    assert kwargs['level'] == 'DEBUG'
+def test_table_field_name_type(table):
+    """Test the type of the field with key 'Name'."""
+    field = next((f for f in table.fields if f.name == "Name"), None)
+    assert field is not None  # Ensure the field exists
+    assert field.type == "text"
 
-# ========== make_api_request tests ==================
+def test_table_get_row_by_id(table):
+    """Test fetching a row by its ID."""
+    row = table.get_row(1)
+    assert row is not None
+    assert row.id == 1
 
-def test_make_api_request_get_request(mocker):
-    baserow = Baserow()
-    
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.text = '{"message": "Hello World"}'
-    mock_response.json.return_value = {"message": "Hello World"}
-    
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
-    
-    response = baserow.make_api_request("/test_endpoint")
-    
-    assert response == {"message": "Hello World"}
+def test_row_values_set(table):
+    """Test that values of a row are set."""
+    row = table.get_row(1)
+    assert row.values is not None
 
-def test_make_api_request_post_request_with_data(mocker):
-    baserow = Baserow()
-    
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.text = '{"message": "Data received"}'
-    mock_response.json.return_value = {"message": "Data received"}
-    
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
-    
-    response = baserow.make_api_request("/test_endpoint", method="POST", data={"key": "value"})
-    
-    assert response == {"message": "Data received"}
+def test_row_content_non_empty(table):
+    """Test that the content of a row is a non-empty dictionary."""
+    row = table.get_row(1)
+    assert isinstance(row.content, dict)
+    assert len(row.content) > 0
 
-def test_make_api_request_delete_request(mocker):
-    baserow = Baserow()
-    
-    mock_response = mocker.Mock()
-    mock_response.status_code = 204
-    
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
-    
-    response = baserow.make_api_request("/test_endpoint", method="DELETE")
-    
-    assert response == 204
+def test_row_name_value(table):
+    """Test the value of the 'Name' field in a row."""
+    row = table.get_row(1)
+    assert row.content['Name'] == 'Spot'
 
-def test_make_api_request_request_timeout(mocker):
-    baserow = Baserow()
+def test_get_all_rows_returns_row_iterator(table):
+    """Test fetching all rows returns a RowIterator object."""
+    rows = table.get_rows()
+    assert isinstance(rows, table.RowIterator)
+
+def test_get_all_rows_count(table):
+    """Test the number of rows returned by the get_rows method."""
+    rows = table.get_rows()
+    assert len(list(rows)) == 7
+
+def test_filter_query_string():
+    name_equal_grace = Filter("Name", "Grace")
+    assert name_equal_grace.query_string == "filter__Name__equal=Grace"
+
+    name_contains_not_A = Filter("Name", "A", 'contains_not')
+    assert name_contains_not_A.query_string == "filter__Name__contains_not=A"
+
+def test_rows_with_name_grace(table):
+    name_equal_grace = Filter("Name", "Grace")
+    rows_with_name_grace = table.get_rows(filters=[name_equal_grace])
+    for row in rows_with_name_grace:
+        assert row['Name'] == "Grace"
+
+def test_rows_without_A(table):
+    name_contains_not_A = Filter("Name", "A", 'contains_not')
+    rows_without_A = table.get_rows(filters=[name_contains_not_A])
+    for row in rows_without_A:
+        assert 'A' not in row['Name']
+
+def test_rows_with_last_name_hopper(table):
+    rows_with_last_name_hopper = table.get_rows(filters=[Filter("Last name","Hopper")])
+    for row in rows_with_last_name_hopper:
+        assert row['Last name'] == "Hopper"
+
+def test_rows_with_name_ada_or_grace(table):
+    rows_with_name_ada_or_grace = table.get_rows(filters=[Filter("Name", "Ada"), Filter("Name", "Grace")], filter_type='OR')
+    for row in rows_with_name_ada_or_grace:
+        assert row['Name'] in ["Ada", "Grace"]
+
+def test_rows_with_name_ada_or_last_name_pascal(table):
+    rows_with_name_ada_or_last_name_pascal = table.get_rows(filters=[Filter("Name","Ada"), Filter("Last name", "Pascal")], filter_type='OR')
+    for row in rows_with_name_ada_or_last_name_pascal:
+        assert row['Name'] == "Ada" or row['Last name'] == "Pascal"
+
+def test_rows_sorted_by_name_ascending(table):
+    rows_name_ascending = table.get_rows(order_by=["Name"])
+    first_row = next(rows_name_ascending)
+    assert first_row['Name'] == "Ada"
+    assert first_row['Last name'] == "Lovelace"
+
+def test_rows_sorted_by_name_descending(table):
+    rows_descending = table.get_rows(order_by=["-Name"])
+    first_row = next(rows_descending)
+    assert first_row['Name'] == "Spot"
+    assert first_row['Last name'] == "Dog"
+
+def test_search_rows_with_canine(table):
+    # get rows with search
+    rows_with_test = table.get_rows(search="canine")
+
+    # Extract the first row (assuming there's at least one result)
+    first_row = next(iter(rows_with_test), None)
     
-    mocker.patch.object(baserow.session, 'request', side_effect=requests.exceptions.Timeout)
+    # Assert that the values in the row match the expected values
+    assert first_row is not None, "No rows returned with search='canine'"
+    assert first_row['Name'] == "Spot", f"Expected Name: Spot, but got {first_row['Name']}"
+    assert first_row['Last name'] == "Dog", f"Expected Last name: Dog, but got {first_row['Last name']}"
+
+def test_get_rows_from_view(table, baserow_config):
+    # Get rows from view
+    rows_from_view = table.get_rows(view_id=baserow_config["view_id"])
     
-    with pytest.raises(requests.exceptions.Timeout):
-        baserow.make_api_request("/test_endpoint")
+    # Ensure there are results
+    assert rows_from_view, "No rows returned from view."
 
-def test_make_api_request_bad_request(mocker):
-    baserow = Baserow()
+    # Check if the "Spot" row is present
+    for row in rows_from_view:
+        if row["Name"] == "Spot" and row["Last name"] == "Dog":
+            break
+    else:
+        pytest.fail("Expected row with Name: Spot and Last name: Dog not found in the view results.")
 
-    mock_response = mocker.Mock()
-    mock_response.status_code = 400
-    mock_response.text = 'Bad request'
-    mock_response.raise_for_status.side_effect = requests.exceptions.RequestException("An error occurred")
-    mock_response.raise_for_status.response = mock_response
+def test_get_rows_with_include(table):
+    # Get rows with include parameters
+    rows_with_include = table.get_rows(include=['Name', 'Last name', 'Notes', 'Active'])
+    
+    # Get the first row from the RowIterator
+    first_row = next(iter(rows_with_include))
 
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
+    # Check the first row's content to ensure only the specified fields are present
+    assert set(first_row.content.keys()) == {'Name', 'Last name', 'Notes', 'Active'}, "Expected fields not present or additional fields present in the row content."
 
-    with pytest.raises(Exception, match="Bad request to"):
-        baserow.make_api_request("/test_endpoint")
+def test_get_rows_with_exclude(table):
+    # Get rows with exclude parameters
+    rows_with_exclude = table.get_rows(exclude=['Notes', 'Active'])
+    
+    # Get the first row from the RowIterator
+    first_row = next(iter(rows_with_exclude))
 
-@pytest.mark.parametrize(
-    "status_code,expected_error",
-    [
-        (401, "Unauthorized request to {url}. Accessing an endpoint without a valid database token."),
-        (404, "Resource not found at {url}. Row or table is not found."),
-        (413, "Request entity too large at {url}. The request exceeded the maximum allowed payload size."),
-        (500, "Internal server error at {url}. The server encountered an unexpected condition."),
-        (502, "Bad gateway at {url}. Baserow is restarting or an unexpected outage is in progress."),
-        (503, "Service unavailable at {url}. The server could not process your request in time.")
+    # Check the first row's content to ensure the excluded fields are not present
+    excluded_fields = {'Notes', 'Active'}
+    assert not (excluded_fields & first_row.content.keys()), "Excluded fields are present in the row content."
+
+
+@pytest.fixture
+def added_row_fixture(table, baserow_config):
+    new_row_data = {
+        'Name': 'Ringo',
+        'Last name': 'Staar',
+        'Notes': 'drums',
+        'Active': True
+    }
+    added_row = table.add_row(new_row_data)
+    yield added_row  # This is the value that tests using this fixture will get.
+
+    # Cleanup
+    try:
+        # If the row was not deleted in the test, try to delete it here.
+        added_row.delete()
+    except Exception as e:
+        # just pass
+        pass
+
+def test_add_new_row_from_dict(added_row_fixture):
+    # Check the data of the added row
+    assert added_row_fixture['Name'] == 'Ringo', "Added row Name doesn't match expected value."
+    assert added_row_fixture['Last name'] == 'Staar', "Added row Last Name doesn't match expected value."
+
+def test_delete_added_row(added_row_fixture):
+    # Delete the added row and check the status
+    deleted_status = added_row_fixture.delete()
+    assert deleted_status is True, "Row was not deleted successfully."
+
+@pytest.fixture
+def added_multiple_rows_fixture(table):
+    add_multiple_row_data = [
+        {
+            'Name': 'Nick',
+            'Last name': 'Saban',
+            'Notes': 'Head coach of Alabama Crimson Tide',
+            'Active': True
+        },
+        {
+            'Name': 'Dabo',
+            'Last name': 'Swinney',
+            'Notes': 'Head coach of Clemson Tigers',
+            'Active': True
+        },
+        {
+            'Name': 'Urban',
+            'Last name': 'Meyer',
+            'Notes': 'Former head coach of Ohio State Buckeyes',
+            'Active': False
+        }
     ]
-)
-def test_make_api_request_error_codes(mocker, status_code, expected_error):
-    # Setup the Baserow client
-    baserow = Baserow()
-    endpoint_url = "https://api.baserow.io/test_endpoint"
 
-    # Create a mock response with the specific status code
-    mock_response = mocker.Mock()
-    mock_response.status_code = status_code
-    mock_response.raise_for_status.side_effect = requests.exceptions.RequestException()
+    added_rows = table.add_row(add_multiple_row_data)
+    yield added_rows
 
-    # Mock the session request to return our mock response
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
+    # Cleanup
+    try:
+        table.delete_rows(added_rows)
+    except Exception:
+        pass
 
-    # Use pytest.raises to expect the exception
-    with pytest.raises(Exception, match=expected_error.format(url=endpoint_url)):
-        baserow.make_api_request("/test_endpoint")
+def test_add_multiple_rows_from_list_of_dicts(added_multiple_rows_fixture):
+    assert len(added_multiple_rows_fixture) == 3
+    assert added_multiple_rows_fixture[0]['Name'] == 'Nick'
 
-def test_parse_response_no_body(mocker):
-    baserow = Baserow()
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.text = ""
+def test_delete_multiple_rows(table, added_multiple_rows_fixture):
+    deleted_status = table.delete_rows(added_multiple_rows_fixture)
+    assert deleted_status == True
 
-    result = baserow.parse_response(mock_response, "GET", "https://api.baserow.io/test_endpoint")
-    assert result is None
-
-def test_parse_response_204_status_code(mocker):
-    baserow = Baserow()
-    mock_response = mocker.Mock()
-    mock_response.status_code = 204
-    mock_response.text = ""
-
-    result = baserow.parse_response(mock_response, "GET", "https://api.baserow.io/test_endpoint")
-    assert result == 204
-
-def test_parse_response_valid_json(mocker):
-    baserow = Baserow()
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.text = '{"data": "valid_json"}'
-    mock_response.json.return_value = {"data": "valid_json"}
-
-    result = baserow.parse_response(mock_response, "GET", "https://api.baserow.io/test_endpoint")
-    assert result == {"data": "valid_json"}
-
-def test_parse_response_invalid_json(mocker):
-    baserow = Baserow()
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.text = "<html>This is not JSON</html>"
-    mock_response.json.side_effect = ValueError("No JSON object could be decoded")
-
-    result = baserow.parse_response(mock_response, "GET", "https://api.baserow.io/test_endpoint")
-    assert result == "<html>This is not JSON</html>"
-
-def test_perform_request_unexpected_error(mocker):
-    baserow = Baserow()
+def test_delete_multiple_rows_by_ids(table, added_multiple_rows_fixture):
+    rows_to_delete = [row.id for row in added_multiple_rows_fixture]
     
-    mock_error = requests.exceptions.RequestException("Unexpected error")
-    mocker.patch.object(baserow.session, 'request', side_effect=mock_error)
-
-    with pytest.raises(Exception, match="Unexpected error occurred while making a request to"):
-        baserow.perform_request("GET", "https://api.baserow.io/test_endpoint", {}, None, 10)
-
-def test_perform_request_connection_error(mocker):
-    baserow = Baserow()
+    delete_status = table.delete_rows(rows_to_delete)
     
-    mock_error = requests.exceptions.ConnectionError("Failed to establish a connection")
-    mocker.patch.object(baserow.session, 'request', side_effect=mock_error)
+    assert delete_status is True
 
-    with pytest.raises(Exception, match="Unexpected error occurred while making a request to"):
-        baserow.perform_request("GET", "https://api.baserow.io/test_endpoint", {}, None, 10)
-
-def test_perform_request_dns_resolution_failure(mocker):
-    baserow = Baserow()
-
-    mock_error = requests.exceptions.RequestException("DNS resolution failed")
-    mocker.patch.object(baserow.session, 'request', side_effect=mock_error)
-
-    with pytest.raises(Exception, match="Unexpected error occurred while making a request to"):
-        baserow.perform_request("GET", "https://api.baserow.io/test_endpoint", {}, None, 10)
-
-def test_get_combined_headers_no_additional_headers():
-    baserow = Baserow()
-
-    headers = baserow.get_combined_headers(None)
+def test_update_rows_from_dict(table):
+    update_rows_data = [
+        {"id": 3, "Notes": "dict update test"},
+        {"id": 4, "Notes": "dict update test"},
+        {"id": 5, "Notes": "dict update test"}
+    ]
+    updated_rows = table.update_rows(update_rows_data)
     
-    # Assuming self.headers has a default value in the class initialization
-    expected_headers = baserow.headers
+    # Ensure three rows were returned
+    assert len(updated_rows) == 3
     
-    assert headers == expected_headers
+    # Check the "Notes" value for the first row
+    assert updated_rows[0]['Notes'] == "dict update test"
 
-def test_get_combined_headers_with_additional_headers():
-    baserow = Baserow()
+def test_update_rows_from_row_objects(table):
+    # Retrieve rows based on the filter condition
+    my_rows = list(table.get_rows(filters=[Filter("Notes", "dict update test")]))
+    
+    # Update the rows in memory
+    for row in my_rows:
+        row.update(values={'Notes': 'Row object update test'}, memory_only=True)
+    
+    # Update the rows in the table
+    updated_rows = table.update_rows(my_rows)
 
-    additional_headers = {"X-Custom-Header": "test_value"}
-    headers = baserow.get_combined_headers(additional_headers)
+    # Ensure three rows were returned
+    assert len(updated_rows) == 3
     
-    expected_headers = {**baserow.headers, **additional_headers}
-    
-    assert headers == expected_headers
+    # Check the "Notes" value for the first row
+    assert updated_rows[0]['Notes'] == "Row object update test"
 
-def test_get_combined_headers_overlapping_headers():
-    baserow = Baserow()
+def test_get_rows_with_non_matching_filter(table):
+    # Attempt to retrieve a single row based on a non-matching filter
+    single_row = table.get_rows(filters=[Filter("Notes", "asdfjkl;")], return_single=True)
+    
+    # Ensure no rows were found with the given criteria
+    assert single_row is None, "A row was found but none were expected."
 
-    # Let's assume "Authorization" is a key in the default headers
-    overlapping_header = {"Authorization": "Bearer new_token"}
-    headers = baserow.get_combined_headers(overlapping_header)
+def test_get_single_row(table):
+    # Attempt to retrieve a single row without any filters
+    single_row = table.get_rows(return_single=True)
     
-    # The new header should take precedence
-    expected_headers = {**baserow.headers, **overlapping_header}
-    
-    assert headers == expected_headers
+    # Ensure that a row was returned and it's of the correct type
+    assert single_row is not None, "No row was returned but one was expected."
+    assert isinstance(single_row, Row), f"Expected a Row object, but got {type(single_row)}."
 
-def test_make_api_request_with_headers(mocker):
-    baserow = Baserow()
+def test_set_value_in_memory_for_single_row(table):
+    # Retrieve a single row without any filters
+    single_row = table.get_rows(return_single=True)
+    
+    # Ensure that a row was returned and it's of the correct type
+    assert single_row is not None, "No row was returned but one was expected."
+    assert isinstance(single_row, Row), f"Expected a Row object, but got {type(single_row)}."
 
-    additional_headers = {"X-Custom-Header": "test_value"}
-    
-    # Mock the HTTP request
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mocker.patch.object(baserow.session, 'request', return_value=mock_response)
-    
-    baserow.make_api_request("/test_endpoint", "GET", headers=additional_headers)
-    
-    # Check if the headers used in the request include our additional header
-    used_headers = baserow.session.request.call_args[1]['headers']
-    
-    assert "X-Custom-Header" in used_headers
-    assert used_headers["X-Custom-Header"] == "test_value"
+    # Change the value in memory
+    single_row['Notes'] = "Changed note in memory"
 
+    # Check that the in-memory value of the row has changed
+    assert single_row['Notes'] == "Changed note in memory", "The in-memory value of the row did not change as expected."
+
+def test_update_row_with_current_values(table):
+    # Retrieve a single row with the specified filter
+    single_row = table.get_rows(filters=[Filter("Name", "Blaise")], return_single=True)
+    
+    # Ensure that a row was returned and it's of the correct type
+    assert single_row is not None, "No row was returned but one was expected."
+    assert isinstance(single_row, Row), f"Expected a Row object, but got {type(single_row)}."
+
+    # Change the value in memory
+    single_row['Notes'] = "Updated test note"
+
+    # Update the row with its current in-memory values
+    updated_row = single_row.update()
+
+    # Ensure that the returned row from the update operation is of the correct type
+    assert isinstance(updated_row, Row), f"Expected a Row object from the update operation, but got {type(updated_row)}."
+
+    # Check that the updated row has the expected values
+    assert updated_row['Name'] == "Blaise", f"Expected 'Blaise' for 'Name', but got {updated_row['Name']}."
+    assert updated_row['Notes'] == "Updated test note", f"Expected 'Updated test note' for 'Notes', but got {updated_row['Notes']}."
+
+def test_update_row_with_dictionary(table):
+    # Retrieve a single row with the specified filter
+    single_row = table.get_rows(filters=[Filter("Name", "Blaise")], return_single=True)
+    
+    # Ensure that a row was returned and it's of the correct type
+    assert single_row is not None, "No row was returned but one was expected."
+    assert isinstance(single_row, Row), f"Expected a Row object, but got {type(single_row)}."
+
+    # Update the row using a dictionary
+    updated_row = single_row.update({'Notes': 'Updated row via dictionary'})
+
+    # Ensure that the returned row from the update operation is of the correct type
+    assert isinstance(updated_row, Row), f"Expected a Row object from the update operation, but got {type(updated_row)}."
+
+    # Check that the updated row has the expected values
+    assert updated_row['Name'] == "Blaise", f"Expected 'Blaise' for 'Name', but got {updated_row['Name']}."
+    assert updated_row['Notes'] == "Updated row via dictionary", f"Expected 'Updated row via dictionary' for 'Notes', but got {updated_row['Notes']}."

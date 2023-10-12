@@ -1,111 +1,202 @@
+from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any
+
 from baserowapi.models.row import Row
-from baserowapi.models.field import Field, FieldList
-from baserowapi.validators.field_validator import FieldValidator
+from baserowapi.models.field import (
+    Field, FieldList, TextField, LongTextField,
+    BooleanField, NumberField, RatingField,
+    DateField, LastModifiedField, CreatedOnField, UrlField,
+    EmailField, FileField, SingleSelectField, MultipleSelectField,
+    PhoneNumberField, FormulaField, TableLinkField, CountField,
+    LookupField, MultipleCollaboratorsField
+)
 from baserowapi.validators.filter_validator import FilterValidator
 import logging
 import urllib.parse
 
+if TYPE_CHECKING:
+    from baserowapi import Baserow
+
 class Table:
-    def __init__(self, table_id, client):
-        self.table_id = table_id
+
+    FIELD_TYPE_CLASS_MAP: Dict[str, type] = {
+        TextField.TYPE: TextField,
+        LongTextField.TYPE: LongTextField,
+        BooleanField.TYPE: BooleanField,
+        NumberField.TYPE: NumberField,
+        RatingField.TYPE: RatingField,
+        DateField.TYPE: DateField,
+        LastModifiedField.TYPE: LastModifiedField,
+        CreatedOnField.TYPE: CreatedOnField,
+        UrlField.TYPE: UrlField,
+        EmailField.TYPE: EmailField,
+        FileField.TYPE: FileField,
+        SingleSelectField.TYPE: SingleSelectField,
+        MultipleSelectField.TYPE: MultipleSelectField,
+        PhoneNumberField.TYPE: PhoneNumberField,
+        FormulaField.TYPE: FormulaField,
+        TableLinkField.TYPE: TableLinkField,
+        CountField.TYPE: CountField,
+        LookupField.TYPE: LookupField,
+        MultipleCollaboratorsField.TYPE: MultipleCollaboratorsField
+    }
+
+    def __init__(self, table_id: int, client: 'Baserow'):
+        """
+        Initialize a Table object.
+
+        :param table_id: The unique identifier for the table.
+        :param client: The Baserow client instance to make API requests.
+        """
+        self.id = table_id
         self.client = client
         self._fields = None
         self._primary_field = None
         self.logger = logging.getLogger(__name__)
+        self.logger.debug(f"Initialized Table id {self.id}")
 
-    def __repr__(self):
-        """String representation of the Table object."""
-        try:
-            num_fields = len(self.fields)
-            max_fields_to_show = 5
-            field_names = [field.name for field in self.fields]
-            
-            if len(field_names) > max_fields_to_show:
-                field_names = field_names[:max_fields_to_show] + ['...']
-            
-            fields_str = ', '.join(field_names)
-            return f"Table(id={self.table_id}, {num_fields} fields: [{fields_str}])"
-        except:
-            return f"Table(id={self.table_id})"
+
+    def __repr__(self) -> str:
+        """
+        Provide a string representation of the Table object.
+
+        :return: A string describing the Table object, including its ID.
+        """
+        return f"Table(id={self.id})"
+
+
+    @staticmethod
+    def _field_class_from_data(field_data: Dict[str, Any]) -> type:
+        """
+        Determine the appropriate Field class based on the provided field data.
+
+        Given the data for a field, this method determines the most suitable 
+        class to represent the field, using the field's type as a key to look it up.
+        If the field's type isn't recognized, it defaults to the base Field class.
+
+        :param field_data: A dictionary containing field data, especially the 'type' key.
+        :type field_data: dict
+        :return: The class (not an instance) best suited to represent the field.
+        :rtype: type
+        """
+        field_type = field_data.get('type')
+        return Table.FIELD_TYPE_CLASS_MAP.get(field_type, Field)  # Default to base Field class if type not found
 
 
     @property
-    def primary_field(self):
+    def fields(self) -> FieldList:
+        """
+        Retrieve the fields associated with the table.
+
+        If the fields haven't been fetched yet, this property sends an API request 
+        to retrieve them. Once retrieved, the fields are cached to avoid unnecessary
+        API requests in subsequent calls.
+
+        :return: A FieldList containing all the Field objects associated with this table.
+        :rtype: FieldList
+        :raises Exception: If there's an unexpected error when fetching the fields.
+        """
+        if self._fields is None:
+            endpoint = f"/api/database/fields/table/{self.id}/"
+            try:
+                response = self.client.make_api_request(endpoint)
+                fields_data = response
+                field_objects = []
+                for fd in fields_data:
+                    FieldClass = self._field_class_from_data(fd)
+                    field_objects.append(FieldClass(fd['name'], fd))
+                self._fields = FieldList(field_objects)
+            except Exception as e:
+                self.logger.error(f"Failed to fetch fields for table {self.id}. Error: {e}")
+                raise Exception("Unexpected error when fetching fields.") from e
+        return self._fields
+
+
+    @property
+    def primary_field(self) -> str:
+        """
+        Retrieve the primary field of the table.
+
+        If the primary field hasn't been determined yet, this property will 
+        invoke the method to set it. Once set, the primary field is cached 
+        to avoid unnecessary computations in subsequent calls.
+
+        :return: The primary field of the table.
+        :rtype: str
+        """
         if self._primary_field is None:
             self._set_primary_field()
         return self._primary_field
 
-    def _set_primary_field(self):
+
+    def _set_primary_field(self) -> None:
+        """
+        Set the primary field of the table.
+
+        This method iterates through all the fields of the table to find 
+        the primary field. Once found, it sets the `_primary_field` attribute 
+        with the name of that field.
+
+        :raises ValueError: If no primary field is found for the table.
+        """
         for field in self.fields:
+            print(f"name: {field.name}  type: {field.type}  primary: {field.is_primary}")
             if field.is_primary:
                 self._primary_field = field.name
                 return
-        self.logger.error(f"No primary field found for table {self.table_id}.")
-        raise ValueError(f"Table {self.table_id} does not have a primary field.")
+        self.logger.error(f"No primary field found for table {self.id}.")
+        raise ValueError(f"Table {self.id} does not have a primary field.")
+
 
     @property
-    def fields(self):
-        if self._fields is None:
-            endpoint = f"/api/database/fields/table/{self.table_id}/"
-            try:
-                response = self.client.make_api_request(endpoint)
-                fields_data = response
-                field_objects = [Field(field_data['name'], field_data) for field_data in fields_data]
-                self._fields = FieldList(field_objects)
-            except Exception as e:
-                self.logger.error(f"Failed to fetch fields for table {self.table_id}. Error: {e}")
-                raise Exception("Unexpected error when fetching fields.") from e
-        return self._fields
+    def field_names(self) -> List[str]:
+        """
+        Retrieve the names of all fields in the table.
 
-    def get_field_names(self):
+        Returns:
+            List[str]: A list of field names.
+
+        Raises:
+            Exception: If there's an error while fetching the field names.
+        """
         try:
             return [field.name for field in self.fields]
         except Exception as e:
-            self.logger.error(f"Failed to get field names for table {self.table_id}. Error: {e}")
+            self.logger.error(f"Failed to get field names for table {self.id}. Error: {e}")
             raise
 
-    def get_field_type(self, field_name):
-        for field in self.fields:
-            if field.name == field_name:
-                return field.type
 
-        self.logger.error(f"Field '{field_name}' not found in table {self.table_id}.")
-        raise ValueError(f"Field '{field_name}' not found in table {self.table_id}.")
-
-    def get_field(self, field_name):
-        for field in self.fields:
-            if field.name == field_name:
-                return field
-
-        self.logger.error(f"Field '{field_name}' not found in table {self.table_id}.")
-        raise ValueError(f"Field '{field_name}' not found in table {self.table_id}.")
-
-    
-    def _build_request_url(self, include=None, exclude=None, search=None, order_by=None, 
-                        filter_type=None, filters=None, view_id=None, page_size=None, **kwargs):
+    def _build_request_url(self, include: Optional[List[str]] = None, exclude: Optional[List[str]] = None, 
+                           search: Optional[str] = None, order_by: Optional[List[str]] = None, 
+                           filter_type: Optional[str] = None, filters: Optional[List[str]] = None, 
+                           view_id: Optional[int] = None, page_size: Optional[int] = None, **kwargs) -> str:
         """
         Constructs the URL for the Baserow API request based on the given parameters.
 
-        Args:
-            include (str, optional): A comma-separated list of field names to include.
-            exclude (str, optional): A comma-separated list of field names to exclude.
-            search (str, optional): Search string to search the table.
-            order_by (list, optional): List of field names to order results by.
-            filter_type (str, optional): The type of filter to apply.
-            filters (list, optional): List containing the Filter objects to apply.
-            view_id (int, optional): The ID of the view to apply its filters and sorts.
-            page_size (int, optional): Number of rows per page for each API call.
-            kwargs: Additional parameters that can be passed.
-
-        Returns:
-            str: The constructed request URL
-
-        Raises:
-            ValueError: If any of the parameters are invalid.
+        :param include: A comma-separated list of field names to include. Defaults to None.
+        :type include: list, optional
+        :param exclude: A comma-separated list of field names to exclude. Defaults to None.
+        :type exclude: list, optional
+        :param search: Search string to search the table. Defaults to None.
+        :type search: str, optional
+        :param order_by: List of field names to order results by. Defaults to None.
+        :type order_by: list, optional
+        :param filter_type: The type of filter to apply. Defaults to None.
+        :type filter_type: str, optional
+        :param filters: List containing the Filter objects to apply. Defaults to None.
+        :type filters: list, optional
+        :param view_id: The ID of the view to apply its filters and sorts. Defaults to None.
+        :type view_id: int, optional
+        :param page_size: Number of rows per page for each API call. Defaults to None.
+        :type page_size: int, optional
+        :param kwargs: Additional parameters that can be passed.
+        :type kwargs: dict
+        :return: The constructed request URL.
+        :rtype: str
+        :raises ValueError: If any of the parameters are invalid.
         """
 
         # Base URL construction with user_field_names=true
-        base_url = f"/api/database/rows/table/{self.table_id}/?user_field_names=true"
+        base_url = f"/api/database/rows/table/{self.id}/?user_field_names=true"
 
         # Convert dictionary to query parameters
         query_params_parts = []
@@ -160,8 +251,8 @@ class Table:
                 # Validate filters against table
                 FilterValidator.validate_filters_against_table(filters, self)
             except ValueError as ve:
-                self.logger.error(f"Failed filter validation for table {self.table_id}. Error: {ve}")
-                raise ValueError(f"Failed filter validation for table {self.table_id}. Error: {ve}")
+                self.logger.error(f"Failed filter validation for table {self.id}. Error: {ve}")
+                raise ValueError(f"Failed filter validation for table {self.id}. Error: {ve}")
 
             for filter_obj in filters:
                 query_params_parts.append(filter_obj.query_string)
@@ -176,18 +267,19 @@ class Table:
         query_params = "&".join(query_params_parts)
 
         # Return the fully constructed URL with concatenated query parameters
-        return f"{base_url}&{query_params}" if query_params else base_url
+        full_request_url = f"{base_url}&{query_params}" if query_params else base_url
+        self.logger.debug(f"built request url: '{full_request_url}'")
+        return full_request_url
 
 
-    def _parse_row_data(self, response_data):
+    def _parse_row_data(self, response_data: Dict[str, Any]) -> List[Row]:
         """
         Parses the raw data from the API response and transforms it into a list of Row objects.
 
-        Args:
-        - response_data (dict): The raw response data from the Baserow API.
-
-        Returns:
-        - list[Row]: List of Row objects.
+        :param response_data: The raw response data from the Baserow API.
+        :type response_data: dict
+        :return: List of Row objects.
+        :rtype: list[Row]
         """
 
         if not response_data or "results" not in response_data:
@@ -200,106 +292,94 @@ class Table:
 
         return parsed_rows
 
+
     class RowIterator:
-        def __init__(self, table, initial_url):
-            """
-            Initializes the RowIterator.
-
-            Args:
-            - table (Table): The table instance.
-            - initial_url (string): The initial url to pass to the table for data fetching.
-
-            Attributes:
-            - table (Table): Reference to the table.
-            - params (dict): Params for the API request.
-            - next_page_url (str): URL to fetch the next page.
-            - current_rows (list): Rows of the current page.
-            - index (int): Index for iteration over current_rows.
-            """
+        def __init__(self, table: 'Table', initial_url: str, fetch_data_fn=None) -> None:
             self.table = table
             self.initial_url = initial_url
-            self.next_page_url = None
-            self.current_rows = []
+            self.next_page_url: Optional[str] = None
+            self.current_rows: List[Row] = []
             self.index = 0
-
             self.logger = logging.getLogger(__name__)
             self.logger.debug("RowIterator initialized.")
+            
+            # Use the provided fetch function or default to the table's method
+            self.fetch_data_fn = fetch_data_fn or self.table.client.make_api_request
 
-        def _fetch_next_page(self):
-            """
-            Fetches the next page of data and updates self.current_rows with the new rows.
-            """
-            try:
+        def _fetch_next_page(self) -> None:
+            if not self.current_rows or self.index >= len(self.current_rows):
                 if not self.next_page_url and not self.initial_url:
                     # No more pages left to fetch
                     self.current_rows = []
                     return
 
-                # If there's no next_page_url set, use the initial_url
-                url_to_fetch = self.next_page_url if self.next_page_url else self.initial_url
-
-                response_data = self.table.client.make_api_request(url_to_fetch)
+                url_to_fetch = self.next_page_url or self.initial_url
+                response_data = self.fetch_data_fn(url_to_fetch)
 
                 if not response_data:
                     self.current_rows = []
-                elif 'results' not in response_data or 'next' not in response_data:
-                    # Added check for missing fields in response data
-                    raise Exception("Error fetching next page of rows")
                 else:
                     self.next_page_url = response_data.get('next', None)
                     self.current_rows = self.table._parse_row_data(response_data)
 
-                # Once the initial URL has been used once, we should set it to None so it's not used again
                 if url_to_fetch == self.initial_url:
                     self.initial_url = None
 
-                # Reset index to start iterating over new rows.
                 self.index = 0
-            except Exception as e:
-                self.logger.error(f"Error fetching next page of rows: {e}")
-                raise
-
-
-        def __iter__(self):
+        
+        def __iter__(self) -> 'Table.RowIterator':
+            """Returns the iterator instance."""
             return self
 
-        def __next__(self):
-            # If there are no more rows or the index is out of range, fetch the next page.
+        def __next__(self) -> Row:
+            """
+            Returns the next row in the iterator. Fetches the next page of rows if necessary.
+            """
             if not self.current_rows or self.index >= len(self.current_rows):
                 self._fetch_next_page()
-                
-                # If after fetching, we still have no rows, it means we have iterated over all rows.
+
                 if not self.current_rows:
                     self.logger.debug("End of rows reached.")
                     raise StopIteration
 
-            # Get the row at the current index and increment the index.
             row = self.current_rows[self.index]
             self.index += 1
             return row
 
-    def get_rows(self, include=None, exclude=None, search=None, order_by=None, 
-                filter_type=None, filters=None, view_id=None, page_size=None, return_single=False, **kwargs):
+
+    def get_rows(self, include: Optional[List[str]] = None, exclude: Optional[List[str]] = None, 
+                search: Optional[str] = None, order_by: Optional[List[str]] = None, 
+                filter_type: Optional[str] = None, filters: Optional[List[str]] = None, 
+                view_id: Optional[int] = None, page_size: Optional[int] = None, 
+                return_single: bool = False, **kwargs) -> Union[Row, 'Table.RowIterator']:
         """
         Retrieves rows from the table using provided parameters.
-        
-        Args:
-            include (str, optional): A comma-separated list of field names to include in the results.
-            exclude (str, optional): A comma-separated list of field names to exclude from the results.
-            search (str, optional): A search string to apply on the table data.
-            order_by (str, optional): Field by which the results should be ordered.
-            filter_type (str, optional): The type of filter to be applied.
-            filters (list, optional): A list containing Filter objects to be applied.
-            view_id (int, optional): ID of the view to consider its filters and sorts.
-            page_size (int, optional): The number of rows per page in the response.
-            return_single (bool, optional): If True, returns a single Row object instead of an iterator.
-            kwargs: Additional parameters for the API request.
 
-        Returns:
-            Row or RowIterator: Depending on return_single, either a single Row object or a RowIterator.
+        :param include: A list of field names to include in the results.
+        :type include: list, optional
+        :param exclude: A list of field names to exclude from the results.
+        :type exclude: list, optional
+        :param search: A search string to apply on the table data.
+        :type search: str, optional
+        :param order_by: Field by which the results should be ordered.
+        :type order_by: list, optional
+        :param filter_type: The type of filter to be applied.
+        :type filter_type: str, optional
+        :param filters: A list containing Filter objects to be applied.
+        :type filters: list, optional
+        :param view_id: ID of the view to consider its filters and sorts.
+        :type view_id: int, optional
+        :param page_size: The number of rows per page in the response.
+        :type page_size: int, optional
+        :param return_single: If True, returns a single Row object instead of an iterator.
+        :type return_single: bool, optional
+        :param kwargs: Additional parameters for the API request.
+        :type kwargs: dict
 
-        Raises:
-            Exception: If any error occurs during the process.
+        :return: Depending on return_single, either a single Row object or a RowIterator.
+        :rtype: Union[Row, RowIterator]
+
+        :raises Exception: If any error occurs during the process.
         """
 
         # Construct the request URL with all parameters
@@ -323,87 +403,156 @@ class Table:
         # Return a RowIterator for the constructed URL
         return self.RowIterator(self, initial_url=request_url)
 
-    def get_row(self, row_id):
-        """
-        Fetch a specific row by its ID from the table.
-        Args:
-            row_id (int): The ID of the row to fetch.
-        Returns:
-            Row: An instance of the Row model representing the fetched row.
-        """
-        try:
-            endpoint = f"/api/database/rows/table/{self.table_id}/{row_id}/?user_field_names=true"
-            response = self.client.make_api_request(endpoint)
-            row_data = response
-            return Row(row_data=row_data, table=self, client=self.client)
-        except Exception as e:
-            self.logger.error(f"Failed to get row with ID {row_id} from table {self.table_id}. Error: {e}")
-            raise
 
-    def add_row(self, fields):
+    def get_row(self, row_id: Union[int, str]) -> Row:
         """
-        Add a new row (or multiple rows) to the table.
-        Args:
-            fields (dict or list[dict]): A dictionary representing the fields of the row 
-                                        to add or a list of dictionaries for multiple rows.
-        Returns:
-            Row or list[Row]: An instance of the Row model representing the added row or 
-                            a list of Row instances for multiple rows.
+        Retrieve a specific row by its ID from the table.
+
+        :param row_id: The unique identifier of the row to retrieve.
+        :type row_id: int or str
+        :return: An instance of the Row model representing the fetched row.
+        :rtype: Row
+        :raises ValueError: If the provided row_id is not valid.
+        :raises Exception: If there's any error during the API request or if the row is not found.
         """
+        # Validate the row_id
+        if not row_id:
+            raise ValueError("The provided row_id is not valid.")
+        
+        # Ensure fields are fetched
+        # _ = self.fields
+
+        # Construct the API endpoint to retrieve the specific row
+        endpoint = f"/api/database/rows/table/{self.id}/{row_id}/?user_field_names=true"
+        
         try:
-            FieldValidator.validate_fields_against_table(fields, self)
-            if isinstance(fields, list):
-                endpoint = f"/api/database/rows/table/{self.table_id}/batch/?user_field_names=true"
-                response = self.client.make_api_request(endpoint, method="POST", data={'items': fields})
-                rows_data = response
-                added_rows = rows_data['items']
-                return [Row(row_data=row_data, table=self, client=self.client) for row_data in added_rows]
-            else:
-                endpoint = f"/api/database/rows/table/{self.table_id}/?user_field_names=true"
-                response = self.client.make_api_request(endpoint, method="POST", data=fields)
-                row_data = response
-                return Row(row_data=row_data, table=self, client=self.client)
+            response = self.client.make_api_request(endpoint)
+            # Return a Row object initialized with the fetched data
+            return Row(row_data=response, table=self, client=self.client)
+        
         except Exception as e:
-            error_message = f"Failed to add row to table {self.table_id}. Error: {e}"
+            error_message = f"Failed to retrieve row with ID {row_id} from table {self.id}. Error: {e}"
             self.logger.error(error_message)
             raise Exception(error_message)
 
-    def update_rows(self, rows_data):
+
+    def add_row(self, rows_data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> Union[Row, List[Row]]:
+        """
+        Add a new row (or multiple rows) to the table.
+
+        :param rows_data: A dictionary representing the fields and values 
+                        of the row to add, or a list of dictionaries for 
+                        adding multiple rows.
+        :type rows_data: dict or list[dict]
+        
+        :return: An instance of the Row model representing the added row or 
+                a list of Row instances for multiple rows.
+        :rtype: Row or list[Row]
+
+        :raises Exception: If there's any error during the API request.
+        """
+
+        # Distinguish between single row data and multiple rows data
+        if isinstance(rows_data, list):
+            api_endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+            data_payload = {'items': rows_data}
+        else:
+            api_endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
+            data_payload = rows_data
+
+        try:
+            response = self.client.make_api_request(api_endpoint, method="POST", data=data_payload)
+
+            # If multiple rows are added, return a list of Row objects, else return a single Row object
+            if isinstance(rows_data, list):
+                return [Row(row_data=row_data_item, table=self, client=self.client) for row_data_item in response['items']]
+            else:
+                return Row(row_data=response, table=self, client=self.client)
+        
+        except Exception as e:
+            error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
+            self.logger.error(error_message)
+            raise Exception(error_message)
+
+
+    def update_rows(self, rows_data: List[Union[Dict[str, Any], Row]]) -> List[Row]:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
 
-        Args:
-        - rows_data (list[Union[dict, Row]]): A list of dictionaries or Row objects. 
-        Each dictionary should contain the field values for updating a specific row and 
-        include the ID of the row to be updated.
+        This method accepts a list of Row objects or dictionaries. For each item:
+        - If it's a dictionary, the method checks that all keys correspond to valid,
+        editable fields in the table, validates the provided values, and ensures that
+        an 'id' key is present with the row ID.
+        - If it's a Row object, the method extracts its values, excluding any that 
+        are read-only.
 
-        Returns:
-        - list[Row]: A list of Row objects representing the updated rows.
+        :param rows_data: A list of dictionaries or Row objects. Each dictionary should
+                        contain the field values for updating a specific row and include
+                        the ID of the row to be updated. Row objects represent the rows 
+                        to be updated.
+        :type rows_data: list[Union[dict, Row]]
 
-        Raises:
-        - Exception: If the API request results in any error responses.
-        - TypeError: If an item in rows_data is neither a dictionary nor a Row object.
+        :return: A list of Row objects representing the updated rows.
+        :rtype: list[Row]
+
+        :raises ValueError: If rows_data is empty, trying to update a read-only field, 
+                            or invalid 'order' value.
+        :raises KeyError: If a dictionary contains a key that doesn't correspond to any 
+                        field in the table or is missing the 'id' key.
+        :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object.
+        :raises Exception: If the API request results in any error responses.
         """
+
         if not rows_data:
             warning_msg = "The rows_data list is empty. Nothing to update."
             self.logger.warning(warning_msg)
             raise ValueError(warning_msg)
 
-        # Convert Row objects to dictionaries
+        # Convert Row objects to dictionaries and validate dictionaries
         formatted_data = []
         for item in rows_data:
             if isinstance(item, dict):
+                if "id" not in item:
+                    raise KeyError("The 'id' key is missing, which is required for updating a row.")
+                
+                for key, value in item.items():
+                    # Skip "id" as it's already checked
+                    if key == "id":
+                        continue
+
+                    # Validate 'order' value
+                    if key == "order":
+                        if not isinstance(value, (int, float)) or value <= 0:
+                            raise ValueError(f"Invalid 'order' value: {value}. 'order' should be a positive numeric value.")
+                        continue
+
+                    if key not in self.fields:
+                        raise KeyError(f"Field '{key}' not found in table fields.")
+                    
+                    field_object = self.fields[key]
+                    
+                    # Check if the field is read-only
+                    if field_object.is_read_only:
+                        raise ValueError(f"Field '{key}' is read-only and cannot be updated.")
+                    
+                    try:
+                        field_object.validate_value(value)
+                    except ValueError as ve:
+                        raise ValueError(f"Invalid value for field '{key}': {ve}") from ve
                 formatted_data.append(item)
+
             elif isinstance(item, Row):
-                row_data = item.fields.copy()  # Extract fields from the Row object
-                row_data["id"] = item.id  # Ensure the row ID is also included
+                row_data = {"id": item.id}  # Start with the row ID
+                for rv in item.values:
+                    if not rv.is_read_only:
+                        row_data[rv.name] = rv.format_for_api()
                 formatted_data.append(row_data)
+
             else:
                 raise TypeError(f"Unsupported type {type(item)} in rows_data. Expected dict or Row object.")
 
         try:
-            FieldValidator.validate_fields_against_table(formatted_data, self, is_update=True)
-            endpoint = f"/api/database/rows/table/{self.table_id}/batch/?user_field_names=true"
+            endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
             response = self.client.make_api_request(endpoint, method="PATCH", data={'items': formatted_data})
 
             # Convert the response to a list of Row objects
@@ -411,42 +560,50 @@ class Table:
             
             return updated_rows
         except Exception as e:
-            self.logger.error(f"Failed to update rows in table {self.table_id}. Error: {e}")
+            self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
             raise
 
-    def delete_rows(self, rows_data):
+
+    def delete_rows(self, rows_data: List[Union[Row, int]]) -> bool:
         """
         Deletes multiple rows from the table using the Baserow batch-delete endpoint.
 
-        Args:
-        - rows_data (list[Union[Row, dict]]): A list of Row objects or dictionaries. 
-        Each dictionary should include the ID of the row to be deleted.
+        This method accepts a list of Row objects or integers. For each item:
+        - If it's a Row object, the method extracts its ID for deletion.
+        - If it's an integer, it represents the ID of the row to be deleted.
 
-        Returns:
-        - int: HTTP status code of the API response.
+        :param rows_data: A list of Row objects or integers. Row objects represent 
+                        the rows to be deleted, while integers represent the row IDs 
+                        to be deleted.
+        :type rows_data: list[Union[Row, int]]
 
-        Raises:
-        - Exception: If the API request results in any error responses.
-        - TypeError: If an invalid input type is provided.
+        :return: True if rows are successfully deleted, otherwise an exception is raised.
+        :rtype: bool
+
+        :raises ValueError: If rows_data is empty or doesn't provide valid row IDs.
+        :raises TypeError: If an item in rows_data is neither an integer nor a Row object.
+        :raises Exception: If the API request results in any error responses.
         """
-        # Convert Row objects to their respective IDs
+
+        # Convert Row objects to their respective IDs and validate integer inputs
         row_ids = []
         for item in rows_data:
             if isinstance(item, Row):
                 row_ids.append(item.id)
-            elif isinstance(item, dict) and "id" in item:
-                row_ids.append(item["id"])
+            elif isinstance(item, int):
+                if item <= 0:
+                    raise ValueError(f"Invalid row ID: {item}. Row IDs should be positive integers.")
+                row_ids.append(item)
             else:
-                raise TypeError(f"Unsupported type {type(item)} in rows_data. Expected Row object or dict with an 'id' key.")
+                raise TypeError(f"Unsupported type {type(item)} in rows_data. Expected Row object or positive integer.")
 
         if not row_ids:
             raise ValueError("The rows_data list is empty. Nothing to delete.")
 
         try:
-            endpoint = f"/api/database/rows/table/{self.table_id}/batch-delete/"
+            endpoint = f"/api/database/rows/table/{self.id}/batch-delete/"
             response = self.client.make_api_request(endpoint, method="POST", data={'items': row_ids})
-            return response
+            return True
         except Exception as e:
-            self.logger.error(f"Failed to delete rows from table {self.table_id}. Error: {e}")
+            self.logger.error(f"Failed to delete rows from table {self.id}. Error: {e}")
             raise
-

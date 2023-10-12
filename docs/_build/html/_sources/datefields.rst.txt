@@ -1,0 +1,42 @@
+Working with date fields
+=========================
+
+.. code-block:: python
+
+    from baserowapi import Baserow, Filter
+
+    # baserow client
+    baserow = Baserow(url='https://api.baserow.io',token='mytoken')
+    table = baserow.get_table(1234567)
+
+    # settings for the field are available from the field object
+    print(table.field['myDate'].date_format)
+
+    # Baserow stores date as UTC string
+    myRow = table.get_row(1)
+    print myRow['myDate']
+
+    # get date as python datetime object, method from RowValue object
+    print(myRow.values['myDate'].as_datetime())
+
+    # get date formatted string according to field settings
+    print(myRow.values['myDate'].formatted_date)
+
+    # update value as UTC string
+    myRow['myDate'] = '2023-10-02T18:38:45Z'
+
+    # update value as python datetime object
+    import datetime
+    from datetime import timedelta
+
+    field_date = single_row.values['myDate'].as_datetime()
+
+    # Add one day
+    new_date = field_date + timedelta(days=1)
+
+    # Print the new date
+    print(new_date)
+
+    # update with datetime object
+    single_row[fieldname] = new_date
+    single_row.update()

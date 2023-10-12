@@ -1,0 +1,29 @@
+Baserowapi Package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   baserowapi.models
+
+Submodules
+----------
+
+baserowapi.baserow module
+-------------------------
+
+.. automodule:: baserowapi.baserow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: baserowapi
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baserowapi Package &mdash; baserowapi .1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=69a67b7f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="baserowapi.models package" href="baserowapi.models.html" />
+    <link rel="prev" title="Changelog for baserowapi" href="changelog.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            baserowapi
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">baserowapi: API wrapper for Baserow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single and multiple select fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkfields.html">Working with linked fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog for baserowapi</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Baserowapi Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html">baserowapi.models package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-baserowapi.baserow">baserowapi.baserow module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#baserowapi.baserow.Baserow"><code class="docutils literal notranslate"><span class="pre">Baserow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.ERROR_MESSAGES"><code class="docutils literal notranslate"><span class="pre">Baserow.ERROR_MESSAGES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.configure_logging"><code class="docutils literal notranslate"><span class="pre">Baserow.configure_logging()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.get_combined_headers"><code class="docutils literal notranslate"><span class="pre">Baserow.get_combined_headers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.get_table"><code class="docutils literal notranslate"><span class="pre">Baserow.get_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.make_api_request"><code class="docutils literal notranslate"><span class="pre">Baserow.make_api_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.parse_response"><code class="docutils literal notranslate"><span class="pre">Baserow.parse_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#baserowapi.baserow.Baserow.perform_request"><code class="docutils literal notranslate"><span class="pre">Baserow.perform_request()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-baserowapi">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">baserowapi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Baserowapi Package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/baserowapi.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="baserowapi-package">
+<h1>Baserowapi Package<a class="headerlink" href="#baserowapi-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baserowapi.models.html">baserowapi.models package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models.field">baserowapi.models.field module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BaseDateField"><code class="docutils literal notranslate"><span class="pre">BaseDateField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BaseDateField.TYPE"><code class="docutils literal notranslate"><span class="pre">BaseDateField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BaseDateField.validate_value"><code class="docutils literal notranslate"><span class="pre">BaseDateField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BaseTextClass"><code class="docutils literal notranslate"><span class="pre">BaseTextClass</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BaseTextClass.validate_value"><code class="docutils literal notranslate"><span class="pre">BaseTextClass.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BooleanField"><code class="docutils literal notranslate"><span class="pre">BooleanField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BooleanField.TYPE"><code class="docutils literal notranslate"><span class="pre">BooleanField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BooleanField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">BooleanField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.BooleanField.validate_value"><code class="docutils literal notranslate"><span class="pre">BooleanField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField"><code class="docutils literal notranslate"><span class="pre">CountField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField.TYPE"><code class="docutils literal notranslate"><span class="pre">CountField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">CountField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField.is_read_only"><code class="docutils literal notranslate"><span class="pre">CountField.is_read_only</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField.through_field_id"><code class="docutils literal notranslate"><span class="pre">CountField.through_field_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CountField.validate_value"><code class="docutils literal notranslate"><span class="pre">CountField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CreatedOnField"><code class="docutils literal notranslate"><span class="pre">CreatedOnField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CreatedOnField.TYPE"><code class="docutils literal notranslate"><span class="pre">CreatedOnField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CreatedOnField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">CreatedOnField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.CreatedOnField.is_read_only"><code class="docutils literal notranslate"><span class="pre">CreatedOnField.is_read_only</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.DateField"><code class="docutils literal notranslate"><span class="pre">DateField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.DateField.TYPE"><code class="docutils literal notranslate"><span class="pre">DateField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.DateField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">DateField.compatible_filters</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.EmailField"><code class="docutils literal notranslate"><span class="pre">EmailField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.EmailField.TYPE"><code class="docutils literal notranslate"><span class="pre">EmailField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.EmailField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">EmailField.compatible_filters</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field"><code class="docutils literal notranslate"><span class="pre">Field</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.format_for_api"><code class="docutils literal notranslate"><span class="pre">Field.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.id"><code class="docutils literal notranslate"><span class="pre">Field.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.is_primary"><code class="docutils literal notranslate"><span class="pre">Field.is_primary</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.is_read_only"><code class="docutils literal notranslate"><span class="pre">Field.is_read_only</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.order"><code class="docutils literal notranslate"><span class="pre">Field.order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.table_id"><code class="docutils literal notranslate"><span class="pre">Field.table_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.type"><code class="docutils literal notranslate"><span class="pre">Field.type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.Field.validate_value"><code class="docutils literal notranslate"><span class="pre">Field.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FieldList"><code class="docutils literal notranslate"><span class="pre">FieldList</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FileField"><code class="docutils literal notranslate"><span class="pre">FileField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FileField.TYPE"><code class="docutils literal notranslate"><span class="pre">FileField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FileField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">FileField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FileField.format_for_api"><code class="docutils literal notranslate"><span class="pre">FileField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FileField.validate_value"><code class="docutils literal notranslate"><span class="pre">FileField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField"><code class="docutils literal notranslate"><span class="pre">FormulaField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.TYPE"><code class="docutils literal notranslate"><span class="pre">FormulaField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.array_formula_type"><code class="docutils literal notranslate"><span class="pre">FormulaField.array_formula_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">FormulaField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.error"><code class="docutils literal notranslate"><span class="pre">FormulaField.error</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.formula"><code class="docutils literal notranslate"><span class="pre">FormulaField.formula</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.formula_type"><code class="docutils literal notranslate"><span class="pre">FormulaField.formula_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.FormulaField.is_read_only"><code class="docutils literal notranslate"><span class="pre">FormulaField.is_read_only</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LastModifiedField"><code class="docutils literal notranslate"><span class="pre">LastModifiedField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LastModifiedField.TYPE"><code class="docutils literal notranslate"><span class="pre">LastModifiedField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LastModifiedField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">LastModifiedField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LastModifiedField.is_read_only"><code class="docutils literal notranslate"><span class="pre">LastModifiedField.is_read_only</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LongTextField"><code class="docutils literal notranslate"><span class="pre">LongTextField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LongTextField.TYPE"><code class="docutils literal notranslate"><span class="pre">LongTextField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LongTextField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">LongTextField.compatible_filters</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField"><code class="docutils literal notranslate"><span class="pre">LookupField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.TYPE"><code class="docutils literal notranslate"><span class="pre">LookupField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">LookupField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.target_field_id"><code class="docutils literal notranslate"><span class="pre">LookupField.target_field_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.target_field_name"><code class="docutils literal notranslate"><span class="pre">LookupField.target_field_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.through_field_id"><code class="docutils literal notranslate"><span class="pre">LookupField.through_field_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.LookupField.through_field_name"><code class="docutils literal notranslate"><span class="pre">LookupField.through_field_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField.TYPE"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField.format_for_api"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField.notify_user_when_added"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField.notify_user_when_added</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleCollaboratorsField.validate_value"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.TYPE"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.format_for_api"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.options"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.options</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.options_details"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.options_details</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.MultipleSelectField.validate_value"><code class="docutils literal notranslate"><span class="pre">MultipleSelectField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField"><code class="docutils literal notranslate"><span class="pre">NumberField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField.TYPE"><code class="docutils literal notranslate"><span class="pre">NumberField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField.allow_negative"><code class="docutils literal notranslate"><span class="pre">NumberField.allow_negative</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">NumberField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField.decimal_places"><code class="docutils literal notranslate"><span class="pre">NumberField.decimal_places</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.NumberField.validate_value"><code class="docutils literal notranslate"><span class="pre">NumberField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.PhoneNumberField"><code class="docutils literal notranslate"><span class="pre">PhoneNumberField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.PhoneNumberField.TYPE"><code class="docutils literal notranslate"><span class="pre">PhoneNumberField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.PhoneNumberField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">PhoneNumberField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.PhoneNumberField.format_for_api"><code class="docutils literal notranslate"><span class="pre">PhoneNumberField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.PhoneNumberField.validate_value"><code class="docutils literal notranslate"><span class="pre">PhoneNumberField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.RatingField"><code class="docutils literal notranslate"><span class="pre">RatingField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.RatingField.TYPE"><code class="docutils literal notranslate"><span class="pre">RatingField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.RatingField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">RatingField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.RatingField.validate_value"><code class="docutils literal notranslate"><span class="pre">RatingField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField"><code class="docutils literal notranslate"><span class="pre">SingleSelectField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.TYPE"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.format_for_api"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.options"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.options</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.options_details"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.options_details</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.SingleSelectField.validate_value"><code class="docutils literal notranslate"><span class="pre">SingleSelectField.validate_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField"><code class="docutils literal notranslate"><span class="pre">TableLinkField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.TYPE"><code class="docutils literal notranslate"><span class="pre">TableLinkField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">TableLinkField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.format_for_api"><code class="docutils literal notranslate"><span class="pre">TableLinkField.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.link_row_related_field"><code class="docutils literal notranslate"><span class="pre">TableLinkField.link_row_related_field</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.link_row_related_field_id"><code class="docutils literal notranslate"><span class="pre">TableLinkField.link_row_related_field_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.link_row_table"><code class="docutils literal notranslate"><span class="pre">TableLinkField.link_row_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TableLinkField.link_row_table_id"><code class="docutils literal notranslate"><span class="pre">TableLinkField.link_row_table_id</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TextField"><code class="docutils literal notranslate"><span class="pre">TextField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TextField.TYPE"><code class="docutils literal notranslate"><span class="pre">TextField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TextField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">TextField.compatible_filters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.TextField.text_default"><code class="docutils literal notranslate"><span class="pre">TextField.text_default</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.UrlField"><code class="docutils literal notranslate"><span class="pre">UrlField</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.UrlField.TYPE"><code class="docutils literal notranslate"><span class="pre">UrlField.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.field.UrlField.compatible_filters"><code class="docutils literal notranslate"><span class="pre">UrlField.compatible_filters</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models.filter">baserowapi.models.filter module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.filter.Filter"><code class="docutils literal notranslate"><span class="pre">Filter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.filter.Filter.query_string"><code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models.row">baserowapi.models.row module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row"><code class="docutils literal notranslate"><span class="pre">Row</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.content"><code class="docutils literal notranslate"><span class="pre">Row.content</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.delete"><code class="docutils literal notranslate"><span class="pre">Row.delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.logger"><code class="docutils literal notranslate"><span class="pre">Row.logger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.move"><code class="docutils literal notranslate"><span class="pre">Row.move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.update"><code class="docutils literal notranslate"><span class="pre">Row.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row.Row.values"><code class="docutils literal notranslate"><span class="pre">Row.values</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models.row_value">baserowapi.models.row_value module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BaseDateRowValue"><code class="docutils literal notranslate"><span class="pre">BaseDateRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BaseDateRowValue.as_datetime"><code class="docutils literal notranslate"><span class="pre">BaseDateRowValue.as_datetime()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BaseDateRowValue.formatted_date"><code class="docutils literal notranslate"><span class="pre">BaseDateRowValue.formatted_date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BaseDateRowValue.value"><code class="docutils literal notranslate"><span class="pre">BaseDateRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BooleanRowValue"><code class="docutils literal notranslate"><span class="pre">BooleanRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.BooleanRowValue.value"><code class="docutils literal notranslate"><span class="pre">BooleanRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.CountRowValue"><code class="docutils literal notranslate"><span class="pre">CountRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.CountRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">CountRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.CountRowValue.value"><code class="docutils literal notranslate"><span class="pre">CountRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.CreatedOnRowValue"><code class="docutils literal notranslate"><span class="pre">CreatedOnRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.CreatedOnRowValue.value"><code class="docutils literal notranslate"><span class="pre">CreatedOnRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.DateRowValue"><code class="docutils literal notranslate"><span class="pre">DateRowValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.EmailRowValue"><code class="docutils literal notranslate"><span class="pre">EmailRowValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FileRowValue"><code class="docutils literal notranslate"><span class="pre">FileRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FileRowValue.download_files"><code class="docutils literal notranslate"><span class="pre">FileRowValue.download_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FileRowValue.upload_file_to_server"><code class="docutils literal notranslate"><span class="pre">FileRowValue.upload_file_to_server()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FormulaRowValue"><code class="docutils literal notranslate"><span class="pre">FormulaRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FormulaRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">FormulaRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.FormulaRowValue.value"><code class="docutils literal notranslate"><span class="pre">FormulaRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LastModifiedRowValue"><code class="docutils literal notranslate"><span class="pre">LastModifiedRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LastModifiedRowValue.value"><code class="docutils literal notranslate"><span class="pre">LastModifiedRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LongTextRowValue"><code class="docutils literal notranslate"><span class="pre">LongTextRowValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LookupRowValue"><code class="docutils literal notranslate"><span class="pre">LookupRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LookupRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">LookupRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.LookupRowValue.value"><code class="docutils literal notranslate"><span class="pre">LookupRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleCollaboratorsRowValue"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleCollaboratorsRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleCollaboratorsRowValue.value"><code class="docutils literal notranslate"><span class="pre">MultipleCollaboratorsRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleSelectRowValue"><code class="docutils literal notranslate"><span class="pre">MultipleSelectRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleSelectRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">MultipleSelectRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleSelectRowValue.options"><code class="docutils literal notranslate"><span class="pre">MultipleSelectRowValue.options</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.MultipleSelectRowValue.value"><code class="docutils literal notranslate"><span class="pre">MultipleSelectRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.NumberRowValue"><code class="docutils literal notranslate"><span class="pre">NumberRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.NumberRowValue.value"><code class="docutils literal notranslate"><span class="pre">NumberRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.PhoneNumberRowValue"><code class="docutils literal notranslate"><span class="pre">PhoneNumberRowValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RatingRowValue"><code class="docutils literal notranslate"><span class="pre">RatingRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RatingRowValue.value"><code class="docutils literal notranslate"><span class="pre">RatingRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue"><code class="docutils literal notranslate"><span class="pre">RowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">RowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue.is_read_only"><code class="docutils literal notranslate"><span class="pre">RowValue.is_read_only</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue.name"><code class="docutils literal notranslate"><span class="pre">RowValue.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue.type"><code class="docutils literal notranslate"><span class="pre">RowValue.type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValue.value"><code class="docutils literal notranslate"><span class="pre">RowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValueList"><code class="docutils literal notranslate"><span class="pre">RowValueList</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.RowValueList.add"><code class="docutils literal notranslate"><span class="pre">RowValueList.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.SingleSelectRowValue"><code class="docutils literal notranslate"><span class="pre">SingleSelectRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.SingleSelectRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">SingleSelectRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.SingleSelectRowValue.options"><code class="docutils literal notranslate"><span class="pre">SingleSelectRowValue.options</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.SingleSelectRowValue.value"><code class="docutils literal notranslate"><span class="pre">SingleSelectRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TableLinkRowValue"><code class="docutils literal notranslate"><span class="pre">TableLinkRowValue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TableLinkRowValue.format_for_api"><code class="docutils literal notranslate"><span class="pre">TableLinkRowValue.format_for_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TableLinkRowValue.get_options"><code class="docutils literal notranslate"><span class="pre">TableLinkRowValue.get_options()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TableLinkRowValue.get_related_table"><code class="docutils literal notranslate"><span class="pre">TableLinkRowValue.get_related_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TableLinkRowValue.value"><code class="docutils literal notranslate"><span class="pre">TableLinkRowValue.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.TextRowValue"><code class="docutils literal notranslate"><span class="pre">TextRowValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.row_value.UrlRowValue"><code class="docutils literal notranslate"><span class="pre">UrlRowValue</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models.table">baserowapi.models.table module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table"><code class="docutils literal notranslate"><span class="pre">Table</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.FIELD_TYPE_CLASS_MAP"><code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.RowIterator"><code class="docutils literal notranslate"><span class="pre">Table.RowIterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.add_row"><code class="docutils literal notranslate"><span class="pre">Table.add_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.delete_rows"><code class="docutils literal notranslate"><span class="pre">Table.delete_rows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.field_names"><code class="docutils literal notranslate"><span class="pre">Table.field_names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.fields"><code class="docutils literal notranslate"><span class="pre">Table.fields</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.get_row"><code class="docutils literal notranslate"><span class="pre">Table.get_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.get_rows"><code class="docutils literal notranslate"><span class="pre">Table.get_rows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.primary_field"><code class="docutils literal notranslate"><span class="pre">Table.primary_field</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table.update_rows"><code class="docutils literal notranslate"><span class="pre">Table.update_rows()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.models.html#module-baserowapi.models">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-baserowapi.baserow">
+<span id="baserowapi-baserow-module"></span><h2>baserowapi.baserow module<a class="headerlink" href="#module-baserowapi.baserow" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">baserowapi.baserow.</span></span><span class="sig-name descname"><span class="pre">Baserow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'https://api.baserow.io'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#baserowapi.baserow.Baserow" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A client class for interacting with the Baserow API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – The base URL for the Baserow API.</p></li>
+<li><p><strong>token</strong> – The authentication token.</p></li>
+<li><p><strong>headers</strong> – Headers for the API request.</p></li>
+<li><p><strong>session</strong> – A session object for making API requests.</p></li>
+<li><p><strong>ERROR_MESSAGES</strong> – A dictionary mapping HTTP error codes to error messages.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.ERROR_MESSAGES">
+<span class="sig-name descname"><span class="pre">ERROR_MESSAGES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{400:</span> <span class="pre">'Bad</span> <span class="pre">request</span> <span class="pre">to</span> <span class="pre">{url}.</span> <span class="pre">The</span> <span class="pre">request</span> <span class="pre">contains</span> <span class="pre">invalid</span> <span class="pre">values</span> <span class="pre">or</span> <span class="pre">the</span> <span class="pre">JSON</span> <span class="pre">could</span> <span class="pre">not</span> <span class="pre">be</span> <span class="pre">parsed.',</span> <span class="pre">401:</span> <span class="pre">'Unauthorized</span> <span class="pre">request</span> <span class="pre">to</span> <span class="pre">{url}.</span> <span class="pre">Accessing</span> <span class="pre">an</span> <span class="pre">endpoint</span> <span class="pre">without</span> <span class="pre">a</span> <span class="pre">valid</span> <span class="pre">database</span> <span class="pre">token.',</span> <span class="pre">404:</span> <span class="pre">'Resource</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">at</span> <span class="pre">{url}.</span> <span class="pre">Row</span> <span class="pre">or</span> <span class="pre">table</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">found.',</span> <span class="pre">413:</span> <span class="pre">'Request</span> <span class="pre">entity</span> <span class="pre">too</span> <span class="pre">large</span> <span class="pre">at</span> <span class="pre">{url}.</span> <span class="pre">The</span> <span class="pre">request</span> <span class="pre">exceeded</span> <span class="pre">the</span> <span class="pre">maximum</span> <span class="pre">allowed</span> <span class="pre">payload</span> <span class="pre">size.',</span> <span class="pre">415:</span> <span class="pre">'Unsupported</span> <span class="pre">media</span> <span class="pre">type</span> <span class="pre">in</span> <span class="pre">request</span> <span class="pre">at</span> <span class="pre">{url}.',</span> <span class="pre">500:</span> <span class="pre">'Internal</span> <span class="pre">server</span> <span class="pre">error</span> <span class="pre">at</span> <span class="pre">{url}.</span> <span class="pre">The</span> <span class="pre">server</span> <span class="pre">encountered</span> <span class="pre">an</span> <span class="pre">unexpected</span> <span class="pre">condition.',</span> <span class="pre">502:</span> <span class="pre">'Bad</span> <span class="pre">gateway</span> <span class="pre">at</span> <span class="pre">{url}.</span> <span class="pre">Baserow</span> <span class="pre">is</span> <span class="pre">restarting</span> <span class="pre">or</span> <span class="pre">an</span> <span class="pre">unexpected</span> <span class="pre">outage</span> <span class="pre">is</span> <span class="pre">in</span> <span class="pre">progress.',</span> <span class="pre">503:</span> <span class="pre">'Service</span> <span class="pre">unavailable</span> <span class="pre">at</span> <span class="pre">{url}.</span> <span class="pre">The</span> <span class="pre">server</span> <span class="pre">could</span> <span class="pre">not</span> <span class="pre">process</span> <span class="pre">your</span> <span class="pre">request</span> <span class="pre">in</span> <span class="pre">time.'}</span></em><a class="headerlink" href="#baserowapi.baserow.Baserow.ERROR_MESSAGES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.configure_logging">
+<span class="sig-name descname"><span class="pre">configure_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.configure_logging" title="Link to this definition"></a></dt>
+<dd><p>Configure logging for the Baserow client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> – The logging level.</p></li>
+<li><p><strong>log_file</strong> – The path to a log file. If provided, logs will also be written to this file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.get_combined_headers">
+<span class="sig-name descname"><span class="pre">get_combined_headers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.get_combined_headers" title="Link to this definition"></a></dt>
+<dd><p>Combines the default headers with any additional headers provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>additional_headers</strong> – Additional headers to combine with the default headers.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Combined headers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.get_table">
+<span class="sig-name descname"><span class="pre">get_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="baserowapi.models.html#baserowapi.models.table.Table" title="baserowapi.models.table.Table"><span class="pre">Table</span></a></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.get_table" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a table instance based on its ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table_id</strong> – The unique identifier of the table.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of the Table class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.make_api_request">
+<span class="sig-name descname"><span class="pre">make_api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'GET'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">IO</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.make_api_request" title="Link to this definition"></a></dt>
+<dd><p>Make an API request to the specified endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoint</strong> – The API endpoint to make the request to.</p></li>
+<li><p><strong>method</strong> – The HTTP method to use, by default “GET”.</p></li>
+<li><p><strong>data</strong> – The data payload to send with the request, by default None.</p></li>
+<li><p><strong>headers</strong> – Additional headers to send with the request, by default None.</p></li>
+<li><p><strong>timeout</strong> – The maximum number of seconds to wait for the server response, by default 10.</p></li>
+<li><p><strong>files</strong> – Files to be sent with the request, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parsed response data.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Exception</strong> – If the response status code is in the defined ERROR_MESSAGES.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.parse_response">
+<span class="sig-name descname"><span class="pre">parse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.parse_response" title="Link to this definition"></a></dt>
+<dd><p>Parses the response received from an HTTP request.</p>
+<p>If the response has a status code of 204, it will return the status code.
+If the response body is empty, it logs a warning (unless the method is DELETE and 
+status code is 204) and returns None.
+If the response body contains JSON, it attempts to parse and return the JSON.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>response</strong> – The response object received from an HTTP request.</p></li>
+<li><p><strong>method</strong> – The HTTP method that was used for the request.</p></li>
+<li><p><strong>url</strong> – The complete URL the request was made to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either the status code, a dictionary parsed from the JSON response, or the raw response text.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the response cannot be parsed as JSON.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="baserowapi.baserow.Baserow.perform_request">
+<span class="sig-name descname"><span class="pre">perform_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">IO</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Response</span></span></span><a class="headerlink" href="#baserowapi.baserow.Baserow.perform_request" title="Link to this definition"></a></dt>
+<dd><p>Performs an HTTP request using the given parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – The HTTP method to use (e.g., “GET”, “POST”).</p></li>
+<li><p><strong>url</strong> – The complete URL to make the request to.</p></li>
+<li><p><strong>headers</strong> – Headers to send with the request.</p></li>
+<li><p><strong>data</strong> – The data payload to send with the request.</p></li>
+<li><p><strong>timeout</strong> – The maximum number of seconds to wait for the server response.</p></li>
+<li><p><strong>files</strong> – The files to send with the request, if any. The dictionary keys are 
+the form field names, and the values are the file data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The server’s response to the request.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requests.exceptions.HTTPError</strong> – If the response status code is in the defined ERROR_MESSAGES.</p></li>
+<li><p><strong>requests.exceptions.Timeout</strong> – If the request times out.</p></li>
+<li><p><strong>Exception</strong> – For any other unexpected exceptions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-baserowapi">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-baserowapi" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="changelog.html" class="btn btn-neutral float-left" title="Changelog for baserowapi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="baserowapi.models.html" class="btn btn-neutral float-right" title="baserowapi.models package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

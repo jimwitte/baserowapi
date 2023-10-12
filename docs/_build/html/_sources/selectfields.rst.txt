@@ -1,0 +1,25 @@
+Working with single and multiple select fields
+===============================================
+
+.. code-block:: python
+
+    # given this example row
+    single_row = table.get_row(1)
+
+    # available options from field
+    my_options = table.fields['mySelectField'].options
+
+    # set option in-memory
+    single_row['mySelectField'] = 'option 1'
+
+    # set no option
+    single_row['mySelectField'] = None
+
+    # for multiple selection field, use a list to set value
+    single_row['myMultiSelectField'] = ['option 1', 'option 2']
+
+    # or use empty list for no options
+    single_row['myMultiSelectField'] = []
+
+    # update row to server
+    single_row.update()
