@@ -1,7 +1,0 @@
-Changelog for baserowapi
-========================
-
-[0.1] - 2023-10-12
--------------------
-Initial release
-

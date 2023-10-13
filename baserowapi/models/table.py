@@ -139,7 +139,6 @@ class Table:
         :raises ValueError: If no primary field is found for the table.
         """
         for field in self.fields:
-            print(f"name: {field.name}  type: {field.type}  primary: {field.is_primary}")
             if field.is_primary:
                 self._primary_field = field.name
                 return

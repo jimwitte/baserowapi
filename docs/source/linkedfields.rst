@@ -1,0 +1,23 @@
+Working with linked fields
+==========================
+
+.. code-block:: python
+
+    # given this example row
+    single_row = table.get_row(1)
+
+    # available properties from field
+    # 'link_row_table_id', 'link_row_related_field_id', 'link_row_table', 'link_row_related_field'
+    linked_table_id = table.fields['myTableLink'].link_row_table_id
+
+    # get valid options for values
+    options = single_row.values['myTableLink'].get_options()
+
+    # get a related table object, useful for searching/filtering to find rows to link to
+    related_table = single_row.values['myTableLink'].get_related_table()
+
+    # set in-memory value to first 2 valid options
+    single_row['myTableLink'] = options[:2]
+
+    # update to save to server
+    single_row.update()
