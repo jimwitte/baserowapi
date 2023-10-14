@@ -213,13 +213,11 @@ class Row:
         :return: True if both objects are Rows and have the same id and table_id, otherwise False.
         :rtype: bool
         """
-        try:
-            if isinstance(other, Row):
-                return self.id == other.id and self.table_id == other.table_id
-            return False
-        except AttributeError as e:
-            self.logger.error(f"Error comparing Row instances: {e}")
-            return False
+        if isinstance(other, Row):
+            return getattr(self, 'id', None) == getattr(other, 'id', None) and \
+                getattr(self, 'table_id', None) == getattr(other, 'table_id', None)
+        return False
+
 
     @property
     def content(self) -> Dict[str, Any]:
