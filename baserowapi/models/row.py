@@ -129,11 +129,11 @@ class Row:
         :rtype: Field
         :raises KeyError: If the specified field name is not found in the table fields.
         """
-        field_object = self.table.fields[field_name]
-        if not field_object:
+        try:
+            return self.table.fields[field_name]
+        except KeyError:
             self.logger.error(f"Field '{field_name}' not found in table fields.")
             raise KeyError(f"Field '{field_name}' not found in table fields.")
-        return field_object
 
 
     def _get_row_value_class(self, field_type: str) -> Type[RowValue]:
