@@ -9,8 +9,6 @@ class Baserow:
 
     :ivar url: The base URL for the Baserow API.
     :ivar token: The authentication token.
-    :ivar headers: Headers for the API request.
-    :ivar session: A session object for making API requests.
     :ivar ERROR_MESSAGES: A dictionary mapping HTTP error codes to error messages.
     """
 
@@ -37,6 +35,8 @@ class Baserow:
         :param token: The authentication token. Defaults to None.
         :param logging_level: The logging level. Defaults to logging.WARNING.
         :param log_file: The path to a log file. Defaults to None.
+        :ivar headers: Headers for the API request.
+        :ivar session: A session object for making API requests.
         """
         self.url = url
         self.token = token
@@ -103,7 +103,6 @@ class Baserow:
         :param timeout: The maximum number of seconds to wait for the server response, by default 10.
         :param files: Files to be sent with the request, by default None.
         :return: The parsed response data.
-        :raises Exception: If the response status code is in the defined ERROR_MESSAGES.
         """
         logger = logging.getLogger(__name__)
 
@@ -152,6 +151,7 @@ class Baserow:
         :return: The server's response to the request.
         :raises requests.exceptions.HTTPError: If the response status code is in the defined ERROR_MESSAGES.
         :raises requests.exceptions.Timeout: If the request times out.
+        :raises requests.exceptions.RequestException: For other request-related exceptions like connectivity issues.
         :raises Exception: For any other unexpected exceptions.
         """
         logger = logging.getLogger(__name__)
@@ -189,9 +189,10 @@ class Baserow:
         Parses the response received from an HTTP request. 
 
         If the response has a status code of 204, it will return the status code.
-        If the response body is empty, it logs a warning (unless the method is DELETE and 
-        status code is 204) and returns None.
+        If the response body is empty and the method is not "DELETE" or the status code is not 204, 
+        a warning is logged.
         If the response body contains JSON, it attempts to parse and return the JSON.
+        Otherwise, the raw response text is returned.
 
         :param response: The response object received from an HTTP request.
         :param method: The HTTP method that was used for the request.
