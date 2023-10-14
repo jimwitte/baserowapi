@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 from baserowapi.models.row_value import (
     RowValueList, RowValue, TextRowValue, LongTextRowValue, UrlRowValue,
-    EmailRowValue, PhoneNumberRowValue, PhoneNumberRowValue, BooleanRowValue, 
+    EmailRowValue, PhoneNumberRowValue, BooleanRowValue, 
     RatingRowValue, NumberRowValue, BaseDateRowValue, DateRowValue, LastModifiedRowValue,
     CreatedOnRowValue, SingleSelectRowValue, MultipleSelectRowValue,
     FormulaRowValue, TableLinkRowValue, CountRowValue,
