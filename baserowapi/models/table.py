@@ -17,6 +17,9 @@ if TYPE_CHECKING:
     from baserowapi import Baserow
 
 class Table:
+    """
+    Represents a table in Baserow with functionalities to manipulate and query rows, fields, etc.
+    """
 
     FIELD_TYPE_CLASS_MAP: Dict[str, type] = {
         TextField.TYPE: TextField,
@@ -151,11 +154,9 @@ class Table:
         """
         Retrieve the names of all fields in the table, sorted by field.order.
 
-        Returns:
-            List[str]: A list of field names.
-
-        Raises:
-            Exception: If there's an error while fetching the field names.
+        :return: A list of field names.
+        :rtype: List[str]
+        :raises Exception: If there's an error while fetching the field names.
         """
         try:
             # Sort fields based on 'order' property
@@ -197,6 +198,7 @@ class Table:
         :return: The constructed request URL.
         :rtype: str
         :raises ValueError: If any of the parameters are invalid.
+        
         """
 
         # Base URL construction with user_field_names=true
@@ -298,6 +300,9 @@ class Table:
 
 
     class RowIterator:
+        """
+        An iterator class to iterate over rows fetched from Baserow, handling pagination and next page fetches.
+        """
         def __init__(self, table: 'Table', initial_url: str, fetch_data_fn=None) -> None:
             self.table = table
             self.initial_url = initial_url
@@ -384,6 +389,7 @@ class Table:
         :rtype: Union[Row, RowIterator]
 
         :raises Exception: If any error occurs during the process.
+        :raises ValueError: If parameters are not valid.
         """
 
         # Construct the request URL with all parameters
@@ -453,6 +459,7 @@ class Table:
                 a list of Row instances for multiple rows.
         :rtype: Row or list[Row]
 
+        :raises ValueError: If parameters are not valid.
         :raises Exception: If there's any error during the API request.
         """
 
@@ -499,10 +506,8 @@ class Table:
         :return: A list of Row objects representing the updated rows.
         :rtype: list[Row]
 
-        :raises ValueError: If rows_data is empty, trying to update a read-only field, 
-                            or invalid 'order' value.
-        :raises KeyError: If a dictionary contains a key that doesn't correspond to any 
-                        field in the table or is missing the 'id' key.
+        :raises ValueError: If parameters are not valid.
+        :raises KeyError: If a dictionary contains a key that doesn't correspond to any field in the table or is missing the 'id' key.
         :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object.
         :raises Exception: If the API request results in any error responses.
         """
@@ -584,7 +589,7 @@ class Table:
         :return: True if rows are successfully deleted, otherwise an exception is raised.
         :rtype: bool
 
-        :raises ValueError: If rows_data is empty or doesn't provide valid row IDs.
+        :raises ValueError: If parameters are not valid.
         :raises TypeError: If an item in rows_data is neither an integer nor a Row object.
         :raises Exception: If the API request results in any error responses.
         """
