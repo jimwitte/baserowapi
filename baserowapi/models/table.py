@@ -149,7 +149,7 @@ class Table:
     @property
     def field_names(self) -> List[str]:
         """
-        Retrieve the names of all fields in the table.
+        Retrieve the names of all fields in the table, sorted by field.order.
 
         Returns:
             List[str]: A list of field names.
@@ -158,10 +158,15 @@ class Table:
             Exception: If there's an error while fetching the field names.
         """
         try:
-            return [field.name for field in self.fields]
+            # Sort fields based on 'order' property
+            # If 'order' is None, sort those fields last
+            sorted_fields = sorted(self.fields, key=lambda field: (field.order is None, field.order))
+            
+            return [field.name for field in sorted_fields]
         except Exception as e:
             self.logger.error(f"Failed to get field names for table {self.id}. Error: {e}")
             raise
+
 
 
     def _build_request_url(self, include: Optional[List[str]] = None, exclude: Optional[List[str]] = None, 
