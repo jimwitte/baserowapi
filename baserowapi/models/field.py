@@ -919,10 +919,12 @@ class FileField(Field):
 
 class SingleSelectField(Field):
     """
-    Represents a single-select field allowing the user to select one option from a predefined set of options.
+    Utility method to retrieve an option by its id or value.
 
-    :ivar TYPE: The type of the field, which is 'single_select'.
-    :vartype TYPE: str
+    :param value: The id or value of the option to retrieve.
+    :type value: Union[int, str]
+    :return: The option if found, otherwise None.
+    :rtype: Optional[Dict[str, Any]]
     """
     
     TYPE = 'single_select'
@@ -982,7 +984,7 @@ class SingleSelectField(Field):
         :return: The option if found, otherwise None.
         :rtype: Optional[Dict[str, Any]]
         """
-        for option in self.field_data['select_options']:
+        for option in self.options_details:
             if option['id'] == value or option['value'] == value:
                 return option
         return None
@@ -1045,6 +1047,7 @@ class MultipleSelectField(Field):
         if 'select_options' not in field_data or not isinstance(field_data['select_options'], list):
             self.logger.error("Invalid or missing select_options provided for MultipleSelectField initialization.")
             raise ValueError("select_options should be a non-empty list in field_data.")
+        
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1085,11 +1088,10 @@ class MultipleSelectField(Field):
         :return: The option if found, otherwise None.
         :rtype: Optional[Dict[str, Any]]
         """
-        for option in self.field_data['select_options']:
+        for option in self.options_details:
             if option['id'] == value or option['value'] == value:
                 return option
         return None
-
 
     def validate_value(self, values: List[Union[int, str]]) -> None:
         """
@@ -1183,6 +1185,7 @@ class FormulaField(Field):
         :return: The formula of the field.
         :rtype: Optional[str]
         """
+
         return self._formula
 
     @property
@@ -1193,6 +1196,7 @@ class FormulaField(Field):
         :return: The formula type of the field.
         :rtype: Optional[str]
         """
+
         return self._formula_type
 
     @property
@@ -1203,6 +1207,7 @@ class FormulaField(Field):
         :return: The error associated with the formula.
         :rtype: Optional[str]
         """
+
         return self._error
 
     @property
@@ -1213,6 +1218,7 @@ class FormulaField(Field):
         :return: The array formula type of the field.
         :rtype: Optional[str]
         """
+
         return self._array_formula_type
 
     @property
@@ -1223,6 +1229,7 @@ class FormulaField(Field):
         :return: Always returns True for a FormulaField.
         :rtype: bool
         """
+
         return True
 
 
@@ -1260,19 +1267,23 @@ class TableLinkField(Field):
         :return: The list of compatible filters.
         :rtype: List[str]
         """
+
         return self._COMPATIBLE_FILTERS
 
     def format_for_api(self, value: List[Union[int, str]]) -> List[Union[int, str]]:
         """
-        Format the value for API submission.
-        
-        :param value: A list of either integers (identifiers of rows in the linked table)
-                      or strings (values of the primary field in the linked table).
+        Format the value for API submission. This method accepts a list of either integers 
+        (identifying rows in the linked table) or strings (values of the primary field in the 
+        linked table).
+
+        :param value: A list containing either integers (row identifiers in the linked table)
+                    or strings (values of the primary field in the linked table).
         :type value: List[Union[int, str]]
-        :return: A list formatted for API submission.
+        :return: A list containing row identifiers or primary field values formatted for API submission.
         :rtype: List[Union[int, str]]
-        :raises ValueError: If the provided value isn't a list or if its entries are not integers or strings.
+        :raises ValueError: If the provided value is not a list or if its entries are not integers or strings.
         """
+
         # Ensure the value is a list
         if not isinstance(value, list):
             self.logger.error("Value provided for TableLinkField should be a list.")
@@ -1315,6 +1326,7 @@ class TableLinkField(Field):
         :return: Details of the linked table.
         :rtype: Optional[Dict[str, Any]]
         """
+
         return self.field_data.get('link_row_table', None)
 
     @property
@@ -1325,6 +1337,7 @@ class TableLinkField(Field):
         :return: Details of the related field in the linked table.
         :rtype: Optional[Dict[str, Any]]
         """
+
         return self.field_data.get('link_row_related_field', None)
 
 
@@ -1384,13 +1397,14 @@ class CountField(Field):
             raise ValueError("CountField value cannot be negative.")
         
     @property
-    def through_field_id(self) -> Optional[int]:
+    def through_field_name(self) -> Optional[str]:
         """
-        Retrieve the through_field_id of the field from field_data.
+        Retrieve the through_field_name of the field from field_data.
 
-        :return: The id of the linking field.
-        :rtype: Optional[int]
+        :return: The name of the linking field.
+        :rtype: Optional[str]
         """
+
         return self.field_data.get('through_field_id', None)
 
 
@@ -1431,6 +1445,7 @@ class LookupField(Field):
         :return: The list of compatible filters.
         :rtype: List[str]
         """
+        
         return self._COMPATIBLE_FILTERS
     
     @property
@@ -1441,6 +1456,7 @@ class LookupField(Field):
         :return: The id of the linking field.
         :rtype: Optional[int]
         """
+
         return self.field_data.get('through_field_id', None)
     
     @property
@@ -1451,6 +1467,7 @@ class LookupField(Field):
         :return: The name of the linking field.
         :rtype: Optional[int]
         """
+
         return self.field_data.get('through_field_name', None)
     
     @property
@@ -1461,16 +1478,18 @@ class LookupField(Field):
         :return: The id of the target field.
         :rtype: Optional[int]
         """
+
         return self.field_data.get('target_field_id', None)
     
     @property
-    def target_field_name(self) -> Optional[int]:
+    def target_field_name(self) -> Optional[str]:
         """
         Retrieve the target_field_name of the field from field_data.
 
         :return: The name of the target field.
-        :rtype: Optional[int]
+        :rtype: Optional[str]
         """
+
         return self.field_data.get('target_field_name', None)
 
 
