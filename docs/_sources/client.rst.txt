@@ -1,5 +1,5 @@
-Baserow API Client Documentation
-================================
+Baserow Client Class
+====================
 
 Introduction
 ------------
@@ -37,13 +37,6 @@ Examples
 
     # Enable logging to a file
     baserow = Baserow(url='https://baserow.example.com', token='mytoken', logging_level='DEBUG', log_file='log.txt')
-
-Suggestions
------------
-   
-- **Token Management**: Clarify how the token is managed. For example, does the class handle token expiration and refresh? If there are any methods to renew or update the token, include those in the documentation.
-
-- **Dependencies**: If the library depends on any external packages or has specific Python version requirements, include that information.
 
 
 Error Handling

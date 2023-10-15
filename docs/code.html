@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction to Baserow API &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Code Structure &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Quick Start with Baserow API" href="quickstart.html" />
-    <link rel="prev" title="Baserowapi: API wrapper for Baserow" href="index.html" /> 
+    <link rel="next" title="Full Class and Function docs" href="baserowapi.html" />
+    <link rel="prev" title="Working with Filters in Baserow API" href="filters.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,13 +44,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction to Baserow API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#package-dependencies">Package Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#link-to-source-and-licensing">Link to Source and Licensing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#feedback-and-contributions">Feedback and Contributions</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="client.html">Baserow Client Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
@@ -60,7 +54,13 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#baserow-class">Baserow Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-class">Table Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#row-class">Row Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filter-objects">Filter Objects</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -78,9 +78,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Introduction to Baserow API</li>
+      <li class="breadcrumb-item active">Code Structure</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/intro.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/code.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -88,36 +88,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="introduction-to-baserow-api">
-<h1>Introduction to Baserow API<a class="headerlink" href="#introduction-to-baserow-api" title="Link to this heading"></a></h1>
-<p>This documentation serves as a guide to <strong>baserowapi</strong>, a high-level API wrapper designed for integration with <a class="reference external" href="https://baserow.io">Baserow</a>, an open-source, no-code database tool.</p>
-<section id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
-<p>For those interested in setting up and initiating the first API call with <cite>baserowapi</cite>, the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start with Baserow API</span></a> guide is provided.</p>
+  <section id="code-structure">
+<h1>Code Structure<a class="headerlink" href="#code-structure" title="Link to this heading"></a></h1>
+<p>The Baserow API client library offers a structured approach to work with the Baserow database. The following provides an overview of the primary classes and their relationships.</p>
+<section id="baserow-class">
+<h2>Baserow Class<a class="headerlink" href="#baserow-class" title="Link to this heading"></a></h2>
+<p>The main entrypoint for interacting with the library. This client class is in charge of making API calls. It is passed to other classes requiring API access. Notably, the Baserow class provides functionality to instantiate table objects.</p>
 </section>
-<section id="package-dependencies">
-<h2>Package Dependencies<a class="headerlink" href="#package-dependencies" title="Link to this heading"></a></h2>
-<p>The <cite>baserowapi</cite> relies on the following Python packages:</p>
+<section id="table-class">
+<h2>Table Class<a class="headerlink" href="#table-class" title="Link to this heading"></a></h2>
+<p>This class represents the tables in Baserow. Each table comprises various fields characterized by the following:</p>
 <ul class="simple">
-<li><p><strong>Requests</strong>: Utilized for making HTTP calls.</p></li>
-<li><p><strong>pytz</strong>: Required for timezone-related operations.</p></li>
+<li><p><strong>Fields Property</strong>: A property that holds the value of a <cite>FieldList</cite> object, which encompasses various field objects corresponding to each field present in the table.</p></li>
+<li><p><strong>Field Objects</strong>: All field objects possess properties such as <cite>id</cite>, <cite>table_id</cite>, <cite>order</cite>, <cite>type</cite>, <cite>is_primary</cite>, and <cite>is_read_only</cite>. Specific field types may have additional properties. If any alterations are made to table fields, it is recommended to re-instantiate the table object.</p></li>
 </ul>
 </section>
-<section id="link-to-source-and-licensing">
-<h2>Link to Source and Licensing<a class="headerlink" href="#link-to-source-and-licensing" title="Link to this heading"></a></h2>
+<section id="row-class">
+<h2>Row Class<a class="headerlink" href="#row-class" title="Link to this heading"></a></h2>
+<p>This class stands for the rows in a Baserow table, encompassing:</p>
 <ul class="simple">
-<li><p><strong>GitHub Repository</strong>: The source code for <cite>baserowapi</cite> can be found on <a class="reference external" href="https://github.com/jimwitte/baserowapi">GitHub</a>.</p></li>
-<li><p><strong>License</strong>: <cite>baserowapi</cite> is licensed under the <cite>GNU GENERAL PUBLIC LICENSE, Version 3</cite>.</p></li>
+<li><p><strong>Values Property</strong>: A property containing the value of a <cite>RowValueList</cite> object. The <cite>RowValueList</cite> embeds multiple <cite>RowValue</cite> objects, each correlating to a specific field object.</p></li>
+<li><p><strong>RowValue Objects</strong>: Representing the value for a particular field in a specified row, RowValues can be accessed or modified using setters and getters. Additional methods provided in the Row class include deleting, updating, and moving rows. For batch operations on rows, consider using methods from the table object.</p></li>
 </ul>
+<p>Note: Some <cite>RowValue</cite> objects offer utility functions. For instance, there are methods for converting date values into datetime objects or for uploading and downloading files for a file field value.</p>
 </section>
-<section id="feedback-and-contributions">
-<h2>Feedback and Contributions<a class="headerlink" href="#feedback-and-contributions" title="Link to this heading"></a></h2>
-<p>Feedback on the wrapper and its documentation is appreciated. For proposed changes:</p>
-<ol class="arabic simple">
-<li><p>Fork the <a class="reference external" href="https://github.com/jimwitte/baserowapi">repository on GitHub</a>.</p></li>
-<li><p>Implement the changes.</p></li>
-<li><p>Submit a pull request with a description of the modifications.</p></li>
-</ol>
+<section id="filter-objects">
+<h2>Filter Objects<a class="headerlink" href="#filter-objects" title="Link to this heading"></a></h2>
+<p>Designed for use with the <cite>table.get_rows()</cite> function. Filters can be initiated independently from tables. On application, each filter is validated against the table field to ensure the existence of a compatible field with the correct name.</p>
 </section>
 </section>
 
@@ -125,8 +122,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Baserowapi: API wrapper for Baserow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quick Start with Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="filters.html" class="btn btn-neutral float-left" title="Working with Filters in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="baserowapi.html" class="btn btn-neutral float-right" title="Full Class and Function docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baserow API Client Documentation &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Baserow Client Class &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -46,11 +46,10 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Baserow API Client Documentation</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Baserow Client Class</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#initialization-options">Initialization Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#suggestions">Suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#token-management">Token Management</a></li>
 </ul>
@@ -62,6 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -79,7 +79,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Baserow API Client Documentation</li>
+      <li class="breadcrumb-item active">Baserow Client Class</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/client.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,8 +89,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="baserow-api-client-documentation">
-<h1>Baserow API Client Documentation<a class="headerlink" href="#baserow-api-client-documentation" title="Link to this heading"></a></h1>
+  <section id="baserow-client-class">
+<h1>Baserow Client Class<a class="headerlink" href="#baserow-client-class" title="Link to this heading"></a></h1>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
 <p>The <cite>Baserow</cite> class provides the main entry point to interact with the Baserow API. This class serves as the API client and facilitates all the API calls. For any other classes that require API access, this class is passed as a reference to ensure smooth and coherent operations.</p>
@@ -127,13 +127,6 @@
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="suggestions">
-<h2>Suggestions<a class="headerlink" href="#suggestions" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><strong>Token Management</strong>: Clarify how the token is managed. For example, does the class handle token expiration and refresh? If there are any methods to renew or update the token, include those in the documentation.</p></li>
-<li><p><strong>Dependencies</strong>: If the library depends on any external packages or has specific Python version requirements, include that information.</p></li>
-</ul>
 </section>
 <section id="error-handling">
 <h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>

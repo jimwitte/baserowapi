@@ -15,4 +15,5 @@ Baserowapi: API wrapper for Baserow
    linkedfields
    selectfields
    filters
+   code
    baserowapi
