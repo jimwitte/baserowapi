@@ -2,6 +2,7 @@
 app_testing_*
 .vscode
 source
+docsrc
 
 
 
