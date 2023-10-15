@@ -20,7 +20,7 @@ To install `baserowapi`, simply use pip:
 
 * Efficient API Calls: The Baserow class offers a streamlined way to make API requests.
 * Robust Data Management: Manipulate and manage Baserow tables with ease using the Table and Row classes.
-* Advanced Filtering: Employ the Filter objects to efficiently retrieve data from tables.
+* Advanced Filtering: Employ Filter objects to efficiently retrieve data from tables.
 
 ## License
 
