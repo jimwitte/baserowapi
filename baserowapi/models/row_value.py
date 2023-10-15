@@ -1004,31 +1004,18 @@ class TableLinkRowValue(RowValue):
         field values from each row.
 
         :return: A list of primary field values from the related table.
-        :rtype: List[str]
         :raises ValueError: If there's an error fetching the primary values from the related table.
         """
         try:
-            # Fetch the related table using the get_related_table method
             related_table = self.get_related_table()
-            
-            # Get the primary field name of the related table
             primary_field_name = related_table.primary_field
-            
-            # Fetch the rows from the related table with only the primary field values
             returned_rows = related_table.get_rows(include=[primary_field_name])
-            
-            # Extract the primary field values from each row and return them as a list
             options = [row[primary_field_name] for row in returned_rows]
 
-            # Logging the successful retrieval of options
             self.logger.debug(f"Retrieved {len(options)} options for TableLinkRowValue associated with field {self.field.name} from related table {related_table.id}")
-
             return options
         except Exception as e:
-            # Logging the error
             self.logger.error(f"Failed to retrieve options for TableLinkRowValue associated with field {self.field.name}. Error: {e}")
-
-            # Raising an error for external handling or informing the caller
             raise ValueError(f"Failed to retrieve options from the related table. Error: {e}")
 
 
@@ -1159,7 +1146,7 @@ class MultipleCollaboratorsRowValue(RowValue):
 
     def __init__(self, field: 'MultipleCollaboratorsField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
         super().__init__(field, raw_value, client)
-        
+
     @property
     def value(self) -> Any:
         """
