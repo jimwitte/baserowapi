@@ -1,43 +1,68 @@
-Working with date fields
-=========================
+Working with Date Fields in Baserow API
+=======================================
 
+The Baserow API provides a convenient way to work with date fields. When working with dates, you might need to retrieve them, format them according to certain settings, or even modify them. This guide provides a comprehensive overview of how to achieve these tasks.
+
+Setting Up
+----------
+
+Start by initializing the Baserow client and getting a table instance:
 
 .. code-block:: python
 
-    from baserowapi import Baserow, Filter
+    from baserowapi import Baserow
 
-    # baserow client
-    baserow = Baserow(url='https://api.baserow.io',token='mytoken')
+    # Initialize the Baserow client
+    baserow = Baserow(url='https://api.baserow.io', token='mytoken')
     table = baserow.get_table(1234567)
 
-    # settings for the field are available from the field object
-    print(table.field['myDate'].date_format)
+Accessing Date Field Settings
+-----------------------------
 
-    # Baserow stores date as UTC string
+Every date field in Baserow has associated settings, which can be accessed from the field object:
+
+.. code-block:: python
+
+    print(table.fields['myDate'].date_format)
+
+Fetching and Formatting Dates
+-----------------------------
+
+Baserow stores date values as UTC strings. You can retrieve these values directly or as Python datetime objects:
+
+.. code-block:: python
+
+    # Retrieve the date as a UTC string
     myRow = table.get_row(1)
-    print myRow['myDate']
+    print(myRow['myDate'])
 
-    # get date as python datetime object, method from RowValue object
+    # Convert the date into a Python datetime object
     print(myRow.values['myDate'].as_datetime())
 
-    # get date formatted string according to field settings
+    # Fetch the date as a formatted string based on the field's settings
     print(myRow.values['myDate'].formatted_date)
 
-    # update value as UTC string
+Updating Date Values
+--------------------
+
+Dates can be updated using both UTC strings and Python datetime objects:
+
+.. code-block:: python
+
+    # Update the date value using a UTC string
     myRow['myDate'] = '2023-10-02T18:38:45Z'
 
-    # update value as python datetime object
+    # Manipulate the date using Python's datetime library
     import datetime
     from datetime import timedelta
 
-    field_date = single_row.values['myDate'].as_datetime()
+    field_date = myRow.values['myDate'].as_datetime()
 
-    # Add one day
+    # Add one day to the date
     new_date = field_date + timedelta(days=1)
-
-    # Print the new date
     print(new_date)
 
-    # update with datetime object
-    single_row[fieldname] = new_date
-    single_row.update()
+    # Update the row with the new date value
+    myRow['myDate'] = new_date
+    myRow.update()
+

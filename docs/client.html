@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baserow client &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Baserow API Client Documentation &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Table class" href="table.html" />
-    <link rel="prev" title="Quick Start" href="quickstart.html" /> 
+    <link rel="next" title="Table Class" href="table.html" />
+    <link rel="prev" title="Quick Start with Baserow API" href="quickstart.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Baserow API Package
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -36,16 +44,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Baserow API Client Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initialization-options">Initialization Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suggestions">Suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#token-management">Token Management</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -62,8 +78,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Baserow client</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Baserow API Client Documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/client.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,32 +89,111 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="baserow-client">
-<h1>Baserow client<a class="headerlink" href="#baserow-client" title="Permalink to this headline"></a></h1>
-<p>These examples show various options when creating a client object.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span><span class="p">,</span> <span class="n">Filter</span>
+  <section id="baserow-api-client-documentation">
+<h1>Baserow API Client Documentation<a class="headerlink" href="#baserow-api-client-documentation" title="Link to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>The <cite>Baserow</cite> class provides the main entry point to interact with the Baserow API. This class serves as the API client and facilitates all the API calls. For any other classes that require API access, this class is passed as a reference to ensure smooth and coherent operations.</p>
+</section>
+<section id="initialization-options">
+<h2>Initialization Options<a class="headerlink" href="#initialization-options" title="Link to this heading"></a></h2>
+<p>When creating an instance of the <cite>Baserow</cite> class, you can specify several parameters to customize your connection and interactions with the Baserow server.</p>
+<p>Parameters:</p>
+<ul class="simple">
+<li><p><strong>token</strong> (str):
+- Required. The authentication token for Baserow.</p></li>
+<li><p><strong>url</strong> (str, optional):
+- The base URL for the Baserow server. Default is <cite>‘https://api.baserow.io’</cite>.</p></li>
+<li><p><strong>logging_level</strong> (str, optional):
+- The desired logging level. Available options include: <cite>‘INFO’</cite>, <cite>‘ERROR’</cite>, and <cite>‘DEBUG’</cite>. If unspecified, logging will be disabled.</p></li>
+<li><p><strong>log_file</strong> (str, optional):
+- Specify a file path to log the interactions. Useful if you want to persist logs for later analysis. This parameter will be ignored if <cite>logging_level</cite> is not specified.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span>
 
-<span class="c1"># baserow client, default is &#39;https://api.baserow.io&#39;</span>
+<span class="c1"># Default baserow client</span>
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
 
-<span class="c1"># specify server url</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
+<span class="c1"># Specify a custom server URL</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
 
-<span class="c1"># with logging, INFO, ERROR, DEBUG</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+<span class="c1"># Enable logging at DEBUG level</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
 
-<span class="c1"># logs to file</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+<span class="c1"># Enable logging to a file</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="suggestions">
+<h2>Suggestions<a class="headerlink" href="#suggestions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Token Management</strong>: Clarify how the token is managed. For example, does the class handle token expiration and refresh? If there are any methods to renew or update the token, include those in the documentation.</p></li>
+<li><p><strong>Dependencies</strong>: If the library depends on any external packages or has specific Python version requirements, include that information.</p></li>
+</ul>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<p>The <cite>Baserow</cite> client class is designed to handle errors in a systematic and consistent manner when interacting with the Baserow API.</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt><strong>Predefined Error Messages</strong>:</dt><dd><p>The client has a predefined set of error messages for specific HTTP status codes:</p>
+<ul class="simple">
+<li><p><strong>400 Bad Request</strong>: The request contains invalid values, or the JSON couldn’t be parsed.</p></li>
+<li><p><strong>401 Unauthorized</strong>: Accessing an endpoint without a valid database token.</p></li>
+<li><p><strong>404 Not Found</strong>: The requested row or table is not found.</p></li>
+<li><p><strong>413 Request Entity Too Large</strong>: The request exceeded the allowed payload size.</p></li>
+<li><p><strong>415 Unsupported Media Type</strong>: The media type in the request is not supported.</p></li>
+<li><p><strong>500 Internal Server Error</strong>: An unexpected condition was encountered by the server.</p></li>
+<li><p><strong>502 Bad Gateway</strong>: Baserow is restarting, or an unexpected outage is ongoing.</p></li>
+<li><p><strong>503 Service Unavailable</strong>: The server couldn’t process the request in time.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Logging</strong>:</dt><dd><p>Error messages are logged to the configured logger. Depending on the severity and type of the error, the client will use different log levels (<cite>ERROR</cite>, <cite>WARNING</cite>, <cite>DEBUG</cite>). The logs can be directed to the console or to a file, based on how you configure the Baserow client.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Raising Exceptions</strong>:</dt><dd><p>In case of an error response from the Baserow server:</p>
+<ul class="simple">
+<li><p>If the status code matches one of the predefined error codes, the corresponding error message is logged and raised as a <cite>requests.exceptions.HTTPError</cite>.</p></li>
+<li><p>A timeout during the request will raise a <cite>requests.exceptions.Timeout</cite>.</p></li>
+<li><p>Other request-related issues, such as connectivity problems, will raise a <cite>requests.exceptions.RequestException</cite>.</p></li>
+<li><p>Any unexpected issues will raise a generic <cite>Exception</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Response Parsing</strong>:</dt><dd><p>Once a response is received from the server, the client attempts to parse it:</p>
+<ul class="simple">
+<li><p>If the response has a status code of 204 (No Content), it simply returns the status code.</p></li>
+<li><p>If the response contains JSON data, it’s parsed and returned as a dictionary.</p></li>
+<li><p>If JSON parsing fails, the raw response text is returned.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<section id="token-management">
+<h2>Token Management<a class="headerlink" href="#token-management" title="Link to this heading"></a></h2>
+<p>The Baserow client requires an authentication token (token) during initialization to ensure authorized access. This token is used in the request headers for authentication purposes. Users are advised to manage and store their tokens securely. Avoid hardcoding tokens directly into your codebase, and instead, consider using environment variables, configuration files, or secure vaults. Regularly rotate your tokens, and ensure that old tokens are invalidated to maintain the security of your API interactions.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="table.html" class="btn btn-neutral float-right" title="Table class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start with Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="table.html" class="btn btn-neutral float-right" title="Table Class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

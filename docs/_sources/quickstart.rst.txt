@@ -1,55 +1,59 @@
-Quick Start
-=============
+Quick Start with Baserow API
+============================
+
+Welcome to the Quick Start guide for the Baserow API! Follow the steps below to swiftly get up and running with basic operations.
 
 Installation
--------------
+------------
 
-.. code-block:: python
+To start with, install the Baserow API Python package:
+
+.. code-block:: bash
 
     pip install baserowapi
 
-Basic Operations
-----------------
+Begin with Basic Operations
+---------------------------
+
+After installation, you can perform basic operations such as fetching tables, reading rows, and manipulating data.
 
 .. code-block:: python
 
-    from baserowapi import Baserow, Filter
+    from baserowapi import Baserow
 
-    # baserow client
-    baserow = Baserow(url='https://api.baserow.io',token='mytoken')
+    # Initialize the Baserow client
+    baserow = Baserow(url='https://api.baserow.io', token='mytoken')
 
-    # create table instance
+    # Create a table instance using its ID
     table = baserow.get_table(1234567)
 
-    # get list of field names for table
+    # Print a list of field names in the table
     print(table.field_names)
 
-    # get row by id
+    # Fetch a row using its ID
     my_row = table.get_row(1)
-
-    # dictionary of field names and values for row
+    # Display a dictionary of field names and their values for this row
     print(my_row.content)
 
-    # access value for specific field
+    # Access a specific field's value in the row
     print(my_row['Name'])
 
-    # get all rows as RowIterator object
-    # iterator handles paging as items are accessed
+    # Retrieve all rows in the table. Note: The RowIterator object automatically handles pagination.
     all_my_rows = table.get_rows()
     for row in all_my_rows:
         print(row)
 
-    # change value for in-memory Row object
-    single_row['Notes'] = "Changed note in memory"
-    print(single_row['Notes'])
+    # Modify an in-memory value of the Row object
+    my_row['Notes'] = "Changed note in memory"
+    print(my_row['Notes'])
 
-    # save Row with current row values to server
-    updated_row = single_row.update()
+    # Synchronize changes made in memory to the server
+    updated_row = my_row.update()
     print(updated_row.content)
 
-    # update Row with dictionary
-    # saves row to server
-    updated_row = single_row.update({'Notes': 'Updated row via dictionary'})
+    # Update a Row's content using a dictionary and save to the server
+    updated_row = my_row.update({'Notes': 'Updated row via dictionary'})
 
-    # delete single row
-    deleted_status = added_row.delete()
+    # Delete a single row
+    deleted_status = updated_row.delete()
+

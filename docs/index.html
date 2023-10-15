@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baserowapi: API wrapper for Baserow &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Introduction" href="intro.html" /> 
+    <link rel="next" title="Introduction to Baserow API" href="intro.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -23,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> Baserow API Package
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Baserow API Package
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -35,16 +43,16 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow API Client Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -61,8 +69,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>Baserowapi: API wrapper for Baserow</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Baserowapi: API wrapper for Baserow</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,28 +81,70 @@
            <div itemprop="articleBody">
              
   <section id="baserowapi-api-wrapper-for-baserow">
-<h1>Baserowapi: API wrapper for Baserow<a class="headerlink" href="#baserowapi-api-wrapper-for-baserow" title="Permalink to this headline"></a></h1>
+<h1>Baserowapi: API wrapper for Baserow<a class="headerlink" href="#baserowapi-api-wrapper-for-baserow" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#package-dependencies">Package Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#link-to-source-and-licensing">Link to Source and Licensing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#feedback-and-contributions">Feedback and Contributions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#basic-operations">Basic Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#begin-with-basic-operations">Begin with Basic Operations</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow API Client Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="client.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="client.html#initialization-options">Initialization Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="client.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="client.html#suggestions">Suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="client.html#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="client.html#token-management">Token Management</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="table.html#properties">Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="table.html#methods-and-usage">Methods and Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="row.html#methods-and-usage">Methods and Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datefields.html#setting-up">Setting Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datefields.html#accessing-date-field-settings">Accessing Date Field Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datefields.html#fetching-and-formatting-dates">Fetching and Formatting Dates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datefields.html#updating-date-values">Updating Date Values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="filefields.html#setting-up">Setting Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filefields.html#downloading-files">Downloading Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filefields.html#uploading-files">Uploading Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filefields.html#inspecting-file-data">Inspecting File Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="linkedfields.html#basics-of-linked-fields">Basics of Linked Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linkedfields.html#working-with-linked-fields-examples">Working with Linked Fields: Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="selectfields.html#basics-of-selection-fields">Basics of Selection Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectfields.html#working-with-selection-fields-examples">Working with Selection Fields: Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="filters.html#filter-basics">Filter Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filters.html#field-type-and-filter-operators">Field Type and Filter Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filters.html#working-with-filters-examples">Working with Filters: Examples</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="baserowapi.html#baserow-client">Baserow Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="baserowapi.html#module-baserowapi.models.table">Table</a></li>
@@ -112,7 +162,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="intro.html" class="btn btn-neutral float-right" title="Introduction to Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

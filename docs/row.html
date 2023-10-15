@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Row class &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Row Class &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Working with date fields" href="datefields.html" />
-    <link rel="prev" title="Table class" href="table.html" /> 
+    <link rel="next" title="Working with Date Fields in Baserow API" href="datefields.html" />
+    <link rel="prev" title="Table Class" href="table.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Baserow API Package
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -36,16 +44,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow API Client Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Row Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#methods-and-usage">Methods and Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -62,8 +73,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Row class</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Row Class</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/row.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -74,56 +85,57 @@
            <div itemprop="articleBody">
              
   <section id="row-class">
-<h1>Row class<a class="headerlink" href="#row-class" title="Permalink to this headline"></a></h1>
-<p>These examples show how to work with Row objects.
-Rows</p>
-<p>Note that the .update() function always sends changes to the server.
-Using the direct setter (single_row[‘Notes’] = “Changed note in memory”) changes values in memory.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span><span class="p">,</span> <span class="n">Filter</span>
+<h1>Row Class<a class="headerlink" href="#row-class" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">Row</span></code> class represents individual rows within a Baserow table. This class provides methods for manipulating the data of a single row and for interacting with the server for CRUD operations. Below is a detailed guide on how to work with the <code class="docutils literal notranslate"><span class="pre">Row</span></code> objects.</p>
+<p><strong>Key Points</strong>:
+- The <code class="docutils literal notranslate"><span class="pre">update()</span></code> method communicates and synchronizes changes with the server.
+- Using direct setters (e.g., <code class="docutils literal notranslate"><span class="pre">single_row['Notes']</span> <span class="pre">=</span> <span class="pre">&quot;Changed</span> <span class="pre">note</span> <span class="pre">in</span> <span class="pre">memory&quot;</span></code>) will only alter values in the memory, and not immediately update them on the server.</p>
+<section id="methods-and-usage">
+<h2>Methods and Usage<a class="headerlink" href="#methods-and-usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span>
 
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
 
-<span class="c1"># create table instance</span>
+<span class="c1"># Initializing a table instance</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
 
-<span class="c1"># get a row</span>
+<span class="c1"># Retrieving a single row</span>
 <span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># change value for in-memory Row value</span>
-<span class="c1"># use update in order to save to server</span>
+<span class="c1"># Modifying an in-memory Row value</span>
 <span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;Notes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Changed note in memory&quot;</span>
 
-<span class="c1"># row content of all fields as a dict</span>
+<span class="c1"># Displaying row content of all fields as a dictionary</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">single_row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 
-<span class="c1"># access row value</span>
+<span class="c1"># Accessing a specific row value</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;Notes&#39;</span><span class="p">])</span>
 
-<span class="c1"># save Row with current row values to server</span>
+<span class="c1"># Synchronizing the current row values with the server</span>
 <span class="n">updated_row</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
-<span class="c1"># update Row with dictionary</span>
-<span class="c1"># changes in-memory and saves row to server</span>
+<span class="c1"># Updating a Row using a dictionary and saving changes to the server</span>
 <span class="n">updated_row</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;Notes&#39;</span><span class="p">:</span> <span class="s1">&#39;Updated row via dictionary&#39;</span><span class="p">})</span>
 
-<span class="c1"># move row before row 4</span>
+<span class="c1"># Reordering a row to be placed before another row (specified by ID)</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">move_row</span><span class="p">(</span><span class="n">before_id</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
-<span class="c1"># move row to the end</span>
+<span class="c1"># Moving a row to the end of the table</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">move_row</span><span class="p">()</span>
 
-<span class="c1"># delete row</span>
+<span class="c1"># Deleting the row</span>
 <span class="n">deleted_status</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="table.html" class="btn btn-neutral float-left" title="Table class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="datefields.html" class="btn btn-neutral float-right" title="Working with date fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="table.html" class="btn btn-neutral float-left" title="Table Class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datefields.html" class="btn btn-neutral float-right" title="Working with Date Fields in Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

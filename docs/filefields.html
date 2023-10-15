@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with file fields &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Working with File Fields in Baserow API &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Working with linked fields" href="linkedfields.html" />
-    <link rel="prev" title="Working with date fields" href="datefields.html" /> 
+    <link rel="next" title="Working with Linked Fields in Baserow API" href="linkedfields.html" />
+    <link rel="prev" title="Working with Date Fields in Baserow API" href="datefields.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Baserow API Package
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -36,16 +44,22 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow API Client Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with File Fields in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up">Setting Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-files">Downloading Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#uploading-files">Uploading Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inspecting-file-data">Inspecting File Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -62,8 +76,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Working with file fields</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Working with File Fields in Baserow API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/filefields.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,34 +87,54 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="working-with-file-fields">
-<h1>Working with file fields<a class="headerlink" href="#working-with-file-fields" title="Permalink to this headline"></a></h1>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># given this example row</span>
+  <section id="working-with-file-fields-in-baserow-api">
+<h1>Working with File Fields in Baserow API<a class="headerlink" href="#working-with-file-fields-in-baserow-api" title="Link to this heading"></a></h1>
+<p>The Baserow API provides tools to interact with file fields, making it easy to upload, download, and inspect file data within your rows. This guide will walk you through the core operations associated with file fields.</p>
+<section id="setting-up">
+<h2>Setting Up<a class="headerlink" href="#setting-up" title="Link to this heading"></a></h2>
+<p>Before working with file fields, you should have a table instance and a target row:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given this example row:</span>
 <span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-<span class="c1"># download files from row value</span>
+</pre></div>
+</div>
+</section>
+<section id="downloading-files">
+<h2>Downloading Files<a class="headerlink" href="#downloading-files" title="Link to this heading"></a></h2>
+<p>Files associated with a row can be downloaded to a specified local directory:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download files from a row value to &#39;/tmp&#39; directory</span>
 <span class="n">download_result</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;myFileField&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">download_files</span><span class="p">(</span><span class="s1">&#39;/tmp&#39;</span><span class="p">)</span>
-
-<span class="c1"># upload a local file to the server. Need to use .update() row method to save changed row to server</span>
+</pre></div>
+</div>
+</section>
+<section id="uploading-files">
+<h2>Uploading Files<a class="headerlink" href="#uploading-files" title="Link to this heading"></a></h2>
+<p>You can upload files to Baserow either from a local source or directly from a URL. After uploading, remember to use the <cite>.update()</cite> method to save the changed row to the server:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Upload a local file to the server</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;myFileField&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">upload_file_to_server</span><span class="p">(</span><span class="s1">&#39;fixie.jpg&#39;</span><span class="p">)</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
-<span class="c1"># upload a file from a URL. Need to use .update() row method to save changed row to server</span>
+<span class="c1"># Upload a file from a URL</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;myFileField&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">upload_file_to_server</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://www.jimwitte.net/bison.jpg&#39;</span><span class="p">)</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-
-<span class="c1"># the value of a file row value is a list of file objects</span>
+</pre></div>
+</div>
+</section>
+<section id="inspecting-file-data">
+<h2>Inspecting File Data<a class="headerlink" href="#inspecting-file-data" title="Link to this heading"></a></h2>
+<p>A file field value in a row contains a list of file objects, each providing details about the stored files:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print the file objects associated with &#39;myFileField&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;myFileField&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="datefields.html" class="btn btn-neutral float-left" title="Working with date fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="linkedfields.html" class="btn btn-neutral float-right" title="Working with linked fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="datefields.html" class="btn btn-neutral float-left" title="Working with Date Fields in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="linkedfields.html" class="btn btn-neutral float-right" title="Working with Linked Fields in Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

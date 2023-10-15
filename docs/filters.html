@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with filters &mdash; Baserow API Package 0.1 documentation</title>
+  <title>Working with Filters in Baserow API &mdash; Baserow API Package 0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Full Class and Function docs" href="baserowapi.html" />
-    <link rel="prev" title="Working with single select and multiple select fields" href="selectfields.html" /> 
+    <link rel="prev" title="Working with Single Select and Multiple Select Fields in Baserow API" href="selectfields.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Baserow API Package
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -36,16 +44,21 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="table.html">Table class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Row class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with date fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with file fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with linked fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with single select and multiple select fields</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow API Client Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Filters in Baserow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#filter-basics">Filter Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#field-type-and-filter-operators">Field Type and Filter Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-filters-examples">Working with Filters: Examples</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
@@ -62,8 +75,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Working with filters</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Working with Filters in Baserow API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/filters.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,47 +86,64 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="working-with-filters">
-<h1>Working with filters<a class="headerlink" href="#working-with-filters" title="Permalink to this headline"></a></h1>
-<p>When fetching rows using the .get_rows() function of the table class,
-you can pass Filter objects.</p>
-<p>A filter consists of a field, a value, and an operator. If no operator is specified, ‘equal’ is the default.</p>
-<p>Each field type is compatible with specific filter operators. You can query the table field ‘compatible_filters’ property to discover compatible operators.
-Compatible filters are also listed in the baserow api documentation.</p>
+  <section id="working-with-filters-in-baserow-api">
+<h1>Working with Filters in Baserow API<a class="headerlink" href="#working-with-filters-in-baserow-api" title="Link to this heading"></a></h1>
+<p>When querying rows using Baserow API, filters play a pivotal role in refining your search. The <cite>.get_rows()</cite> function of the table class supports the use of Filter objects to fine-tune your queries.</p>
+<section id="filter-basics">
+<h2>Filter Basics<a class="headerlink" href="#filter-basics" title="Link to this heading"></a></h2>
+<p>A filter is composed of three elements:</p>
+<ul class="simple">
+<li><p>Field: The field name you’re looking to filter on.</p></li>
+<li><p>Value: The value you’re comparing against.</p></li>
+<li><p>Operator: Specifies the type of comparison (e.g., equal, contains_not, etc.). If omitted, ‘equal’ is the default.</p></li>
+</ul>
+</section>
+<section id="field-type-and-filter-operators">
+<h2>Field Type and Filter Operators<a class="headerlink" href="#field-type-and-filter-operators" title="Link to this heading"></a></h2>
+<p>Each field type in Baserow supports specific filter operators. It’s crucial to use compatible filter operators for accurate results:</p>
+<ul class="simple">
+<li><p>You can determine the list of compatible operators for a field by querying the <cite>compatible_filters</cite> property of the field.</p></li>
+<li><p>Additionally, the official Baserow API documentation provides a comprehensive list of these compatible filters.</p></li>
+</ul>
+</section>
+<section id="working-with-filters-examples">
+<h2>Working with Filters: Examples<a class="headerlink" href="#working-with-filters-examples" title="Link to this heading"></a></h2>
+<p>Here are some Python code examples to help you get started with filters:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span><span class="p">,</span> <span class="n">Filter</span>
 
+<span class="c1"># Initialize the Baserow client</span>
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
 
-<span class="c1"># create table instance</span>
+<span class="c1"># Create a table instance</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
 
-<span class="c1"># find compatible filter operators for &#39;Name&#39; field</span>
+<span class="c1"># Discover valid filter operators for the &#39;Name&#39; field</span>
 <span class="n">valid_operators</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">compatible_filters</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Valid operators for &#39;Name&#39; field: </span><span class="si">{</span><span class="n">valid_operators</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="c1"># filter object implied equal</span>
+<span class="c1"># Create a filter where the &#39;Name&#39; field equals &#39;Grace&#39;</span>
 <span class="n">name_equal_grace</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Grace&quot;</span><span class="p">)</span>
 
-<span class="c1"># contains_not filter</span>
-<span class="n">name_contains_not_A</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s1">&#39;contains_not&#39;</span><span class="p">)</span>
-
-<span class="c1"># get rows with equal filter</span>
+<span class="c1"># Fetch rows that match the filter</span>
 <span class="n">rows_with_name_grace</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">name_equal_grace</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_name_grace</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 
-<span class="c1"># get rows with contains_not filter</span>
-<span class="n">rows_not_containing_A</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s1">&#39;contains_not&#39;</span><span class="p">)])</span>
+<span class="c1"># Create and use a filter where the &#39;Name&#39; field does not contain the letter &#39;A&#39;</span>
+<span class="n">name_contains_not_A</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s1">&#39;contains_not&#39;</span><span class="p">)</span>
+<span class="n">rows_not_containing_A</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">name_contains_not_A</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_not_containing_A</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="selectfields.html" class="btn btn-neutral float-left" title="Working with single select and multiple select fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="selectfields.html" class="btn btn-neutral float-left" title="Working with Single Select and Multiple Select Fields in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="baserowapi.html" class="btn btn-neutral float-right" title="Full Class and Function docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
