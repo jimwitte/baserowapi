@@ -713,35 +713,27 @@ class SingleSelectRowValue(RowValue):
         :raises ValueError: If the provided value doesn't match any select option by ID or value.
         """
         option_details = self.field.options_details
+        
+        # Determine the criteria based on the type of new_value
+        criteria = 'id' if isinstance(new_value, int) else 'value' if isinstance(new_value, str) else None
 
-        # If the new value is an ID (integer)
-        if isinstance(new_value, int):
-            matching_option = next((option for option in option_details if option['id'] == new_value), None)
-            if not matching_option:
-                msg = f"The provided ID '{new_value}' doesn't match any select option."
-                self.logger.error(msg)
-                raise ValueError(msg)
-
-            self._raw_value = {
-                'id': matching_option['id'],
-                'value': matching_option['value']
-            }
-        # If the new value is a string
-        elif isinstance(new_value, str):
-            matching_option = next((option for option in option_details if option['value'] == new_value), None)
-            if not matching_option:
-                msg = f"The provided value '{new_value}' doesn't match any select option."
-                self.logger.error(msg)
-                raise ValueError(msg)
-
-            self._raw_value = {
-                'id': matching_option['id'],
-                'value': matching_option['value']
-            }
-        else:
+        if not criteria:
             msg = f"Invalid input type for value. Expected int or str, got {type(new_value).__name__}."
             self.logger.error(msg)
             raise ValueError(msg)
+
+        matching_option = next((option for option in option_details if option[criteria] == new_value), None)
+        
+        if not matching_option:
+            msg = f"The provided {criteria} '{new_value}' doesn't match any select option."
+            self.logger.error(msg)
+            raise ValueError(msg)
+
+        self._raw_value = {
+            'id': matching_option['id'],
+            'value': matching_option['value']
+        }
+
 
     def format_for_api(self) -> int:
         """
