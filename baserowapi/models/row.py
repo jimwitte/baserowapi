@@ -39,22 +39,21 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
 
 class Row:
     """
-    Represents a row in a Baserow table. Provides methods to update and delete the row.
+    Represents a row in a Baserow table. Provides methods to update, delete, and manipulate the row.
     """
-    
+
+
     logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(self, row_data: Dict[str, Any], table: 'Table', client: 'Client') -> None:
         """
         Initializes a Row instance.
 
-        :param row_data: Dictionary containing the row data.
-        :type row_data: Dict[str, Any]
-        :param table: The table associated with the row.
-        :type table: Table
-        :param client: The client used for making requests.
-        :type client: Client
+        :param Dict[str, Any] row_data: Dictionary containing the row data.
+        :param Table table: The table associated with the row.
+        :param Client client: The client used for making requests.
         """
+
         self.id = row_data.get('id')
         self.order = row_data.get('order')
         self.table: 'Table' = table
@@ -68,14 +67,14 @@ class Row:
     @property
     def values(self) -> RowValueList:
         """
-        Property to retrieve the RowValueList for this row. If the RowValueList 
-        hasn't been created yet, this property lazily loads it using the stored 
-        row data.
+        Retrieves the RowValueList for this row. If not yet created, it lazily loads 
+        the list using the stored row data.
 
-        :return: The RowValueList representing the values for this row.
+        :return: RowValueList representing the values for this row.
         :rtype: RowValueList
-        :raises Exception: If there's an error while creating the RowValueList.
+        :raises Exception: If there's an error creating the RowValueList.
         """
+
         if self._values is None:
             try:
                 row_data = self._row_data
@@ -94,14 +93,14 @@ class Row:
 
     def _create_row_value_list(self, row_data: Dict[str, Any]) -> RowValueList:
         """
-        Create a RowValueList based on the row data and table fields.
+        Create a RowValueList based on the given row data and table fields.
 
-        :param row_data: Dictionary containing the row data.
-        :type row_data: Dict[str, Any]
-        :return: A RowValueList containing the RowValue objects derived from the row data.
+        :param Dict[str, Any] row_data: Data representing the row.
+        :return: RowValueList containing RowValue objects derived from the row data.
         :rtype: RowValueList
-        :raises Exception: If there's an error while creating the RowValue object.
+        :raises Exception: If there's an error creating a RowValue object.
         """
+
         row_value_objects = []
         for field_name, value in row_data.items():
             field_object = self._get_field_object(field_name)
@@ -123,12 +122,12 @@ class Row:
         """
         Retrieve the corresponding Field object from the table.
 
-        :param field_name: The name of the field to retrieve.
-        :type field_name: str
+        :param str field_name: The name of the field to retrieve.
         :return: The Field object corresponding to the given field name.
         :rtype: Field
         :raises KeyError: If the specified field name is not found in the table fields.
         """
+
         try:
             return self.table.fields[field_name]
         except KeyError:
@@ -140,12 +139,12 @@ class Row:
         """
         Get the appropriate RowValue class based on the field's type.
 
-        :param field_type: The type of the field.
-        :type field_type: str
+        :param str field_type: The type of the field.
         :return: The RowValue class corresponding to the given field type.
         :rtype: Type[RowValue]
         :raises ValueError: If the specified field type is not supported.
         """
+
         row_value_class = ROW_VALUE_TYPE_MAPPING.get(field_type)
         if not row_value_class:
             self.logger.error(f"Field type '{field_type}' not supported.")
@@ -160,6 +159,7 @@ class Row:
         :return: A string indicating the Row's ID and associated table ID.
         :rtype: str
         """
+
         return f"Row id {self.id} of table {self.table_id}"
 
     
@@ -167,14 +167,12 @@ class Row:
         """
         Retrieve a value from the row's values using dictionary-style access.
 
-        :param key: The field name to retrieve.
-        :type key: str
-
+        :param str key: The field name to retrieve.
         :return: The value of the specified field.
         :rtype: Any
-
         :raises KeyError: If the specified field name is not found in the row values.
         """
+
         try:
             row_value = self.values[key]
             return row_value.value
@@ -187,15 +185,12 @@ class Row:
         """
         Set a value for a specific field in the row using dictionary-style access.
 
-        :param key: The field name to set.
-        :type key: str
-        :param new_value: The value to set for the specified field.
-        :type new_value: Any
-
+        :param str key: The field name to set.
+        :param Any new_value: The value to set for the specified field.
         :note: This modifies the in-memory representation of the row.
-
         :raises KeyError: If the specified field name is not found in the row values or is unrecognized.
         """
+
         try:
             row_value = self.values[key]
             row_value.value = new_value  # Using the value setter of the RowValue object
@@ -208,11 +203,11 @@ class Row:
         """
         Overridden equality method to compare two Row objects based on their id and table_id.
 
-        :param other: Another object to compare with this Row instance.
-        :type other: object
+        :param object other: Another object to compare with this Row instance.
         :return: True if both objects are Rows and have the same id and table_id, otherwise False.
         :rtype: bool
         """
+
         if isinstance(other, Row):
             return getattr(self, 'id', None) == getattr(other, 'id', None) and \
                 getattr(self, 'table_id', None) == getattr(other, 'table_id', None)
@@ -227,6 +222,7 @@ class Row:
         :return: Dictionary representation of the row's values.
         :rtype: Dict[str, Any]
         """
+
         return {row_value.name: row_value.value for row_value in self.values}
 
 
@@ -234,20 +230,14 @@ class Row:
         """
         Updates the row in the table.
 
-        :param values: A dictionary containing the field values for updating the row. 
-                    Defaults to values from self.values property. 
-        :type values: Optional[Dict[str, Any]]
-
-        :param memory_only: If True, only updates the in-memory row and skips the API request.
-                            Defaults to False.
-        :type memory_only: bool
-
+        :param Optional[Dict[str, Any]] values: A dictionary containing field values for updating the row. Defaults to values from the self.values property. 
+        :param bool memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.
         :return: A Row object representing the updated row.
         :rtype: Row
-
         :raises KeyError: If the specified field name is not found in the row.
         :raises Exception: If the API request results in any error responses.
         """
+
         try:
             # Update the RowValue objects based on the provided dictionary, if any
             if values:
@@ -296,10 +286,10 @@ class Row:
 
         :return: True if deletion was successful.
         :rtype: bool
-
         :raises ValueError: If an unexpected status code is received.
         :raises Exception: For other errors during the delete operation.
         """
+
         self.logger.debug(f"Attempting to delete row with ID {self.id} from table {self.table_id}.")
         try:
             endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/"
@@ -322,16 +312,12 @@ class Row:
         """
         Moves the current row to a position before the row specified by before_id.
 
-        :param before_id: The ID of the row before which the current row should be moved.
-                        If not specified, the row will be moved to the last position.
-                        Defaults to None.
-        :type before_id: Optional[int]
-
+        :param Optional[int] before_id: The ID of the row before which the current row should be moved. If not specified, the row will be moved to the last position. Defaults to None.
         :return: A Row object representing the updated row.
         :rtype: Row
-
         :raises Exception: If there's an error during the move operation.
         """
+
         self.logger.debug(f"Attempting to move row with ID {self.id} in table {self.table_id}.")
 
         try:
