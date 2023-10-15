@@ -1160,9 +1160,6 @@ class MultipleCollaboratorsRowValue(RowValue):
     def __init__(self, field: 'MultipleCollaboratorsField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
         super().__init__(field, raw_value, client)
         
-        if not isinstance(field, MultipleCollaboratorsField):
-            raise ValueError("The provided field is not an instance of the MultipleCollaboratorsField class.")
-
     @property
     def value(self) -> Any:
         """
