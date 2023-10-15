@@ -1618,11 +1618,11 @@ class CountField(Field):
             raise ValueError("CountField value cannot be negative.")
 
     @property
-    def through_field_name(self) -> Optional[str]:
+    def through_field_id(self) -> Optional[str]:
         """
-        Retrieve the through_field_name of the field from field_data.
+        Retrieve the through_field_id of the field from field_data.
 
-        :return: The name of the linking field.
+        :return: The id of the linking field.
         :rtype: Optional[str]
         """
 
