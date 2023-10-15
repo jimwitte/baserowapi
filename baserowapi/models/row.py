@@ -7,45 +7,63 @@ if TYPE_CHECKING:
     from baserowapi.models.field import Field
 
 from baserowapi.models.row_value import (
-    RowValueList, RowValue, TextRowValue, LongTextRowValue, UrlRowValue,
-    EmailRowValue, PhoneNumberRowValue, BooleanRowValue, 
-    RatingRowValue, NumberRowValue, BaseDateRowValue, DateRowValue, LastModifiedRowValue,
-    CreatedOnRowValue, SingleSelectRowValue, MultipleSelectRowValue,
-    FormulaRowValue, TableLinkRowValue, CountRowValue,
-    LookupRowValue, MultipleCollaboratorsRowValue, FileRowValue
-    )
+    RowValueList,
+    RowValue,
+    TextRowValue,
+    LongTextRowValue,
+    UrlRowValue,
+    EmailRowValue,
+    PhoneNumberRowValue,
+    BooleanRowValue,
+    RatingRowValue,
+    NumberRowValue,
+    BaseDateRowValue,
+    DateRowValue,
+    LastModifiedRowValue,
+    CreatedOnRowValue,
+    SingleSelectRowValue,
+    MultipleSelectRowValue,
+    FormulaRowValue,
+    TableLinkRowValue,
+    CountRowValue,
+    LookupRowValue,
+    MultipleCollaboratorsRowValue,
+    FileRowValue,
+)
 
 ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
-    'text': TextRowValue,
-    'long_text': LongTextRowValue,
-    'url': UrlRowValue,
-    'email': EmailRowValue,
-    'phone_number': PhoneNumberRowValue,
-    'boolean': BooleanRowValue,
-    'number': NumberRowValue,
-    'rating': RatingRowValue,
-    'date': DateRowValue,
-    'last_modified': LastModifiedRowValue,
-    'created_on': CreatedOnRowValue,
-    'file': FileRowValue,
-    'single_select': SingleSelectRowValue,
-    'multiple_select': MultipleSelectRowValue,
-    'formula': FormulaRowValue,
-    'link_row': TableLinkRowValue,
-    'count': CountRowValue,
-    'lookup': LookupRowValue,
-    'multiple_collaborators': MultipleCollaboratorsRowValue
+    "text": TextRowValue,
+    "long_text": LongTextRowValue,
+    "url": UrlRowValue,
+    "email": EmailRowValue,
+    "phone_number": PhoneNumberRowValue,
+    "boolean": BooleanRowValue,
+    "number": NumberRowValue,
+    "rating": RatingRowValue,
+    "date": DateRowValue,
+    "last_modified": LastModifiedRowValue,
+    "created_on": CreatedOnRowValue,
+    "file": FileRowValue,
+    "single_select": SingleSelectRowValue,
+    "multiple_select": MultipleSelectRowValue,
+    "formula": FormulaRowValue,
+    "link_row": TableLinkRowValue,
+    "count": CountRowValue,
+    "lookup": LookupRowValue,
+    "multiple_collaborators": MultipleCollaboratorsRowValue,
 }
+
 
 class Row:
     """
     Represents a row in a Baserow table. Provides methods to update, delete, and manipulate the row.
     """
 
-
     logger: logging.Logger = logging.getLogger(__name__)
 
-    def __init__(self, row_data: Dict[str, Any], table: 'Table', client: 'Client') -> None:
+    def __init__(
+        self, row_data: Dict[str, Any], table: "Table", client: "Client"
+    ) -> None:
         """
         Initializes a Row instance.
 
@@ -54,11 +72,11 @@ class Row:
         :param Client client: The client used for making requests.
         """
 
-        self.id = row_data.get('id')
-        self.order = row_data.get('order')
-        self.table: 'Table' = table
+        self.id = row_data.get("id")
+        self.order = row_data.get("order")
+        self.table: "Table" = table
         self.table_id: int = table.id
-        self.client: 'Client' = client
+        self.client: "Client" = client
         self._row_data = row_data
         self._values = None
 
@@ -67,7 +85,7 @@ class Row:
     @property
     def values(self) -> RowValueList:
         """
-        Retrieves the RowValueList for this row. If not yet created, it lazily loads 
+        Retrieves the RowValueList for this row. If not yet created, it lazily loads
         the list using the stored row data.
 
         :return: RowValueList representing the values for this row.
@@ -80,16 +98,21 @@ class Row:
                 row_data = self._row_data
 
                 # remove metadata values before constructing RowValueList
-                row_data.pop('id', None)
-                row_data.pop('order', None)
+                row_data.pop("id", None)
+                row_data.pop("order", None)
                 # construct RowValueList
                 self._values = self._create_row_value_list(row_data)
-                self.logger.debug(f"RowValueList for Row id {self.id} successfully created.")
+                self.logger.debug(
+                    f"RowValueList for Row id {self.id} successfully created."
+                )
             except Exception as e:
-                self.logger.error(f"Failed to create RowValueList for Row id {self.id}. Error: {e}")
-                raise Exception(f"Unexpected error when creating RowValueList for Row id {self.id}.") from e
+                self.logger.error(
+                    f"Failed to create RowValueList for Row id {self.id}. Error: {e}"
+                )
+                raise Exception(
+                    f"Unexpected error when creating RowValueList for Row id {self.id}."
+                ) from e
         return self._values
-
 
     def _create_row_value_list(self, row_data: Dict[str, Any]) -> RowValueList:
         """
@@ -104,21 +127,24 @@ class Row:
         row_value_objects = []
         for field_name, value in row_data.items():
             field_object = self._get_field_object(field_name)
-            
+
             row_value_class = self._get_row_value_class(field_object.type)
-            
+
             try:
                 # Instantiate the RowValue object
-                row_value_obj = row_value_class(field=field_object, client=self.client, raw_value=value)
+                row_value_obj = row_value_class(
+                    field=field_object, client=self.client, raw_value=value
+                )
                 row_value_objects.append(row_value_obj)
             except Exception as e:
-                self.logger.error(f"Failed to create RowValue object for field '{field_name}'. Error: {e}")
+                self.logger.error(
+                    f"Failed to create RowValue object for field '{field_name}'. Error: {e}"
+                )
                 raise
-            
+
         return RowValueList(row_value_objects)
 
-
-    def _get_field_object(self, field_name: str) -> 'Field':
+    def _get_field_object(self, field_name: str) -> "Field":
         """
         Retrieve the corresponding Field object from the table.
 
@@ -133,7 +159,6 @@ class Row:
         except KeyError:
             self.logger.error(f"Field '{field_name}' not found in table fields.")
             raise KeyError(f"Field '{field_name}' not found in table fields.")
-
 
     def _get_row_value_class(self, field_type: str) -> Type[RowValue]:
         """
@@ -151,7 +176,6 @@ class Row:
             raise ValueError(f"Field type '{field_type}' not supported.")
         return row_value_class
 
-
     def __repr__(self) -> str:
         """
         Return a string representation of the Row object.
@@ -162,7 +186,6 @@ class Row:
 
         return f"Row id {self.id} of table {self.table_id}"
 
-    
     def __getitem__(self, key: str) -> Any:
         """
         Retrieve a value from the row's values using dictionary-style access.
@@ -180,7 +203,6 @@ class Row:
             self.logger.warning(f"Field '{key}' not found in row values.")
             raise KeyError(f"Field '{key}' not found in the row values.")
 
-
     def __setitem__(self, key: str, new_value: Any) -> None:
         """
         Set a value for a specific field in the row using dictionary-style access.
@@ -196,7 +218,9 @@ class Row:
             row_value.value = new_value  # Using the value setter of the RowValue object
         except KeyError:
             # Field not found in the Row's values
-            self.logger.error(f"Attempted to set a value for an unrecognized field '{key}' in the row. Ensure the field exists in the table first.")
+            self.logger.error(
+                f"Attempted to set a value for an unrecognized field '{key}' in the row. Ensure the field exists in the table first."
+            )
             raise KeyError(f"Field '{key}' not found in the row values.")
 
     def __eq__(self, other: object) -> bool:
@@ -209,10 +233,10 @@ class Row:
         """
 
         if isinstance(other, Row):
-            return getattr(self, 'id', None) == getattr(other, 'id', None) and \
-                getattr(self, 'table_id', None) == getattr(other, 'table_id', None)
+            return getattr(self, "id", None) == getattr(other, "id", None) and getattr(
+                self, "table_id", None
+            ) == getattr(other, "table_id", None)
         return False
-
 
     @property
     def content(self) -> Dict[str, Any]:
@@ -225,12 +249,13 @@ class Row:
 
         return {row_value.name: row_value.value for row_value in self.values}
 
-
-    def update(self, values: Optional[Dict[str, Any]] = None, memory_only: bool = False) -> 'Row':
+    def update(
+        self, values: Optional[Dict[str, Any]] = None, memory_only: bool = False
+    ) -> "Row":
         """
         Updates the row in the table.
 
-        :param Optional[Dict[str, Any]] values: A dictionary containing field values for updating the row. Defaults to values from the self.values property. 
+        :param Optional[Dict[str, Any]] values: A dictionary containing field values for updating the row. Defaults to values from the self.values property.
         :param bool memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.
         :return: A Row object representing the updated row.
         :rtype: Row
@@ -258,27 +283,34 @@ class Row:
 
             # If memory_only is True, skip the API request
             if memory_only:
-                self.logger.debug(f"Memory-only update for row with ID {self.id}. Skipping API request.")
+                self.logger.debug(
+                    f"Memory-only update for row with ID {self.id}. Skipping API request."
+                )
                 return self
 
             # Make the API request to update the row in the Baserow table
             endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
             self.logger.debug(f"Sending update request to endpoint: {endpoint}.")
-            response = self.client.make_api_request(endpoint, method="PATCH", data=payload)
+            response = self.client.make_api_request(
+                endpoint, method="PATCH", data=payload
+            )
 
             # The updated row data from the response
             updated_row_data = response
 
             # Creating a new Row object with the updated data
-            updated_row = Row(table=self.table, client=self.client, row_data=updated_row_data)
+            updated_row = Row(
+                table=self.table, client=self.client, row_data=updated_row_data
+            )
             self.logger.debug(f"Successfully updated row with ID {self.id}.")
 
             return updated_row
 
         except Exception as e:
-            self.logger.error(f"Failed to update row with ID {self.id} in table {self.table_id}. Error: {e}")
+            self.logger.error(
+                f"Failed to update row with ID {self.id} in table {self.table_id}. Error: {e}"
+            )
             raise
-
 
     def delete(self) -> bool:
         """
@@ -290,25 +322,32 @@ class Row:
         :raises Exception: For other errors during the delete operation.
         """
 
-        self.logger.debug(f"Attempting to delete row with ID {self.id} from table {self.table_id}.")
+        self.logger.debug(
+            f"Attempting to delete row with ID {self.id} from table {self.table_id}."
+        )
         try:
             endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/"
             response_code = self.client.make_api_request(endpoint, method="DELETE")
-            
+
             if response_code == 204:
-                self.logger.debug(f"Successfully deleted row with ID {self.id} from table {self.table_id}.")
+                self.logger.debug(
+                    f"Successfully deleted row with ID {self.id} from table {self.table_id}."
+                )
                 return True
             else:
-                self.logger.warning(f"Unexpected status code {response_code} received when trying to delete row with ID {self.id}.")
+                self.logger.warning(
+                    f"Unexpected status code {response_code} received when trying to delete row with ID {self.id}."
+                )
                 raise ValueError(f"Unexpected status code received: {response_code}")
         except ValueError:
             raise  # Re-raise the ValueError
         except Exception as e:
-            self.logger.error(f"Failed to delete row with ID {self.id} from table {self.table_id}. Error: {e}")
+            self.logger.error(
+                f"Failed to delete row with ID {self.id} from table {self.table_id}. Error: {e}"
+            )
             raise
 
-
-    def move(self, before_id: Optional[int] = None) -> 'Row':
+    def move(self, before_id: Optional[int] = None) -> "Row":
         """
         Moves the current row to a position before the row specified by before_id.
 
@@ -318,7 +357,9 @@ class Row:
         :raises Exception: If there's an error during the move operation.
         """
 
-        self.logger.debug(f"Attempting to move row with ID {self.id} in table {self.table_id}.")
+        self.logger.debug(
+            f"Attempting to move row with ID {self.id} in table {self.table_id}."
+        )
 
         try:
             # Construct the endpoint for the move operation
@@ -333,11 +374,17 @@ class Row:
             moved_row_data = response
 
             # Creating a new Row object with the updated data
-            moved_row = Row(table=self.table, client=self.client, row_data=moved_row_data)
-            self.logger.debug(f"Successfully moved row with ID {self.id} in table {self.table_id}.")
+            moved_row = Row(
+                table=self.table, client=self.client, row_data=moved_row_data
+            )
+            self.logger.debug(
+                f"Successfully moved row with ID {self.id} in table {self.table_id}."
+            )
 
             return moved_row
 
         except Exception as e:
-            self.logger.error(f"Failed to move row with ID {self.id} in table {self.table_id}. Error: {e}")
+            self.logger.error(
+                f"Failed to move row with ID {self.id} in table {self.table_id}. Error: {e}"
+            )
             raise

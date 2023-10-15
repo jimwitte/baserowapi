@@ -31,7 +31,9 @@ class Field:
 
         self.name = name
         self.field_data = field_data
-        self.logger.debug(f"Initialized field '{self.name}' with attributes '{self.field_data}'")
+        self.logger.debug(
+            f"Initialized field '{self.name}' with attributes '{self.field_data}'"
+        )
 
     def __repr__(self) -> str:
         """
@@ -82,7 +84,6 @@ class Field:
         """
         return value
 
-
     @property
     def id(self) -> Union[int, None]:
         """
@@ -91,7 +92,7 @@ class Field:
         :return: The ID of the field or None if not present.
         :rtype: Union[int, None]
         """
-        field_id = self.field_data.get('id', None)
+        field_id = self.field_data.get("id", None)
         if field_id is None:
             self.logger.warning(f"Field ID missing for field {self.name}.")
         return field_id
@@ -104,7 +105,7 @@ class Field:
         :return: The table ID or None if not present.
         :rtype: Union[int, None]
         """
-        table_id = self.field_data.get('table_id', None)
+        table_id = self.field_data.get("table_id", None)
         if table_id is None:
             self.logger.warning(f"Table ID missing for field {self.name}.")
         return table_id
@@ -117,7 +118,7 @@ class Field:
         :return: The order of the field or None if not present.
         :rtype: Union[int, None]
         """
-        order = self.field_data.get('order', None)
+        order = self.field_data.get("order", None)
         if order is None:
             self.logger.warning(f"Order missing for field {self.name}.")
         return order
@@ -130,7 +131,7 @@ class Field:
         :return: The type of the field or None if not present.
         :rtype: Union[str, None]
         """
-        field_type = self.field_data.get('type', None)
+        field_type = self.field_data.get("type", None)
         if field_type is None:
             self.logger.warning(f"Field type missing for field {self.name}.")
         return field_type
@@ -143,7 +144,7 @@ class Field:
         :return: True if the field is primary, otherwise False.
         :rtype: bool
         """
-        return self.field_data.get('primary', False)
+        return self.field_data.get("primary", False)
 
     @property
     def is_read_only(self) -> bool:
@@ -153,7 +154,7 @@ class Field:
         :return: True if the field is read-only, otherwise False.
         :rtype: bool
         """
-        return self.field_data.get('read_only', False)
+        return self.field_data.get("read_only", False)
 
 
 class BaseTextClass(Field):
@@ -169,7 +170,9 @@ class BaseTextClass(Field):
         if value is None:
             return
         elif not isinstance(value, str):
-            raise ValueError(f"Expected a string value for {type(self).__name__} but got {type(value)}")
+            raise ValueError(
+                f"Expected a string value for {type(self).__name__} but got {type(value)}"
+            )
 
 
 class TextField(BaseTextClass):
@@ -180,11 +183,18 @@ class TextField(BaseTextClass):
     :vartype TYPE: str
     """
 
-    TYPE = 'text'
+    TYPE = "text"
 
     _COMPATIBLE_FILTERS = [
-        "equal", "not_equal", "contains", "contains_not", "contains_word", 
-        "doesnt_contain_word", "length_is_lower_than", "empty", "not_empty"
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
@@ -199,10 +209,14 @@ class TextField(BaseTextClass):
         """
         super().__init__(name, field_data)
 
-        text_default_value = field_data.get('text_default', '')
+        text_default_value = field_data.get("text_default", "")
         if not isinstance(text_default_value, str):
-            self.logger.error(f"Expected a string for text_default but got {type(text_default_value)}")
-            raise ValueError(f"Expected a string for text_default but got {type(text_default_value)}")
+            self.logger.error(
+                f"Expected a string for text_default but got {type(text_default_value)}"
+            )
+            raise ValueError(
+                f"Expected a string for text_default but got {type(text_default_value)}"
+            )
 
         self._text_default = text_default_value
 
@@ -235,10 +249,17 @@ class LongTextField(BaseTextClass):
     :vartype TYPE: str
     """
 
-    TYPE = 'long_text'
+    TYPE = "long_text"
     _COMPATIBLE_FILTERS = [
-        "equal", "not_equal", "contains", "contains_not", "contains_word", 
-        "doesnt_contain_word", "length_is_lower_than", "empty", "not_empty"
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
@@ -271,10 +292,17 @@ class UrlField(BaseTextClass):
     :vartype TYPE: str
     """
 
-    TYPE = 'url'
+    TYPE = "url"
     _COMPATIBLE_FILTERS = [
-        "equal", "not_equal", "contains", "contains_not", "contains_word", 
-        "doesnt_contain_word", "length_is_lower_than", "empty", "not_empty"
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
@@ -307,10 +335,17 @@ class EmailField(BaseTextClass):
     :vartype TYPE: str
     """
 
-    TYPE = 'email'
+    TYPE = "email"
     _COMPATIBLE_FILTERS = [
-        "equal", "not_equal", "contains", "contains_not", "contains_word", 
-        "doesnt_contain_word", "length_is_lower_than", "empty", "not_empty"
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
@@ -342,13 +377,18 @@ class PhoneNumberField(Field):
     :ivar TYPE: The type of the field, which is 'phone_number'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'phone_number'
+
+    TYPE = "phone_number"
     _COMPATIBLE_FILTERS = [
-        "equal", "not_equal", "contains", "contains_not", 
-        "length_is_lower_than", "empty", "not_empty"
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
-    
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a PhoneNumberField object.
@@ -359,9 +399,9 @@ class PhoneNumberField(Field):
         :type field_data: Dict[str, Any]
         """
         super().__init__(name, field_data)
-        self.valid_characters = re.compile(r'^[0-9 Nx,._+*()#=;/-]{1,100}$')
+        self.valid_characters = re.compile(r"^[0-9 Nx,._+*()#=;/-]{1,100}$")
         self.logger = logging.getLogger(__name__)
-    
+
     @property
     def compatible_filters(self) -> List[str]:
         """
@@ -386,13 +426,17 @@ class PhoneNumberField(Field):
         if value is None:
             return
         if not self.valid_characters.match(value):
-            self.logger.error(f"The provided phone number '{value}' doesn't match the expected format.")
-            raise ValueError(f"The provided phone number '{value}' doesn't match the expected format.")
-        
+            self.logger.error(
+                f"The provided phone number '{value}' doesn't match the expected format."
+            )
+            raise ValueError(
+                f"The provided phone number '{value}' doesn't match the expected format."
+            )
+
     def format_for_api(self, value: str) -> str:
         """
         Format the value for API submission.
-        
+
         For PhoneNumberField, it would return the phone number as-is after validation.
 
         :param value: The phone number string to be formatted.
@@ -412,10 +456,10 @@ class BooleanField(Field):
     :ivar TYPE: The type of the field, which is 'boolean'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'boolean'
+
+    TYPE = "boolean"
     _COMPATIBLE_FILTERS = ["boolean", "empty", "not_empty"]
-    
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a BooleanField object.
@@ -447,8 +491,12 @@ class BooleanField(Field):
         :raises ValueError: If the value is not of boolean type.
         """
         if not isinstance(value, bool):
-            self.logger.error(f"Expected a boolean value for BooleanField but got {type(value)}")
-            raise ValueError(f"Expected a boolean value for BooleanField but got {type(value)}")
+            self.logger.error(
+                f"Expected a boolean value for BooleanField but got {type(value)}"
+            )
+            raise ValueError(
+                f"Expected a boolean value for BooleanField but got {type(value)}"
+            )
 
 
 class NumberField(Field):
@@ -458,11 +506,20 @@ class NumberField(Field):
     :ivar TYPE: The type of the field, which is 'number'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'number'
-    _COMPATIBLE_FILTERS = ["equal", "not_equal", "contains", "contains_not", "higher_than", 
-                           "lower_than", "is_even_and_whole", "empty", "not_empty"]
-    
+
+    TYPE = "number"
+    _COMPATIBLE_FILTERS = [
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "higher_than",
+        "lower_than",
+        "is_even_and_whole",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a NumberField object.
@@ -476,10 +533,10 @@ class NumberField(Field):
         self.logger = logging.getLogger(__name__)
 
         # Retrieve the number of decimal places allowed for this field
-        self.number_decimal_places = field_data.get('number_decimal_places', 0)
+        self.number_decimal_places = field_data.get("number_decimal_places", 0)
 
         # Check if negative numbers are allowed for this field
-        self.number_negative = field_data.get('number_negative', True)
+        self.number_negative = field_data.get("number_negative", True)
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -522,13 +579,24 @@ class NumberField(Field):
         if value is None:
             return
         elif not isinstance(value, (int, float)):
-            self.logger.error(f"Expected a number value for NumberField but got {type(value)}")
-            raise ValueError(f"Expected a number value for NumberField but got {type(value)}")
+            self.logger.error(
+                f"Expected a number value for NumberField but got {type(value)}"
+            )
+            raise ValueError(
+                f"Expected a number value for NumberField but got {type(value)}"
+            )
 
         # If the number has more decimal places than allowed, raise an error
-        if isinstance(value, float) and len(str(value).split('.')[-1]) > self.number_decimal_places:
-            self.logger.error(f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}")
-            raise ValueError(f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}")
+        if (
+            isinstance(value, float)
+            and len(str(value).split(".")[-1]) > self.number_decimal_places
+        ):
+            self.logger.error(
+                f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
+            )
+            raise ValueError(
+                f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
+            )
 
         # If negative numbers are not allowed and value is negative, raise an error
         if not self.number_negative and value < 0:
@@ -543,10 +611,10 @@ class RatingField(Field):
     :ivar TYPE: The type of the field, which is 'rating'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'rating'
+
+    TYPE = "rating"
     _COMPATIBLE_FILTERS = ["equal", "not_equal", "higher_than", "lower_than"]
-    
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a RatingField object.
@@ -560,17 +628,25 @@ class RatingField(Field):
         self.logger = logging.getLogger(__name__)
 
         # Extract max_value, color, and style attributes
-        self.max_value = field_data.get('max_value')
+        self.max_value = field_data.get("max_value")
         if not isinstance(self.max_value, int):
-            self.logger.error(f"Expected an integer for max_value but got {type(self.max_value)}")
-            raise ValueError(f"Expected an integer for max_value but got {type(self.max_value)}")
-        
-        self.color = field_data.get('color', 'dark-orange')  # Defaulting to 'dark-orange' if not provided
+            self.logger.error(
+                f"Expected an integer for max_value but got {type(self.max_value)}"
+            )
+            raise ValueError(
+                f"Expected an integer for max_value but got {type(self.max_value)}"
+            )
+
+        self.color = field_data.get(
+            "color", "dark-orange"
+        )  # Defaulting to 'dark-orange' if not provided
         if not isinstance(self.color, str):
             self.logger.error(f"Expected a string for color but got {type(self.color)}")
             raise ValueError(f"Expected a string for color but got {type(self.color)}")
-        
-        self.style = field_data.get('style', 'star')  # Defaulting to 'star' if not provided
+
+        self.style = field_data.get(
+            "style", "star"
+        )  # Defaulting to 'star' if not provided
         if not isinstance(self.style, str):
             self.logger.error(f"Expected a string for style but got {type(self.style)}")
             raise ValueError(f"Expected a string for style but got {type(self.style)}")
@@ -594,11 +670,19 @@ class RatingField(Field):
         :raises ValueError: If the value doesn't match the expected type or constraints.
         """
         if not isinstance(value, int):
-            self.logger.error(f"Expected an integer value for RatingField but got {type(value)}")
-            raise ValueError(f"Expected an integer value for RatingField but got {type(value)}")
+            self.logger.error(
+                f"Expected an integer value for RatingField but got {type(value)}"
+            )
+            raise ValueError(
+                f"Expected an integer value for RatingField but got {type(value)}"
+            )
         if value < 0 or value > self.max_value:
-            self.logger.error(f"Rating value should be between 0 and {self.max_value}, but got {value}")
-            raise ValueError(f"Rating value should be between 0 and {self.max_value}, but got {value}")
+            self.logger.error(
+                f"Rating value should be between 0 and {self.max_value}, but got {value}"
+            )
+            raise ValueError(
+                f"Rating value should be between 0 and {self.max_value}, but got {value}"
+            )
 
 
 class BaseDateField(Field):
@@ -609,7 +693,7 @@ class BaseDateField(Field):
     :vartype TYPE: str
     """
 
-    TYPE = 'base_date'
+    TYPE = "base_date"
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
@@ -621,23 +705,32 @@ class BaseDateField(Field):
         :type field_data: Dict[str, Any]
         """
         super().__init__(name, field_data)
-        
+
         # Common attributes for date fields
-        self.date_format: str = field_data.get('date_format', 'EU')
-        self.date_include_time: bool = field_data.get('date_include_time', True)
-        self.date_time_format: str = field_data.get('date_time_format', '24')
-        self.date_show_tzinfo: bool = field_data.get('date_show_tzinfo', False)
-        self.date_force_timezone: Optional[str] = field_data.get('date_force_timezone', None)
+        self.date_format: str = field_data.get("date_format", "EU")
+        self.date_include_time: bool = field_data.get("date_include_time", True)
+        self.date_time_format: str = field_data.get("date_time_format", "24")
+        self.date_show_tzinfo: bool = field_data.get("date_show_tzinfo", False)
+        self.date_force_timezone: Optional[str] = field_data.get(
+            "date_force_timezone", None
+        )
 
         # Validate the extracted attributes
-        if self.date_format not in ['US', 'EU', 'ISO']:
-            self.logger.error(f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO'].")
-            raise ValueError(f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO'].")
-        
-        if self.date_time_format not in ['12', '24']:
-            self.logger.error(f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24'].")
-            raise ValueError(f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24'].")
+        if self.date_format not in ["US", "EU", "ISO"]:
+            self.logger.error(
+                f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
+            )
+            raise ValueError(
+                f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
+            )
 
+        if self.date_time_format not in ["12", "24"]:
+            self.logger.error(
+                f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
+            )
+            raise ValueError(
+                f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
+            )
 
     def validate_value(self, value: str) -> None:
         """
@@ -650,36 +743,36 @@ class BaseDateField(Field):
         # If the value is None, it is considered valid
         if value is None:
             return
-        
+
         if self.date_include_time:
             # First, try validating with fractional seconds format
             try:
-                datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
                 return
             except ValueError:
                 pass
 
             # Next, try without fractional seconds but with UTC offset
             try:
-                datetime.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
+                datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z")
                 return
             except ValueError:
                 pass
-            
+
             # Finally, try without fractional seconds and with 'Z' as the UTC offset
             try:
-                datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
+                datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
                 return
             except ValueError:
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
                 raise ValueError(f"Invalid date format for {self.TYPE}: {value}")
         else:
             # If only date is expected but value contains time, strip the time portion
-            if 'T' in value:
-                value = value.split('T')[0]
-            
+            if "T" in value:
+                value = value.split("T")[0]
+
             try:
-                datetime.strptime(value, '%Y-%m-%d')
+                datetime.strptime(value, "%Y-%m-%d")
             except ValueError:
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
                 raise ValueError(f"Invalid date format for {self.TYPE}: {value}")
@@ -692,15 +785,35 @@ class DateField(BaseDateField):
     :ivar TYPE: The type of the field, which is 'date'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'date'
-    _COMPATIBLE_FILTERS = ["date_equal", "date_not_equal", "date_equals_today", "date_before_today", 
-                           "date_after_today", "date_within_days", "date_within_weeks", "date_within_months", 
-                           "date_equals_days_ago", "date_equals_months_ago", "date_equals_years_ago", 
-                           "date_equals_week", "date_equals_month", "date_equals_year", "date_equals_day_of_month", 
-                           "date_before", "date_before_or_equal", "date_after", "date_after_or_equal", 
-                           "date_after_days_ago", "contains", "contains_not", "empty", "not_empty"]
-    
+
+    TYPE = "date"
+    _COMPATIBLE_FILTERS = [
+        "date_equal",
+        "date_not_equal",
+        "date_equals_today",
+        "date_before_today",
+        "date_after_today",
+        "date_within_days",
+        "date_within_weeks",
+        "date_within_months",
+        "date_equals_days_ago",
+        "date_equals_months_ago",
+        "date_equals_years_ago",
+        "date_equals_week",
+        "date_equals_month",
+        "date_equals_year",
+        "date_equals_day_of_month",
+        "date_before",
+        "date_before_or_equal",
+        "date_after",
+        "date_after_or_equal",
+        "date_after_days_ago",
+        "contains",
+        "contains_not",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a DateField object.
@@ -731,15 +844,35 @@ class LastModifiedField(BaseDateField):
     :ivar TYPE: The type of the field, which is 'last_modified'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'last_modified'
-    _COMPATIBLE_FILTERS = ["date_equal", "date_not_equal", "date_equals_today", "date_before_today", 
-                           "date_after_today", "date_within_days", "date_within_weeks", "date_within_months", 
-                           "date_equals_days_ago", "date_equals_months_ago", "date_equals_years_ago", 
-                           "date_equals_week", "date_equals_month", "date_equals_year", "date_equals_day_of_month", 
-                           "date_before", "date_before_or_equal", "date_after", "date_after_or_equal", 
-                           "date_after_days_ago", "contains", "contains_not", "empty", "not_empty"]
-    
+
+    TYPE = "last_modified"
+    _COMPATIBLE_FILTERS = [
+        "date_equal",
+        "date_not_equal",
+        "date_equals_today",
+        "date_before_today",
+        "date_after_today",
+        "date_within_days",
+        "date_within_weeks",
+        "date_within_months",
+        "date_equals_days_ago",
+        "date_equals_months_ago",
+        "date_equals_years_ago",
+        "date_equals_week",
+        "date_equals_month",
+        "date_equals_year",
+        "date_equals_day_of_month",
+        "date_before",
+        "date_before_or_equal",
+        "date_after",
+        "date_after_or_equal",
+        "date_after_days_ago",
+        "contains",
+        "contains_not",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a LastModifiedField object.
@@ -780,15 +913,35 @@ class CreatedOnField(BaseDateField):
     :ivar TYPE: The type of the field, which is 'created_on'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'created_on'
-    _COMPATIBLE_FILTERS = ["date_equal", "date_not_equal", "date_equals_today", "date_before_today", 
-                           "date_after_today", "date_within_days", "date_within_weeks", "date_within_months", 
-                           "date_equals_days_ago", "date_equals_months_ago", "date_equals_years_ago", 
-                           "date_equals_week", "date_equals_month", "date_equals_year", "date_equals_day_of_month", 
-                           "date_before", "date_before_or_equal", "date_after", "date_after_or_equal", 
-                           "date_after_days_ago", "contains", "contains_not", "empty", "not_empty"]
-    
+
+    TYPE = "created_on"
+    _COMPATIBLE_FILTERS = [
+        "date_equal",
+        "date_not_equal",
+        "date_equals_today",
+        "date_before_today",
+        "date_after_today",
+        "date_within_days",
+        "date_within_weeks",
+        "date_within_months",
+        "date_equals_days_ago",
+        "date_equals_months_ago",
+        "date_equals_years_ago",
+        "date_equals_week",
+        "date_equals_month",
+        "date_equals_year",
+        "date_equals_day_of_month",
+        "date_before",
+        "date_before_or_equal",
+        "date_after",
+        "date_after_or_equal",
+        "date_after_days_ago",
+        "contains",
+        "contains_not",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a CreatedOnField object.
@@ -820,6 +973,7 @@ class CreatedOnField(BaseDateField):
         :rtype: bool
         """
         return True
+
     """
     Represents a field in Baserow that indicates the creation date.
 
@@ -827,7 +981,7 @@ class CreatedOnField(BaseDateField):
     :vartype TYPE: str
     """
 
-    TYPE = 'created_on'
+    TYPE = "created_on"
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
@@ -858,10 +1012,10 @@ class FileField(Field):
     :ivar TYPE: The type of the field, which is 'file'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'file'
+
+    TYPE = "file"
     _COMPATIBLE_FILTERS = ["filename_contains", "has_file_type", "empty", "not_empty"]
-    
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initialize a FileField object.
@@ -891,7 +1045,7 @@ class FileField(Field):
         :param value: A list of file objects to validate.
         :type value: List[Dict[str, Any]]
 
-        :raises ValueError: If the value is not a list or if a file object is missing 
+        :raises ValueError: If the value is not a list or if a file object is missing
                             the 'name' attribute.
         """
         if not isinstance(value, list):
@@ -899,13 +1053,13 @@ class FileField(Field):
             raise ValueError(f"Expected a list for FileField but got {type(value)}")
 
         for file_obj in value:
-            if not file_obj.get('name'):
+            if not file_obj.get("name"):
                 self.logger.error("File object is missing the 'name' attribute.")
                 raise ValueError("File object is missing the 'name' attribute.")
 
     def format_for_api(self, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Formats the value for API submission. For FileField, it returns the list of file 
+        Formats the value for API submission. For FileField, it returns the list of file
         objects as-is.
 
         :param value: A list of file objects.
@@ -926,10 +1080,19 @@ class SingleSelectField(Field):
     :return: The option if found, otherwise None.
     :rtype: Optional[Dict[str, Any]]
     """
-    
-    TYPE = 'single_select'
-    _COMPATIBLE_FILTERS = ["contains", "contains_not", "contains_word", "doesnt_contain_word", "single_select_equal", "single_select_not_equal", "empty", "not_empty"]
-    
+
+    TYPE = "single_select"
+    _COMPATIBLE_FILTERS = [
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "single_select_equal",
+        "single_select_not_equal",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initializes a SingleSelectField object.
@@ -941,8 +1104,12 @@ class SingleSelectField(Field):
         """
         super().__init__(name, field_data)
         self.logger = logging.getLogger(__name__)
-        if 'select_options' not in field_data or not isinstance(field_data['select_options'], list):
-            self.logger.error("Invalid or missing select_options provided for SingleSelectField initialization.")
+        if "select_options" not in field_data or not isinstance(
+            field_data["select_options"], list
+        ):
+            self.logger.error(
+                "Invalid or missing select_options provided for SingleSelectField initialization."
+            )
             raise ValueError("select_options should be a non-empty list in field_data.")
 
     @property
@@ -963,7 +1130,7 @@ class SingleSelectField(Field):
         :return: List of select option values.
         :rtype: List[str]
         """
-        return [option['value'] for option in self.field_data['select_options']]
+        return [option["value"] for option in self.field_data["select_options"]]
 
     @property
     def options_details(self) -> List[Dict[str, Any]]:
@@ -973,9 +1140,11 @@ class SingleSelectField(Field):
         :return: List of detailed select_options.
         :rtype: List[Dict[str, Any]]
         """
-        return self.field_data['select_options']
+        return self.field_data["select_options"]
 
-    def _get_option_by_id_or_value(self, value: Union[int, str]) -> Optional[Dict[str, Any]]:
+    def _get_option_by_id_or_value(
+        self, value: Union[int, str]
+    ) -> Optional[Dict[str, Any]]:
         """
         Utility method to retrieve an option by its id or value.
 
@@ -985,7 +1154,7 @@ class SingleSelectField(Field):
         :rtype: Optional[Dict[str, Any]]
         """
         for option in self.options_details:
-            if option['id'] == value or option['value'] == value:
+            if option["id"] == value or option["value"] == value:
                 return option
         return None
 
@@ -1000,7 +1169,9 @@ class SingleSelectField(Field):
         if value is not None:
             option = self._get_option_by_id_or_value(value)
             if not option:
-                raise ValueError(f"The provided value '{value}' doesn't match any select option.")
+                raise ValueError(
+                    f"The provided value '{value}' doesn't match any select option."
+                )
 
     def format_for_api(self, value: Union[int, str]) -> Union[int, str, None]:
         """
@@ -1017,9 +1188,11 @@ class SingleSelectField(Field):
 
         option = self._get_option_by_id_or_value(value)
         if not option:
-            raise ValueError(f"The provided value '{value}' doesn't match any select option.")
+            raise ValueError(
+                f"The provided value '{value}' doesn't match any select option."
+            )
 
-        return option['id']  # Return the id for API submission
+        return option["id"]  # Return the id for API submission
 
 
 class MultipleSelectField(Field):
@@ -1029,10 +1202,19 @@ class MultipleSelectField(Field):
     :ivar TYPE: The type of the field, which is 'multiple_select'.
     :vartype TYPE: str
     """
-    
-    TYPE = 'multiple_select'
-    _COMPATIBLE_FILTERS = ["contains", "contains_not", "contains_word", "doesnt_contain_word", "multiple_select_has", "multiple_select_has_not", "empty", "not_empty"]
-    
+
+    TYPE = "multiple_select"
+    _COMPATIBLE_FILTERS = [
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "multiple_select_has",
+        "multiple_select_has_not",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initializes a MultipleSelectField object.
@@ -1044,10 +1226,13 @@ class MultipleSelectField(Field):
         """
         super().__init__(name, field_data)
         self.logger = logging.getLogger(__name__)
-        if 'select_options' not in field_data or not isinstance(field_data['select_options'], list):
-            self.logger.error("Invalid or missing select_options provided for MultipleSelectField initialization.")
+        if "select_options" not in field_data or not isinstance(
+            field_data["select_options"], list
+        ):
+            self.logger.error(
+                "Invalid or missing select_options provided for MultipleSelectField initialization."
+            )
             raise ValueError("select_options should be a non-empty list in field_data.")
-        
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1067,7 +1252,7 @@ class MultipleSelectField(Field):
         :return: List of select option values.
         :rtype: List[str]
         """
-        return [option['value'] for option in self.field_data['select_options']]
+        return [option["value"] for option in self.field_data["select_options"]]
 
     @property
     def options_details(self) -> List[Dict[str, Any]]:
@@ -1077,9 +1262,11 @@ class MultipleSelectField(Field):
         :return: List of detailed select_options.
         :rtype: List[Dict[str, Any]]
         """
-        return self.field_data['select_options']
+        return self.field_data["select_options"]
 
-    def _get_option_by_id_or_value(self, value: Union[int, str]) -> Optional[Dict[str, Any]]:
+    def _get_option_by_id_or_value(
+        self, value: Union[int, str]
+    ) -> Optional[Dict[str, Any]]:
         """
         Utility method to retrieve an option by its id or value.
 
@@ -1089,7 +1276,7 @@ class MultipleSelectField(Field):
         :rtype: Optional[Dict[str, Any]]
         """
         for option in self.options_details:
-            if option['id'] == value or option['value'] == value:
+            if option["id"] == value or option["value"] == value:
                 return option
         return None
 
@@ -1105,12 +1292,16 @@ class MultipleSelectField(Field):
             return
 
         if not isinstance(values, list):
-            raise ValueError("The provided value should be a list for a MultipleSelectField.")
+            raise ValueError(
+                "The provided value should be a list for a MultipleSelectField."
+            )
 
         for value in values:
             option = self._get_option_by_id_or_value(value)
             if not option:
-                raise ValueError(f"The provided value '{value}' doesn't match any select option.")
+                raise ValueError(
+                    f"The provided value '{value}' doesn't match any select option."
+                )
 
     def format_for_api(self, values: List[Union[int, str]]) -> List[Union[int, str]]:
         """
@@ -1126,14 +1317,18 @@ class MultipleSelectField(Field):
             return values
 
         if not isinstance(values, list):
-            raise ValueError("The provided value should be a list for a MultipleSelectField.")
+            raise ValueError(
+                "The provided value should be a list for a MultipleSelectField."
+            )
 
         formatted_values = []
         for value in values:
             option = self._get_option_by_id_or_value(value)
             if not option:
-                raise ValueError(f"The provided value '{value}' doesn't match any select option.")
-            formatted_values.append(option['id'])
+                raise ValueError(
+                    f"The provided value '{value}' doesn't match any select option."
+                )
+            formatted_values.append(option["id"])
 
         return formatted_values
 
@@ -1146,9 +1341,8 @@ class FormulaField(Field):
     :vartype TYPE: str
     """
 
-    TYPE = 'formula'
+    TYPE = "formula"
     _COMPATIBLE_FILTERS = []
-
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
@@ -1160,12 +1354,12 @@ class FormulaField(Field):
         :type field_data: Dict[str, Any]
         """
         super().__init__(name, field_data)
-        
+
         # Attributes specific to the FormulaField
-        self._formula = field_data.get('formula')
-        self._formula_type = field_data.get('formula_type')
-        self._error = field_data.get('error')
-        self._array_formula_type = field_data.get('array_formula_type')
+        self._formula = field_data.get("formula")
+        self._formula_type = field_data.get("formula_type")
+        self._error = field_data.get("error")
+        self._array_formula_type = field_data.get("array_formula_type")
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1242,8 +1436,15 @@ class TableLinkField(Field):
     """
 
     TYPE = "link_row"
-    _COMPATIBLE_FILTERS = ["link_row_has", "link_row_has_not", "link_row_contains", "link_row_not_contains", "empty", "not_empty"]
-    
+    _COMPATIBLE_FILTERS = [
+        "link_row_has",
+        "link_row_has_not",
+        "link_row_contains",
+        "link_row_not_contains",
+        "empty",
+        "not_empty",
+    ]
+
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
         Initializes a TableLinkField object.
@@ -1256,8 +1457,12 @@ class TableLinkField(Field):
         """
         super().__init__(name, field_data)
         if self.type != self.TYPE:
-            self.logger.error(f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}.")
-            raise ValueError(f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}.")
+            self.logger.error(
+                f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
+            )
+            raise ValueError(
+                f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
+            )
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1272,8 +1477,8 @@ class TableLinkField(Field):
 
     def format_for_api(self, value: List[Union[int, str]]) -> List[Union[int, str]]:
         """
-        Format the value for API submission. This method accepts a list of either integers 
-        (identifying rows in the linked table) or strings (values of the primary field in the 
+        Format the value for API submission. This method accepts a list of either integers
+        (identifying rows in the linked table) or strings (values of the primary field in the
         linked table).
 
         :param value: A list containing either integers (row identifiers in the linked table)
@@ -1292,8 +1497,12 @@ class TableLinkField(Field):
         # Validate each entry in the list to be either an integer or string
         for entry in value:
             if not isinstance(entry, (int, str)):
-                self.logger.error("Each entry in the list should be an integer or string.")
-                raise ValueError("Each entry in the list should be an integer or string.")
+                self.logger.error(
+                    "Each entry in the list should be an integer or string."
+                )
+                raise ValueError(
+                    "Each entry in the list should be an integer or string."
+                )
 
         # Since the API expects a simple list of integers or strings, return the value as-is
         return value
@@ -1306,7 +1515,7 @@ class TableLinkField(Field):
         :return: The link_row_table_id of the field.
         :rtype: Optional[int]
         """
-        return self.field_data.get('link_row_table_id', None)
+        return self.field_data.get("link_row_table_id", None)
 
     @property
     def link_row_related_field_id(self) -> Optional[int]:
@@ -1316,7 +1525,7 @@ class TableLinkField(Field):
         :return: The link_row_related_field_id of the field.
         :rtype: Optional[int]
         """
-        return self.field_data.get('link_row_related_field_id', None)
+        return self.field_data.get("link_row_related_field_id", None)
 
     @property
     def link_row_table(self) -> Optional[Dict[str, Any]]:
@@ -1327,7 +1536,7 @@ class TableLinkField(Field):
         :rtype: Optional[Dict[str, Any]]
         """
 
-        return self.field_data.get('link_row_table', None)
+        return self.field_data.get("link_row_table", None)
 
     @property
     def link_row_related_field(self) -> Optional[Dict[str, Any]]:
@@ -1338,7 +1547,7 @@ class TableLinkField(Field):
         :rtype: Optional[Dict[str, Any]]
         """
 
-        return self.field_data.get('link_row_related_field', None)
+        return self.field_data.get("link_row_related_field", None)
 
 
 class CountField(Field):
@@ -1349,8 +1558,18 @@ class CountField(Field):
     :vartype TYPE: str
     """
 
-    TYPE = 'count'
-    _COMPATIBLE_FILTERS = ["equal", "not_equal", "contains", "contains_not", "higher_than", "lower_than", "is_even_and_whole", "empty", "not_empty"]
+    TYPE = "count"
+    _COMPATIBLE_FILTERS = [
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "higher_than",
+        "lower_than",
+        "is_even_and_whole",
+        "empty",
+        "not_empty",
+    ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
@@ -1372,7 +1591,7 @@ class CountField(Field):
         :rtype: List[str]
         """
         return self._COMPATIBLE_FILTERS
-    
+
     @property
     def is_read_only(self) -> bool:
         """
@@ -1382,7 +1601,7 @@ class CountField(Field):
         :rtype: bool
         """
         return True
-        
+
     def validate_value(self, value: int):
         """
         Validate the value for a CountField.
@@ -1392,10 +1611,12 @@ class CountField(Field):
         :raises ValueError: If the value is not an integer or if it's negative.
         """
         if not isinstance(value, int):
-            raise ValueError(f"Expected an integer value for CountField but got {type(value)}")
+            raise ValueError(
+                f"Expected an integer value for CountField but got {type(value)}"
+            )
         if value < 0:
             raise ValueError("CountField value cannot be negative.")
-        
+
     @property
     def through_field_name(self) -> Optional[str]:
         """
@@ -1405,20 +1626,20 @@ class CountField(Field):
         :rtype: Optional[str]
         """
 
-        return self.field_data.get('through_field_id', None)
+        return self.field_data.get("through_field_id", None)
 
 
 class LookupField(Field):
     """
     Represents a field field connected to a link to table field
-    which returns an array of values and row ids from the chosen 
+    which returns an array of values and row ids from the chosen
     lookup field in the linked table.
 
     :ivar TYPE: The type of the field, which is 'lookup'.
     :vartype TYPE: str
     """
 
-    TYPE = 'lookup'
+    TYPE = "lookup"
     _COMPATIBLE_FILTERS = []
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
@@ -1432,11 +1653,11 @@ class LookupField(Field):
         :raises ValueError: If the field is not read-only.
         """
         super().__init__(name, field_data)
-        
+
         if not self.is_read_only:
             self.logger.error("LookupField should be read-only.")
             raise ValueError("LookupField should be read-only.")
-        
+
     @property
     def compatible_filters(self) -> List[str]:
         """
@@ -1445,9 +1666,9 @@ class LookupField(Field):
         :return: The list of compatible filters.
         :rtype: List[str]
         """
-        
+
         return self._COMPATIBLE_FILTERS
-    
+
     @property
     def through_field_id(self) -> Optional[int]:
         """
@@ -1457,8 +1678,8 @@ class LookupField(Field):
         :rtype: Optional[int]
         """
 
-        return self.field_data.get('through_field_id', None)
-    
+        return self.field_data.get("through_field_id", None)
+
     @property
     def through_field_name(self) -> Optional[int]:
         """
@@ -1468,8 +1689,8 @@ class LookupField(Field):
         :rtype: Optional[int]
         """
 
-        return self.field_data.get('through_field_name', None)
-    
+        return self.field_data.get("through_field_name", None)
+
     @property
     def target_field_id(self) -> Optional[int]:
         """
@@ -1479,8 +1700,8 @@ class LookupField(Field):
         :rtype: Optional[int]
         """
 
-        return self.field_data.get('target_field_id', None)
-    
+        return self.field_data.get("target_field_id", None)
+
     @property
     def target_field_name(self) -> Optional[str]:
         """
@@ -1490,7 +1711,7 @@ class LookupField(Field):
         :rtype: Optional[str]
         """
 
-        return self.field_data.get('target_field_name', None)
+        return self.field_data.get("target_field_name", None)
 
 
 class MultipleCollaboratorsField(Field):
@@ -1501,8 +1722,13 @@ class MultipleCollaboratorsField(Field):
     :vartype TYPE: str
     """
 
-    TYPE = 'multiple_collaborators'
-    _COMPATIBLE_FILTERS = ["multiple_collaborators_has", "multiple_collaborators_has_not", "empty", "not_empty"]
+    TYPE = "multiple_collaborators"
+    _COMPATIBLE_FILTERS = [
+        "multiple_collaborators_has",
+        "multiple_collaborators_has_not",
+        "empty",
+        "not_empty",
+    ]
 
     def __init__(self, name: str, field_data: Dict[str, Any]):
         """
@@ -1533,8 +1759,8 @@ class MultipleCollaboratorsField(Field):
         :return: True if the user should be notified, False otherwise.
         :rtype: bool
         """
-        return self.field_data.get('notify_user_when_added', False)
-        
+        return self.field_data.get("notify_user_when_added", False)
+
     def format_for_api(self, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Format the value for API submission. Accepts an array of objects where each object contains a user's id.
@@ -1546,7 +1772,9 @@ class MultipleCollaboratorsField(Field):
         :raises ValueError: If the provided value is not a list or if the format is incorrect.
         """
         if not isinstance(value, list):
-            raise ValueError(f"Expected a list of collaborator data for MultipleCollaboratorsField but got {type(value)}")
+            raise ValueError(
+                f"Expected a list of collaborator data for MultipleCollaboratorsField but got {type(value)}"
+            )
         return value  # Return value as-is since it's already in the expected format
 
     def validate_value(self, value: List[Dict[str, Any]]):
@@ -1558,10 +1786,14 @@ class MultipleCollaboratorsField(Field):
         :raises ValueError: If the provided value is not a list or if the format is incorrect.
         """
         if not isinstance(value, list):
-            raise ValueError(f"Expected a list for MultipleCollaboratorsField but got {type(value)}")
+            raise ValueError(
+                f"Expected a list for MultipleCollaboratorsField but got {type(value)}"
+            )
         for collaborator in value:
-            if not isinstance(collaborator, dict) or 'id' not in collaborator:
-                raise ValueError("Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key")
+            if not isinstance(collaborator, dict) or "id" not in collaborator:
+                raise ValueError(
+                    "Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key"
+                )
 
 
 class FieldList:
@@ -1588,17 +1820,17 @@ class FieldList:
     def __repr__(self) -> str:
         """
         Provide a string representation of the FieldList object.
-        
+
         :return: A string representing the FieldList.
         :rtype: str
         """
         max_fields_to_show = 5
         fields_names = [field.name for field in self.fields]
-        
+
         if len(fields_names) > max_fields_to_show:
-            fields_names = fields_names[:max_fields_to_show] + ['...']
-        
-        fields_str = ', '.join(fields_names)
+            fields_names = fields_names[:max_fields_to_show] + ["..."]
+
+        fields_str = ", ".join(fields_names)
         return f"FieldList({len(self.fields)} fields: [{fields_str}])"
 
     def __getitem__(self, field_name: str) -> Field:
