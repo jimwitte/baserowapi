@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import requests
 
+
 class RowValue:
     """
     Represents a value in a Baserow row associated with a specific field.
@@ -15,7 +16,12 @@ class RowValue:
         logger (logging.Logger): Logger instance for the class.
     """
 
-    def __init__(self, field: 'Field', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "Field",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a RowValue object.
 
@@ -25,13 +31,17 @@ class RowValue:
         :raises ValueError: If the provided field is not an instance of the Field class.
         """
         if not isinstance(field, Field):
-            raise ValueError("The provided field is not an instance of the Field class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the Field class."
+            )
+
         self.field = field
         self._raw_value = raw_value
         self.client = client
         self.logger = logging.getLogger(__name__)
-        self.logger.debug(f"Initialized RowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized RowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     def __repr__(self) -> str:
         """
@@ -56,7 +66,7 @@ class RowValue:
     @value.setter
     def value(self, new_value: Any) -> None:
         """
-        Set a new value. 
+        Set a new value.
         This should handle validation and potentially conversion to a format suitable for the API.
 
         :param new_value: New value to set.
@@ -64,10 +74,14 @@ class RowValue:
         """
         try:
             self.field.validate_value(new_value)
-            self._raw_value = new_value  # Child classes can transform this value before setting
+            self._raw_value = (
+                new_value  # Child classes can transform this value before setting
+            )
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:
-            self.logger.error(f"Failed to set value for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
             raise
 
     def format_for_api(self) -> Any:
@@ -117,7 +131,12 @@ class TextRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.
     """
 
-    def __init__(self, field: 'TextField', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "TextField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a TextRowValue object.
 
@@ -127,10 +146,14 @@ class TextRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the TextField class.
         """
         if not isinstance(field, TextField):
-            raise ValueError("The provided field is not an instance of the TextField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the TextField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized TextRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized TextRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
 
 class LongTextRowValue(RowValue):
@@ -143,7 +166,12 @@ class LongTextRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.
     """
 
-    def __init__(self, field: 'LongTextField', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "LongTextField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a LongTextRowValue object.
 
@@ -153,10 +181,14 @@ class LongTextRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the LongTextField class.
         """
         if not isinstance(field, LongTextField):
-            raise ValueError("The provided field is not an instance of the LongTextField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the LongTextField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized LongTextRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized LongTextRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
 
 class UrlRowValue(RowValue):
@@ -169,7 +201,12 @@ class UrlRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.
     """
 
-    def __init__(self, field: 'UrlField', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "UrlField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a UrlRowValue object.
 
@@ -179,10 +216,14 @@ class UrlRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the UrlField class.
         """
         if not isinstance(field, UrlField):
-            raise ValueError("The provided field is not an instance of the UrlField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the UrlField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized UrlRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized UrlRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
 
 class EmailRowValue(RowValue):
@@ -195,7 +236,12 @@ class EmailRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'EmailField', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "EmailField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize an EmailRowValue object.
 
@@ -205,10 +251,14 @@ class EmailRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the EmailField class.
         """
         if not isinstance(field, EmailField):
-            raise ValueError("The provided field is not an instance of the EmailField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the EmailField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized EmailRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized EmailRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
 
 class PhoneNumberRowValue(RowValue):
@@ -221,7 +271,12 @@ class PhoneNumberRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'PhoneNumberField', raw_value: Optional[Any] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "PhoneNumberField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a PhoneNumberRowValue object.
 
@@ -231,10 +286,14 @@ class PhoneNumberRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the PhoneNumberField class.
         """
         if not isinstance(field, PhoneNumberField):
-            raise ValueError("The provided field is not an instance of the PhoneNumberField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the PhoneNumberField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized PhoneNumberRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized PhoneNumberRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
 
 class NumberRowValue(RowValue):
@@ -247,7 +306,12 @@ class NumberRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'NumberField', raw_value: Optional[Union[int, float]] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "NumberField",
+        raw_value: Optional[Union[int, float]] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a NumberRowValue object.
 
@@ -257,11 +321,15 @@ class NumberRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the NumberField class.
         """
         if not isinstance(field, NumberField):
-            raise ValueError("The provided field is not an instance of the NumberField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the NumberField class."
+            )
+
         super().__init__(field, raw_value, client)
         self.logger = logging.getLogger(__name__)
-        self.logger.debug(f"Initialized NumberRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized NumberRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def value(self) -> Union[int, float, str]:
@@ -279,7 +347,7 @@ class NumberRowValue(RowValue):
     @value.setter
     def value(self, new_value: Union[int, float]) -> None:
         """
-        Set a new value. 
+        Set a new value.
         This should handle validation specific to NumberRowValue using the associated NumberField's validate_value method.
 
         :param new_value: The new numeric value to set.
@@ -288,11 +356,13 @@ class NumberRowValue(RowValue):
         try:
             # Use the validate_value method of the corresponding NumberField class
             self.field.validate_value(new_value)
-            
+
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:
-            self.logger.error(f"Failed to set value for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
             raise
 
 
@@ -306,7 +376,12 @@ class BooleanRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'BooleanField', raw_value: Optional[bool] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "BooleanField",
+        raw_value: Optional[bool] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a BooleanRowValue object.
 
@@ -316,10 +391,14 @@ class BooleanRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the BooleanField class.
         """
         if not isinstance(field, BooleanField):
-            raise ValueError("The provided field is not an instance of the BooleanField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the BooleanField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized BooleanRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized BooleanRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def value(self) -> bool:
@@ -334,7 +413,7 @@ class BooleanRowValue(RowValue):
     @value.setter
     def value(self, new_value: bool) -> None:
         """
-        Set a new value. 
+        Set a new value.
         This should handle validation specific to BooleanRowValue using the associated BooleanField's validate_value method.
 
         :param new_value: The new boolean value to set.
@@ -343,11 +422,13 @@ class BooleanRowValue(RowValue):
         try:
             # Use the validate_value method of the corresponding BooleanField class
             self.field.validate_value(new_value)
-            
+
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:
-            self.logger.error(f"Failed to set value for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
             raise
 
 
@@ -361,7 +442,12 @@ class RatingRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'RatingField', raw_value: Optional[Union[int, float]] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "RatingField",
+        raw_value: Optional[Union[int, float]] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a RatingRowValue object.
 
@@ -371,10 +457,14 @@ class RatingRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the RatingField class.
         """
         if not isinstance(field, RatingField):
-            raise ValueError("The provided field is not an instance of the RatingField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the RatingField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized RatingRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized RatingRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def value(self) -> Union[int, float]:
@@ -389,7 +479,7 @@ class RatingRowValue(RowValue):
     @value.setter
     def value(self, new_value: Union[int, float]) -> None:
         """
-        Set a new value. 
+        Set a new value.
         This should handle validation specific to RatingRowValue using the associated RatingField's validate_value method.
 
         :param new_value: The new numerical value to set.
@@ -398,11 +488,13 @@ class RatingRowValue(RowValue):
         try:
             # Use the validate_value method of the corresponding RatingField class
             self.field.validate_value(new_value)
-            
+
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:
-            self.logger.error(f"Failed to set value for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
             raise
 
 
@@ -416,7 +508,12 @@ class BaseDateRowValue(RowValue):
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'BaseDateField', raw_value: Optional[str] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "BaseDateField",
+        raw_value: Optional[str] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a BaseDateRowValue object.
 
@@ -426,10 +523,14 @@ class BaseDateRowValue(RowValue):
         :raises ValueError: If the provided field is not an instance of the BaseDateField class.
         """
         if not isinstance(field, BaseDateField):
-            raise ValueError("The provided field is not an instance of the BaseDateField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the BaseDateField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized BaseDateRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized BaseDateRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def value(self) -> str:
@@ -449,18 +550,20 @@ class BaseDateRowValue(RowValue):
         """
         try:
             # If the string ends with 'Z', it's indicating UTC timezone.
-            if self._raw_value.endswith('Z'):
-                return datetime.fromisoformat(self._raw_value.replace('Z', '+00:00'))
+            if self._raw_value.endswith("Z"):
+                return datetime.fromisoformat(self._raw_value.replace("Z", "+00:00"))
             else:
                 return datetime.fromisoformat(self._raw_value)
         except Exception as e:
-            self.logger.error(f"Failed to convert value to datetime for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to convert value to datetime for field {self.field.name}. Error: {e}"
+            )
             raise
 
     @value.setter
     def value(self, new_value: Union[datetime, str]) -> None:
         """
-        Set a new value. 
+        Set a new value.
         If the new value is a datetime object, it will be converted to ISO format.
         This method also validates the new value using the associated BaseDateField's validate_value method.
 
@@ -474,19 +577,21 @@ class BaseDateRowValue(RowValue):
 
             # Use the validate_value method of the corresponding BaseDateField class
             self.field.validate_value(new_value)
-            
+
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:
-            self.logger.error(f"Failed to set value for field {self.field.name}. Error: {e}")
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
             raise
-    
+
     @property
     def formatted_date(self) -> str:
         """
         Convert the field's value to a formatted string based on the field's settings.
 
-        The method formats the date and time based on field settings such as `date_format`, 
+        The method formats the date and time based on field settings such as `date_format`,
         `date_time_format`, and `date_show_tzinfo`.
 
         :return: The formatted representation of the date or datetime.
@@ -495,17 +600,10 @@ class BaseDateRowValue(RowValue):
         """
         if self.value is None:
             return None
-        
+
         # Define format patterns
-        date_str_formats = {
-            'US': '%m-%d-%Y',
-            'EU': '%d-%m-%Y',
-            'ISO': '%Y-%m-%d'
-        }
-        time_str_formats = {
-            '12': '%I:%M:%S %p',
-            '24': '%H:%M:%S'
-        }
+        date_str_formats = {"US": "%m-%d-%Y", "EU": "%d-%m-%Y", "ISO": "%Y-%m-%d"}
+        time_str_formats = {"12": "%I:%M:%S %p", "24": "%H:%M:%S"}
 
         # Determine the timezone
         try:
@@ -518,39 +616,52 @@ class BaseDateRowValue(RowValue):
         try:
             if self.field.date_include_time:
                 try:
-                    dt_object = datetime.strptime(self.value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                    dt_object = datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
                 except ValueError:
-                    dt_object = datetime.strptime(self.value, '%Y-%m-%dT%H:%M:%S%z')
+                    dt_object = datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S%z")
 
                 dt_object = dt_object.astimezone(tzinfo)
-                date_str = dt_object.strftime(date_str_formats.get(self.field.date_format, '%Y-%m-%d'))
-                time_str = dt_object.strftime(time_str_formats.get(self.field.date_time_format, '%H:%M:%S'))
-                
+                date_str = dt_object.strftime(
+                    date_str_formats.get(self.field.date_format, "%Y-%m-%d")
+                )
+                time_str = dt_object.strftime(
+                    time_str_formats.get(self.field.date_time_format, "%H:%M:%S")
+                )
+
                 formatted_date = f"{date_str} {time_str}"
                 if self.field.date_show_tzinfo:
                     formatted_date += f" {dt_object.tzname()}"
-                
+
                 return formatted_date
 
             else:
-                dt_object = datetime.strptime(self.value, '%Y-%m-%d')
-                return dt_object.strftime(date_str_formats.get(self.field.date_format, '%Y-%m-%d'))
+                dt_object = datetime.strptime(self.value, "%Y-%m-%d")
+                return dt_object.strftime(
+                    date_str_formats.get(self.field.date_format, "%Y-%m-%d")
+                )
         except ValueError as e:
-            self.logger.error(f"Invalid date format for {self.type}: {self.value}. Error: {e}")
+            self.logger.error(
+                f"Invalid date format for {self.type}: {self.value}. Error: {e}"
+            )
             raise
 
 
 class DateRowValue(BaseDateRowValue):
     """
     Represents a RowValue specifically designed for a DateField.
-    
+
     Attributes:
         field (:class:`DateField`): The associated DateField object.
         raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'DateField', raw_value: Optional[str] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "DateField",
+        raw_value: Optional[str] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a DateRowValue object.
 
@@ -560,22 +671,29 @@ class DateRowValue(BaseDateRowValue):
         :raises ValueError: If the provided field is not an instance of the DateField class.
         """
         if not isinstance(field, DateField):
-            raise ValueError("The provided field is not an instance of the DateField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the DateField class."
+            )
+
         super().__init__(field, raw_value, client)
 
 
 class LastModifiedRowValue(BaseDateRowValue):
     """
     Represents a RowValue specifically designed for a LastModifiedField.
-    
+
     Attributes:
         field (:class:`LastModifiedField`): The associated LastModifiedField object.
         raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'LastModifiedField', raw_value: Optional[str] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "LastModifiedField",
+        raw_value: Optional[str] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a LastModifiedRowValue object.
 
@@ -585,14 +703,16 @@ class LastModifiedRowValue(BaseDateRowValue):
         :raises ValueError: If the provided field is not an instance of the LastModifiedField class.
         """
         if not isinstance(field, LastModifiedField):
-            raise ValueError("The provided field is not an instance of the LastModifiedField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the LastModifiedField class."
+            )
+
         super().__init__(field, raw_value, client)
 
     @BaseDateRowValue.value.setter
     def value(self, new_value: str) -> None:
         """
-        Set a new value for LastModifiedRowValue. 
+        Set a new value for LastModifiedRowValue.
         As LastModifiedRowValue is read-only, it will raise an error if there's an attempt to set a value.
 
         :param new_value: The new value to be set.
@@ -606,14 +726,19 @@ class LastModifiedRowValue(BaseDateRowValue):
 class CreatedOnRowValue(BaseDateRowValue):
     """
     Represents a RowValue specifically designed for a CreatedOnField.
-    
+
     Attributes:
         field (:class:`CreatedOnField`): The associated CreatedOnField object.
         raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'CreatedOnField', raw_value: Optional[str] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "CreatedOnField",
+        raw_value: Optional[str] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a CreatedOnRowValue object.
 
@@ -623,14 +748,16 @@ class CreatedOnRowValue(BaseDateRowValue):
         :raises ValueError: If the provided field is not an instance of the CreatedOnField class.
         """
         if not isinstance(field, CreatedOnField):
-            raise ValueError("The provided field is not an instance of the CreatedOnField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the CreatedOnField class."
+            )
+
         super().__init__(field, raw_value, client)
 
     @BaseDateRowValue.value.setter
     def value(self, new_value: str) -> None:
         """
-        Set a new value for CreatedOnRowValue. 
+        Set a new value for CreatedOnRowValue.
         As CreatedOnRowValue is read-only, it will raise an error if there's an attempt to set a value.
 
         :param new_value: The new value to be set.
@@ -644,14 +771,19 @@ class CreatedOnRowValue(BaseDateRowValue):
 class SingleSelectRowValue(RowValue):
     """
     Represents a RowValue specifically designed for a SingleSelectField.
-    
+
     Attributes:
         field (SingleSelectField): The associated SingleSelectField object.
         raw_value (dict): The raw value as fetched/returned from the API.
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
-    def __init__(self, field: 'SingleSelectField', raw_value: Optional[dict] = None, client: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        field: "SingleSelectField",
+        raw_value: Optional[dict] = None,
+        client: Optional[Any] = None,
+    ) -> None:
         """
         Initialize a SingleSelectRowValue object.
 
@@ -663,13 +795,16 @@ class SingleSelectRowValue(RowValue):
         self._raw_value = raw_value
 
         if not isinstance(field, SingleSelectField):
-            msg = "The provided field is not an instance of the SingleSelectField class."
+            msg = (
+                "The provided field is not an instance of the SingleSelectField class."
+            )
             self.logger.error(msg)
             raise ValueError(msg)
-        
-        super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized SingleSelectRowValue with field {self.field.name} and value {self._raw_value}")
 
+        super().__init__(field, raw_value, client)
+        self.logger.debug(
+            f"Initialized SingleSelectRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def options(self) -> List[str]:
@@ -689,7 +824,6 @@ class SingleSelectRowValue(RowValue):
             self.logger.error(msg)
             raise AttributeError(msg)
 
-
     @property
     def value(self) -> str:
         """
@@ -701,39 +835,46 @@ class SingleSelectRowValue(RowValue):
         if self._raw_value is None:
             return None
         else:
-            return self._raw_value.get('value', "None")
+            return self._raw_value.get("value", "None")
 
     @value.setter
     def value(self, new_value: Union[int, str]) -> None:
         """
-        Set a new value. 
+        Set a new value.
         This should handle validation specific to SingleSelectRowValue using the associated SingleSelectField's validate_value method.
 
         :param new_value: The new value to be set, which can be either an ID or a string corresponding to an option value.
         :raises ValueError: If the provided value doesn't match any select option by ID or value.
         """
         option_details = self.field.options_details
-        
+
         # Determine the criteria based on the type of new_value
-        criteria = 'id' if isinstance(new_value, int) else 'value' if isinstance(new_value, str) else None
+        criteria = (
+            "id"
+            if isinstance(new_value, int)
+            else "value"
+            if isinstance(new_value, str)
+            else None
+        )
 
         if not criteria:
             msg = f"Invalid input type for value. Expected int or str, got {type(new_value).__name__}."
             self.logger.error(msg)
             raise ValueError(msg)
 
-        matching_option = next((option for option in option_details if option[criteria] == new_value), None)
-        
+        matching_option = next(
+            (option for option in option_details if option[criteria] == new_value), None
+        )
+
         if not matching_option:
             msg = f"The provided {criteria} '{new_value}' doesn't match any select option."
             self.logger.error(msg)
             raise ValueError(msg)
 
         self._raw_value = {
-            'id': matching_option['id'],
-            'value': matching_option['value']
+            "id": matching_option["id"],
+            "value": matching_option["value"],
         }
-
 
     def format_for_api(self) -> Optional[int]:
         """
@@ -748,7 +889,7 @@ class SingleSelectRowValue(RowValue):
             if self._raw_value is None:
                 return None
             else:
-                return self._raw_value['id']
+                return self._raw_value["id"]
         except Exception as e:
             msg = f"Failed to format value for API submission for field {self.field.name}. Error: {e}"
             self.logger.error(msg)
@@ -772,14 +913,23 @@ class MultipleSelectRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'MultipleSelectField', raw_value: List[Optional[Any]] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "MultipleSelectField",
+        raw_value: List[Optional[Any]] = None,
+        client: Optional[Any] = None,
+    ):
         self._raw_value = raw_value if raw_value is not None else []
 
         if not isinstance(field, MultipleSelectField):
-            raise ValueError("The provided field is not an instance of the MultipleSelectField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the MultipleSelectField class."
+            )
+
         super().__init__(field, raw_value, client)
-        self.logger.debug(f"Initialized MultipleSelectRowValue with field {self.field.name} and value {self._raw_value}")
+        self.logger.debug(
+            f"Initialized MultipleSelectRowValue with field {self.field.name} and value {self._raw_value}"
+        )
 
     @property
     def options(self) -> List[str]:
@@ -808,7 +958,7 @@ class MultipleSelectRowValue(RowValue):
         :rtype: List[str]
         """
         options = self._raw_value
-        return [option['value'] for option in options if option]
+        return [option["value"] for option in options if option]
 
     @value.setter
     def value(self, new_values: Union[List[int], List[str]]) -> None:
@@ -830,13 +980,15 @@ class MultipleSelectRowValue(RowValue):
                 if option:
                     option_dicts.append(option)
                 else:
-                    raise ValueError(f"The value '{new_value}' doesn't match any select option.")
+                    raise ValueError(
+                        f"The value '{new_value}' doesn't match any select option."
+                    )
             else:
-                raise ValueError(f"Invalid type '{type(new_value).__name__}' for value. Expected int or str.")
+                raise ValueError(
+                    f"Invalid type '{type(new_value).__name__}' for value. Expected int or str."
+                )
 
         self._raw_value = option_dicts
-
-
 
     def format_for_api(self) -> List[int]:
         """
@@ -848,9 +1000,11 @@ class MultipleSelectRowValue(RowValue):
         """
         try:
             # Extracting the 'id' from each option dictionary in the raw_value for API submission
-            return [option['id'] for option in self._raw_value]
+            return [option["id"] for option in self._raw_value]
         except Exception as e:
-            raise ValueError(f"Failed to format values for API submission for field {self.field.name}. Error: {e}")
+            raise ValueError(
+                f"Failed to format values for API submission for field {self.field.name}. Error: {e}"
+            )
 
 
 class FormulaRowValue(RowValue):
@@ -870,10 +1024,17 @@ class FormulaRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'FormulaField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "FormulaField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ):
         if not isinstance(field, FormulaField):
-            raise ValueError("The provided field is not an instance of the FormulaField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the FormulaField class."
+            )
+
         super().__init__(field, raw_value, client)
 
     @property
@@ -924,10 +1085,17 @@ class TableLinkRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'TableLinkField', raw_value: Optional[List[Union[int, str]]] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "TableLinkField",
+        raw_value: Optional[List[Union[int, str]]] = None,
+        client: Optional[Any] = None,
+    ):
         if not isinstance(field, TableLinkField):
-            raise ValueError("The provided field is not an instance of the TableLinkField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the TableLinkField class."
+            )
+
         super().__init__(field, raw_value, client)
 
     @property
@@ -938,7 +1106,7 @@ class TableLinkRowValue(RowValue):
         :return: A list of primary field values or IDs.
         :rtype: List[Union[int, str]]
         """
-        return [entry.get('value', entry.get('id', '')) for entry in self._raw_value]
+        return [entry.get("value", entry.get("id", "")) for entry in self._raw_value]
 
     @value.setter
     def value(self, new_value: List[Union[int, str]]):
@@ -950,14 +1118,18 @@ class TableLinkRowValue(RowValue):
         :raises ValueError: If the provided values are not in the expected format or there are mixed types of IDs and values.
         """
         if not isinstance(new_value, list):
-            raise ValueError("The provided value for TableLinkRowValue should be a list.")
-        
+            raise ValueError(
+                "The provided value for TableLinkRowValue should be a list."
+            )
+
         if all(isinstance(val, int) for val in new_value):
             self._raw_value = [{"id": val, "value": val} for val in new_value]
         elif all(isinstance(val, str) for val in new_value):
             self._raw_value = [{"value": val} for val in new_value]
         else:
-            raise ValueError("Mixed types of IDs and values provided for TableLinkRowValue.")
+            raise ValueError(
+                "Mixed types of IDs and values provided for TableLinkRowValue."
+            )
 
     def format_for_api(self) -> List[Union[int, str]]:
         """
@@ -966,8 +1138,7 @@ class TableLinkRowValue(RowValue):
         :return: A list of IDs or values suitable for API submission.
         :rtype: List[Union[int, str]]
         """
-        return [entry.get('id', entry.get('value')) for entry in self._raw_value]
-    
+        return [entry.get("id", entry.get("value")) for entry in self._raw_value]
 
     def get_related_table(self):
         """
@@ -983,24 +1154,28 @@ class TableLinkRowValue(RowValue):
         try:
             # Fetch the related table using the client's get_table method
             related_table = self.client.get_table(self.field.link_row_table_id)
-            
+
             # Logging the successful fetch operation
-            self.logger.debug(f"Fetched related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}")
+            self.logger.debug(
+                f"Fetched related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}"
+            )
 
             return related_table
         except Exception as e:
             # Logging the error
-            self.logger.error(f"Failed to fetch related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}. Error: {e}")
-            
+            self.logger.error(
+                f"Failed to fetch related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}. Error: {e}"
+            )
+
             # Raising an error for external handling or informing the caller
             raise ValueError(f"Failed to fetch the related table. Error: {e}")
-        
+
     def get_options(self) -> List[str]:
         """
-        Fetches and returns the primary values from the related table that are possible 
+        Fetches and returns the primary values from the related table that are possible
         for the TableLinkRowValue.
 
-        This method retrieves the rows from the related table and extracts the primary 
+        This method retrieves the rows from the related table and extracts the primary
         field values from each row.
 
         :return: A list of primary field values from the related table.
@@ -1012,11 +1187,17 @@ class TableLinkRowValue(RowValue):
             returned_rows = related_table.get_rows(include=[primary_field_name])
             options = [row[primary_field_name] for row in returned_rows]
 
-            self.logger.debug(f"Retrieved {len(options)} options for TableLinkRowValue associated with field {self.field.name} from related table {related_table.id}")
+            self.logger.debug(
+                f"Retrieved {len(options)} options for TableLinkRowValue associated with field {self.field.name} from related table {related_table.id}"
+            )
             return options
         except Exception as e:
-            self.logger.error(f"Failed to retrieve options for TableLinkRowValue associated with field {self.field.name}. Error: {e}")
-            raise ValueError(f"Failed to retrieve options from the related table. Error: {e}")
+            self.logger.error(
+                f"Failed to retrieve options for TableLinkRowValue associated with field {self.field.name}. Error: {e}"
+            )
+            raise ValueError(
+                f"Failed to retrieve options from the related table. Error: {e}"
+            )
 
 
 class CountRowValue(RowValue):
@@ -1036,11 +1217,18 @@ class CountRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'CountField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "CountField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ):
         super().__init__(field, raw_value, client)
-        
+
         if not isinstance(field, CountField):
-            raise ValueError("The provided field is not an instance of the CountField class.")
+            raise ValueError(
+                "The provided field is not an instance of the CountField class."
+            )
 
     @property
     def value(self) -> Any:
@@ -1090,11 +1278,18 @@ class LookupRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'LookupField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "LookupField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ):
         super().__init__(field, raw_value, client)
-        
+
         if not isinstance(field, LookupField):
-            raise ValueError("The provided field is not an instance of the LookupField class.")
+            raise ValueError(
+                "The provided field is not an instance of the LookupField class."
+            )
 
     @property
     def value(self) -> Any:
@@ -1144,7 +1339,12 @@ class MultipleCollaboratorsRowValue(RowValue):
     :ivar Optional[Any] client: The Baserow class API client.
     """
 
-    def __init__(self, field: 'MultipleCollaboratorsField', raw_value: Optional[Any] = None, client: Optional[Any] = None):
+    def __init__(
+        self,
+        field: "MultipleCollaboratorsField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ):
         super().__init__(field, raw_value, client)
 
     @property
@@ -1195,18 +1395,26 @@ class FileRowValue(RowValue):
     :ivar Optional[List[Any]] raw_value: The raw value as fetched/returned from the API.
     """
 
-    def __init__(self, field: 'FileField', client: Any, raw_value: Optional[List[Any]] = None):
+    def __init__(
+        self, field: "FileField", client: Any, raw_value: Optional[List[Any]] = None
+    ):
         if not isinstance(field, FileField):
-            raise ValueError("The provided field is not an instance of the FileField class.")
-        
+            raise ValueError(
+                "The provided field is not an instance of the FileField class."
+            )
+
         self.client = client
         super().__init__(field, raw_value, client)
 
         if self._raw_value is None:
             self._raw_value = []
 
-
-    def upload_file_to_server(self, file_path: Optional[str] = None, url: Optional[str] = None, replace: bool = False) -> List[Any]:
+    def upload_file_to_server(
+        self,
+        file_path: Optional[str] = None,
+        url: Optional[str] = None,
+        replace: bool = False,
+    ) -> List[Any]:
         """
         Upload a file or files to Baserow either from a local path or by downloading it from a provided URL.
         The method either appends or replaces the current value based on the 'replace' flag.
@@ -1237,14 +1445,18 @@ class FileRowValue(RowValue):
         # Upload local files
         if file_path:
             if os.path.isdir(file_path):
-                files_to_upload = [os.path.join(file_path, file) for file in os.listdir(file_path)]
+                files_to_upload = [
+                    os.path.join(file_path, file) for file in os.listdir(file_path)
+                ]
             else:
                 files_to_upload = [file_path]
 
             for file in files_to_upload:
                 try:
-                    with open(file, 'rb') as f:
-                        response = self.client.make_api_request(endpoint_file, method="POST", files={'file': f})
+                    with open(file, "rb") as f:
+                        response = self.client.make_api_request(
+                            endpoint_file, method="POST", files={"file": f}
+                        )
                         uploaded_files.append(response)
                 except Exception as e:
                     error_message = f"Failed to upload file {file}. Error: {e}"
@@ -1255,7 +1467,9 @@ class FileRowValue(RowValue):
         if url:
             try:
                 data = {"url": url}
-                response = self.client.make_api_request(endpoint_url, method="POST", data=data)
+                response = self.client.make_api_request(
+                    endpoint_url, method="POST", data=data
+                )
                 uploaded_files.append(response)
             except Exception as e:
                 self.logger.error(f"Failed to upload file from URL {url}. Error: {e}")
@@ -1280,19 +1494,23 @@ class FileRowValue(RowValue):
         :raises Exception: If there's an error during the download process.
         """
         logger = logging.getLogger(__name__)
-        downloaded_files = []  # List to store the names of successfully downloaded files
+        downloaded_files = (
+            []
+        )  # List to store the names of successfully downloaded files
 
         # Ensure the target directory exists
         os.makedirs(directory_path, exist_ok=True)
 
         for file_obj in self._raw_value:
-            file_url = file_obj['url']
-            file_name = file_obj['original_name']
+            file_url = file_obj["url"]
+            file_name = file_obj["original_name"]
             target_file_path = os.path.join(directory_path, file_name)
 
             # Check if the file already exists in the target directory
             if os.path.exists(target_file_path):
-                logger.info(f"File {file_name} already exists in {directory_path}. Skipping download.")
+                logger.info(
+                    f"File {file_name} already exists in {directory_path}. Skipping download."
+                )
                 continue
 
             try:
@@ -1301,18 +1519,25 @@ class FileRowValue(RowValue):
                 response.raise_for_status()
 
                 # Save the downloaded file to the target directory
-                with open(target_file_path, 'wb') as out_file:
+                with open(target_file_path, "wb") as out_file:
                     for chunk in response.iter_content(chunk_size=8192):
                         out_file.write(chunk)
 
-                logger.debug(f"File {file_name} downloaded successfully to {directory_path}.")
-                downloaded_files.append(file_name)  # Append the file name to the downloaded_files list
+                logger.debug(
+                    f"File {file_name} downloaded successfully to {directory_path}."
+                )
+                downloaded_files.append(
+                    file_name
+                )  # Append the file name to the downloaded_files list
 
             except requests.RequestException as e:
-                logger.error(f"Failed to download file {file_name} from {file_url}. Error: {e}")
+                logger.error(
+                    f"Failed to download file {file_name} from {file_url}. Error: {e}"
+                )
                 raise Exception(f"Failed to download file {file_name}. Error: {e}")
 
         return downloaded_files  # Return the list of successfully downloaded files
+
 
 class RowValueList:
     """
@@ -1322,7 +1547,7 @@ class RowValueList:
     :vartype row_values: List[RowValue]
     """
 
-    def __init__(self, row_values: Union[List['RowValue'], None] = None) -> None:
+    def __init__(self, row_values: Union[List["RowValue"], None] = None) -> None:
         """
         Initializes a RowValueList instance.
 
@@ -1340,14 +1565,14 @@ class RowValueList:
         """
         max_values_to_show = 5
         value_names = [value.field.name for value in self.row_values]
-        
+
         if len(value_names) > max_values_to_show:
-            value_names = value_names[:max_values_to_show] + ['...']
-        
-        values_str = ', '.join(value_names)
+            value_names = value_names[:max_values_to_show] + ["..."]
+
+        values_str = ", ".join(value_names)
         return f"RowValueList({len(self.row_values)} values: [{values_str}])"
 
-    def __getitem__(self, field_name: str) -> 'RowValue':
+    def __getitem__(self, field_name: str) -> "RowValue":
         """
         Retrieve a RowValue object from the list by its field name.
 
@@ -1380,7 +1605,7 @@ class RowValueList:
         """
         return len(self.row_values)
 
-    def add(self, row_value: 'RowValue') -> None:
+    def add(self, row_value: "RowValue") -> None:
         """
         Add a RowValue object to the list.
 
@@ -1389,6 +1614,8 @@ class RowValueList:
         :raises TypeError: If the provided object is not an instance of RowValue.
         """
         if not isinstance(row_value, RowValue):
-            raise TypeError("The provided object is not an instance of the RowValue class.")
-        
+            raise TypeError(
+                "The provided object is not an instance of the RowValue class."
+            )
+
         self.row_values.append(row_value)
