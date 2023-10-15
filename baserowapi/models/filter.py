@@ -15,14 +15,13 @@ class Filter:
     - query_string (str): Computes the API's required GET parameter string.
     """
 
-    def __init__(self, field_name, value, operator="equal"):
+    def __init__(self, field_name: str, value: str, operator: str = "equal"):
         """
         Initializes the Filter object with the given field name, value, and operator.
 
-        Parameters:
-        - field_name (str): The name of the field.
-        - value (str, int, etc.): The value for comparison.
-        - operator (str): The comparison operator. Default is "equal".
+        :param field_name: The name of the field.
+        :param value: The value for comparison.
+        :param operator: The comparison operator. Default is "equal".
         """
 
         self.logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ class Filter:
         self.operator = operator
 
     @property
-    def query_string(self):
+    def query_string(self) -> str:
         """
         Returns the filter as a query string formatted for use as a GET parameter in an API call.
 
