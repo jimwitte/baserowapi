@@ -735,12 +735,12 @@ class SingleSelectRowValue(RowValue):
         }
 
 
-    def format_for_api(self) -> int:
+    def format_for_api(self) -> Optional[int]:
         """
         Format the value for API submission.
         This method will extract the 'id' of the option from the raw_value for API submission.
 
-        :return: The option's id suitable for API submission.
+        :return: The option's id suitable for API submission or None if raw_value is None.
         :raises ValueError: If there's an error in formatting the value for API submission.
         """
         try:
