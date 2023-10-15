@@ -298,17 +298,19 @@ class Table:
 
         return parsed_rows
 
-
     class RowIterator:
         """
         An iterator class to iterate over rows fetched from Baserow, handling pagination and next page fetches.
         """
+        MAX_CONSECUTIVE_EMPTY_FETCHES = 5
+
         def __init__(self, table: 'Table', initial_url: str, fetch_data_fn=None) -> None:
             self.table = table
             self.initial_url = initial_url
             self.next_page_url: Optional[str] = None
             self.current_rows: List[Row] = []
             self.index = 0
+            self.empty_fetch_count = 0
             self.logger = logging.getLogger(__name__)
             self.logger.debug("RowIterator initialized.")
             
@@ -323,19 +325,31 @@ class Table:
                     return
 
                 url_to_fetch = self.next_page_url or self.initial_url
-                response_data = self.fetch_data_fn(url_to_fetch)
-
-                if not response_data:
+                try:
+                    response_data = self.fetch_data_fn(url_to_fetch)
+                except Exception as e:
+                    self.logger.error(f"API fetch failed for URL {url_to_fetch}. Error: {e}")
                     self.current_rows = []
-                else:
+                    return
+
+                if response_data and "results" in response_data and "next" in response_data:
                     self.next_page_url = response_data.get('next', None)
                     self.current_rows = self.table._parse_row_data(response_data)
+                else:
+                    self.logger.warning(f"Received unexpected response data: {response_data}")
+                    self.current_rows = []
 
                 if url_to_fetch == self.initial_url:
                     self.initial_url = None
 
+                if not self.current_rows:
+                    self.empty_fetch_count += 1
+                    if self.empty_fetch_count > self.MAX_CONSECUTIVE_EMPTY_FETCHES:
+                        self.logger.error(f"Reached maximum consecutive empty fetches ({self.MAX_CONSECUTIVE_EMPTY_FETCHES}). Stopping iteration.")
+                        raise StopIteration
+
                 self.index = 0
-        
+
         def __iter__(self) -> 'Table.RowIterator':
             """Returns the iterator instance."""
             return self
