@@ -196,6 +196,7 @@ class Table:
         filters: Optional[List[str]] = None,
         view_id: Optional[int] = None,
         page_size: Optional[int] = None,
+        size: Optional[int] = None,
         **kwargs,
     ) -> str:
         """
@@ -217,6 +218,8 @@ class Table:
         :type view_id: int, optional
         :param page_size: Number of rows per page for each API call. Defaults to None.
         :type page_size: int, optional
+        :param size: Maximum number of rows to be returned (must be <= page_size).
+        :type size: int, optional
         :param kwargs: Additional parameters that can be passed.
         :type kwargs: dict
         :return: The constructed request URL.
@@ -286,6 +289,14 @@ class Table:
                 )
                 raise ValueError("'page_size' parameter should be an integer.")
             query_params_parts.append(f"page_size={page_size}")
+
+        if size:
+            if not isinstance(size, int):
+                self.logger.error(
+                    f"'size' should be an integer, got {type(size)} instead."
+                )
+                raise ValueError("'size' parameter should be an integer.")
+            query_params_parts.append(f"size={size}")
 
         # Handle filters using the Filter objects' query_string property
         if filters:
@@ -433,6 +444,7 @@ class Table:
         filters: Optional[List[str]] = None,
         view_id: Optional[int] = None,
         page_size: Optional[int] = None,
+        size: Optional[int] = None,
         return_single: bool = False,
         **kwargs,
     ) -> Union[Row, "Table.RowIterator"]:
@@ -455,6 +467,8 @@ class Table:
         :type view_id: int, optional
         :param page_size: The number of rows per page in the response.
         :type page_size: int, optional
+        :param size: Maximum number of rows to be returned (must be <= page_size).
+        :type size: int, optional
         :param return_single: If True, returns a single Row object instead of an iterator.
         :type return_single: bool, optional
         :param kwargs: Additional parameters for the API request.
@@ -478,6 +492,7 @@ class Table:
                 filters=filters,
                 view_id=view_id,
                 page_size=page_size,
+                size=size,
                 **kwargs,
             )
         except Exception as e:
