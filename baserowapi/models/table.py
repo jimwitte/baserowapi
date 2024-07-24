@@ -195,7 +195,6 @@ class Table:
         filter_type: Optional[str] = None,
         filters: Optional[List[str]] = None,
         view_id: Optional[int] = None,
-        page_size: Optional[int] = None,
         size: Optional[int] = None,
         **kwargs,
     ) -> str:
@@ -216,9 +215,7 @@ class Table:
         :type filters: list, optional
         :param view_id: The ID of the view to apply its filters and sorts. Defaults to None.
         :type view_id: int, optional
-        :param page_size: Number of rows per page for each API call. Defaults to None.
-        :type page_size: int, optional
-        :param size: Maximum number of rows to be returned (must be <= page_size).
+        :param size: Number of rows per page for each API call. Defaults to None. For baserow.io hosted tables, it translates to 100.
         :type size: int, optional
         :param kwargs: Additional parameters that can be passed.
         :type kwargs: dict
@@ -273,7 +270,7 @@ class Table:
             encoded_order = urllib.parse.quote(",".join(order_by))
             query_params_parts.append(f"order_by={encoded_order}")
 
-        # Handle view_id and page_size parameters
+        # Handle view_id and size parameters
         if view_id:
             if not isinstance(view_id, int):
                 self.logger.error(
@@ -281,14 +278,6 @@ class Table:
                 )
                 raise ValueError("'view_id' parameter should be an integer.")
             query_params_parts.append(f"view_id={view_id}")
-
-        if page_size:
-            if not isinstance(page_size, int):
-                self.logger.error(
-                    f"'page_size' should be an integer, got {type(page_size)} instead."
-                )
-                raise ValueError("'page_size' parameter should be an integer.")
-            query_params_parts.append(f"page_size={page_size}")
 
         if size:
             if not isinstance(size, int):
@@ -443,7 +432,6 @@ class Table:
         filter_type: Optional[str] = None,
         filters: Optional[List[str]] = None,
         view_id: Optional[int] = None,
-        page_size: Optional[int] = None,
         size: Optional[int] = None,
         return_single: bool = False,
         **kwargs,
@@ -465,9 +453,7 @@ class Table:
         :type filters: list, optional
         :param view_id: ID of the view to consider its filters and sorts.
         :type view_id: int, optional
-        :param page_size: The number of rows per page in the response.
-        :type page_size: int, optional
-        :param size: Maximum number of rows to be returned (must be <= page_size).
+        :param size: The number of rows per page in the response. Defaults To None. For baserow.io hosted tables, it translates to 100.
         :type size: int, optional
         :param return_single: If True, returns a single Row object instead of an iterator.
         :type return_single: bool, optional
@@ -491,7 +477,6 @@ class Table:
                 filter_type=filter_type,
                 filters=filters,
                 view_id=view_id,
-                page_size=page_size,
                 size=size,
                 **kwargs,
             )
