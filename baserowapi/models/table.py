@@ -384,6 +384,8 @@ class Table:
                     and "next" in response_data
                 ):
                     self.next_page_url = response_data.get("next", None)
+                    if self.next_page_url and self.next_page_url.startswith('http://api.baserow.io'):
+                        self.next_page_url = self.next_page_url.replace('http://api.baserow.io', '')
                     self.current_rows = self.table._parse_row_data(response_data)
                 else:
                     self.logger.warning(
