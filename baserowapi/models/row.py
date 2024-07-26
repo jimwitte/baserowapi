@@ -51,6 +51,7 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
     "count": CountRowValue,
     "lookup": LookupRowValue,
     "multiple_collaborators": MultipleCollaboratorsRowValue,
+    "autonumber": NumberRowValue,
 }
 
 
