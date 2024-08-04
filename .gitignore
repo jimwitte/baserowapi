@@ -3,7 +3,10 @@ app_testing_*
 .vscode
 source
 docsrc
-
+tests
+sample_app.py
+build
+pytest.ini
 
 
 # Byte-compiled / optimized / DLL files

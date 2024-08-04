@@ -2,7 +2,7 @@ import requests
 import logging
 from typing import IO, Union, Dict, Optional, Any
 from baserowapi.models.table import Table
-
+import urllib.parse
 
 class Baserow:
     """
@@ -107,7 +107,20 @@ class Baserow:
         """
         logger = logging.getLogger(__name__)
 
-        url = self.url + endpoint
+        # URLs returned during paging may include the full URL, but use http rather than the scheme used in the initial api call
+        # To ensure consistency, adjust the scheme of the endpoint to match the scheme of self.url
+
+        if endpoint.startswith("http://") or endpoint.startswith("https://"):
+            parsed_base_url = urllib.parse.urlparse(self.url)
+            parsed_endpoint_url = urllib.parse.urlparse(endpoint)
+
+            # Replace the scheme of the endpoint with the scheme of self.url
+            url = parsed_endpoint_url._replace(
+                scheme=parsed_base_url.scheme
+            ).geturl()
+        else:
+            url = self.url + endpoint
+
         combined_headers = self.get_combined_headers(headers)
 
         response = self.perform_request(

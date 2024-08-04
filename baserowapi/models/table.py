@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any
 
+from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
 from baserowapi.models.field import (
     Field,
@@ -27,6 +28,8 @@ from baserowapi.models.field import (
 from baserowapi.validators.filter_validator import FilterValidator
 import logging
 import urllib.parse
+import json
+import re
 
 if TYPE_CHECKING:
     from baserowapi import Baserow
@@ -192,39 +195,15 @@ class Table:
         exclude: Optional[List[str]] = None,
         search: Optional[str] = None,
         order_by: Optional[List[str]] = None,
-        filter_type: Optional[str] = None,
-        filters: Optional[List[str]] = None,
+        filter_type: Optional[str] = None,  # Set to None initially
+        filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
-        page_size: Optional[int] = None,
+        size: Optional[int] = None,
         **kwargs,
     ) -> str:
         """
         Constructs the URL for the Baserow API request based on the given parameters.
-
-        :param include: A comma-separated list of field names to include. Defaults to None.
-        :type include: list, optional
-        :param exclude: A comma-separated list of field names to exclude. Defaults to None.
-        :type exclude: list, optional
-        :param search: Search string to search the table. Defaults to None.
-        :type search: str, optional
-        :param order_by: List of field names to order results by. Defaults to None.
-        :type order_by: list, optional
-        :param filter_type: The type of filter to apply. Defaults to None.
-        :type filter_type: str, optional
-        :param filters: List containing the Filter objects to apply. Defaults to None.
-        :type filters: list, optional
-        :param view_id: The ID of the view to apply its filters and sorts. Defaults to None.
-        :type view_id: int, optional
-        :param page_size: Number of rows per page for each API call. Defaults to None.
-        :type page_size: int, optional
-        :param kwargs: Additional parameters that can be passed.
-        :type kwargs: dict
-        :return: The constructed request URL.
-        :rtype: str
-        :raises ValueError: If any of the parameters are invalid.
-
         """
-
         # Base URL construction with user_field_names=true
         base_url = f"/api/database/rows/table/{self.id}/?user_field_names=true"
 
@@ -235,7 +214,7 @@ class Table:
         if include:
             if not isinstance(include, list):
                 self.logger.error(
-                    f"'include' should be a list, got {type(include)} instead."
+                    "'include' should be a list, got {type(include)} instead."
                 )
                 raise ValueError("'include' parameter should be a list of field names.")
             encoded_include = urllib.parse.quote(",".join(include))
@@ -244,7 +223,7 @@ class Table:
         if exclude:
             if not isinstance(exclude, list):
                 self.logger.error(
-                    f"'exclude' should be a list, got {type(exclude)} instead."
+                    "'exclude' should be a list, got {type(exclude)} instead."
                 )
                 raise ValueError("'exclude' parameter should be a list of field names.")
             encoded_exclude = urllib.parse.quote(",".join(exclude))
@@ -254,7 +233,7 @@ class Table:
         if search:
             if not isinstance(search, str):
                 self.logger.error(
-                    f"'search' should be a string, got {type(search)} instead."
+                    "'search' should be a string, got {type(search)} instead."
                 )
                 raise ValueError("'search' parameter should be a string.")
             encoded_search = urllib.parse.quote(search)
@@ -264,53 +243,67 @@ class Table:
         if order_by:
             if not isinstance(order_by, list):
                 self.logger.error(
-                    f"order_by should be a list, got {type(order_by)} instead."
+                    "order_by should be a list, got {type(order_by)} instead."
                 )
                 raise ValueError("order_by parameter should be a list.")
             encoded_order = urllib.parse.quote(",".join(order_by))
             query_params_parts.append(f"order_by={encoded_order}")
 
-        # Handle view_id and page_size parameters
+        # Handle view_id and size parameters
         if view_id:
             if not isinstance(view_id, int):
                 self.logger.error(
-                    f"'view_id' should be an integer, got {type(view_id)} instead."
+                    "'view_id' should be an integer, got {type(view_id)} instead."
                 )
                 raise ValueError("'view_id' parameter should be an integer.")
             query_params_parts.append(f"view_id={view_id}")
 
-        if page_size:
-            if not isinstance(page_size, int):
+        if size:
+            if not isinstance(size, int):
                 self.logger.error(
-                    f"'page_size' should be an integer, got {type(page_size)} instead."
+                    "'size' should be an integer, got {type(size)} instead."
                 )
-                raise ValueError("'page_size' parameter should be an integer.")
-            query_params_parts.append(f"page_size={page_size}")
+                raise ValueError("'size' parameter should be an integer.")
+            query_params_parts.append(f"size={size}")
 
         # Handle filters using the Filter objects' query_string property
         if filters:
-            try:
-                # Validate filters against table
-                FilterValidator.validate_filters_against_table(filters, self)
-            except ValueError as ve:
-                self.logger.error(
-                    f"Failed filter validation for table {self.id}. Error: {ve}"
-                )
+            if not isinstance(filters, list) or not all(
+                isinstance(f, Filter) for f in filters
+            ):
+                self.logger.error("filters should be a list of Filter objects.")
                 raise ValueError(
-                    f"Failed filter validation for table {self.id}. Error: {ve}"
+                    "filters parameter should be a list of Filter objects."
                 )
 
-            for filter_obj in filters:
-                query_params_parts.append(filter_obj.query_string)
+            # Ensure filter_type defaults to "AND" if not specified
+            if filter_type is None:
+                filter_type = "AND"
 
-        # Handle filter_type (OR or AND) if present
-        if filter_type:
+            # Validate the filter_type
             if filter_type not in ["AND", "OR"]:
                 self.logger.error(
                     f"'filter_type' should be either 'AND' or 'OR', got '{filter_type}' instead."
                 )
-                raise ValueError("'filter_type' should be either 'AND' or 'OR'.")
-            query_params_parts.append(f"filter_type={filter_type}")
+                raise ValueError("'filter_type' should be either 'AND' or 'OR'")
+
+            # Construct the filter tree
+            filter_dicts = [
+                {"field": f.field_name, "type": f.operator, "value": f.value}
+                for f in filters
+            ]
+            filter_tree = {
+                "filter_type": filter_type,
+                "filters": filter_dicts,
+                "groups": [],
+            }
+
+            # Log the filter tree before encoding
+            self.logger.debug(f"Filter tree: {filter_tree}")
+
+            # Serialize and URL encode the filter tree
+            filter_string = urllib.parse.quote(json.dumps(filter_tree))
+            query_params_parts.append(f"filters={filter_string}")
 
         query_params = "&".join(query_params_parts)
 
@@ -346,9 +339,7 @@ class Table:
 
         MAX_CONSECUTIVE_EMPTY_FETCHES = 5
 
-        def __init__(
-            self, table: "Table", initial_url: str, fetch_data_fn=None
-        ) -> None:
+        def __init__(self, table: "Table", initial_url: str, fetch_data_fn=None) -> None:
             self.table = table
             self.initial_url = initial_url
             self.next_page_url: Optional[str] = None
@@ -356,10 +347,21 @@ class Table:
             self.index = 0
             self.empty_fetch_count = 0
             self.logger = logging.getLogger(__name__)
-            self.logger.debug("RowIterator initialized.")
+            self.logger.debug(
+                "RowIterator initialized with initial URL: %s", self.initial_url
+            )
 
             # Use the provided fetch function or default to the table's method
             self.fetch_data_fn = fetch_data_fn or self.table.client.make_api_request
+
+            # Store the initial state for resetting
+            self._initial_state = {
+                "initial_url": initial_url,
+                "next_page_url": None,
+                "current_rows": [],
+                "index": 0,
+                "empty_fetch_count": 0,
+            }
 
         def _fetch_next_page(self) -> None:
             if not self.current_rows or self.index >= len(self.current_rows):
@@ -369,6 +371,7 @@ class Table:
                     return
 
                 url_to_fetch = self.next_page_url or self.initial_url
+
                 try:
                     response_data = self.fetch_data_fn(url_to_fetch)
                 except Exception as e:
@@ -378,11 +381,7 @@ class Table:
                     self.current_rows = []
                     return
 
-                if (
-                    response_data
-                    and "results" in response_data
-                    and "next" in response_data
-                ):
+                if response_data and "results" in response_data:
                     self.next_page_url = response_data.get("next", None)
                     self.current_rows = self.table._parse_row_data(response_data)
                 else:
@@ -423,6 +422,24 @@ class Table:
             self.index += 1
             return row
 
+        def reset(self) -> None:
+            """
+            Resets the iterator to its initial state.
+            """
+            self.initial_url = self._initial_state["initial_url"]
+            self.next_page_url = self._initial_state["next_page_url"]
+            self.current_rows = self._initial_state["current_rows"]
+            self.index = self._initial_state["index"]
+            self.empty_fetch_count = self._initial_state["empty_fetch_count"]
+            self.logger.debug("RowIterator reset.")
+
+        def reset_index(self) -> None:
+            """
+            Resets the iterator's index to the beginning without refetching data from the API.
+            """
+            self.index = 0
+            self.logger.debug("RowIterator index reset to 0.")
+
     def get_rows(
         self,
         include: Optional[List[str]] = None,
@@ -432,7 +449,7 @@ class Table:
         filter_type: Optional[str] = None,
         filters: Optional[List[str]] = None,
         view_id: Optional[int] = None,
-        page_size: Optional[int] = None,
+        size: Optional[int] = None,
         return_single: bool = False,
         **kwargs,
     ) -> Union[Row, "Table.RowIterator"]:
@@ -453,8 +470,8 @@ class Table:
         :type filters: list, optional
         :param view_id: ID of the view to consider its filters and sorts.
         :type view_id: int, optional
-        :param page_size: The number of rows per page in the response.
-        :type page_size: int, optional
+        :param size: The number of rows per page in the response.
+        :type size: int, optional
         :param return_single: If True, returns a single Row object instead of an iterator.
         :type return_single: bool, optional
         :param kwargs: Additional parameters for the API request.
@@ -477,7 +494,7 @@ class Table:
                 filter_type=filter_type,
                 filters=filters,
                 view_id=view_id,
-                page_size=page_size,
+                size=size,
                 **kwargs,
             )
         except Exception as e:
@@ -528,7 +545,7 @@ class Table:
             raise Exception(error_message)
 
     def add_row(
-        self, rows_data: Union[Dict[str, Any], List[Dict[str, Any]]]
+        self, rows_data: Union[Dict[str, Any], List[Dict[str, Any]]], batch_size: int = 10
     ) -> Union[Row, List[Row]]:
         """
         Add a new row (or multiple rows) to the table.
@@ -538,6 +555,10 @@ class Table:
                         adding multiple rows.
         :type rows_data: dict or list[dict]
 
+        :param batch_size: The number of rows to include in each batch request when adding multiple rows.
+                        Defaults to 10.
+        :type batch_size: int
+
         :return: An instance of the Row model representing the added row or
                 a list of Row instances for multiple rows.
         :rtype: Row or list[Row]
@@ -546,51 +567,67 @@ class Table:
         :raises Exception: If there's any error during the API request.
         """
 
-        # Distinguish between single row data and multiple rows data
-        if isinstance(rows_data, list):
+        def _add_rows_chunk(chunk):
+            """
+            Helper function to add a chunk of rows.
+            """
             api_endpoint = (
                 f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
             )
-            data_payload = {"items": rows_data}
-        else:
-            api_endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
-            data_payload = rows_data
-
-        try:
+            data_payload = {"items": chunk}
             response = self.client.make_api_request(
                 api_endpoint, method="POST", data=data_payload
             )
+            return [
+                Row(row_data=row_data_item, table=self, client=self.client)
+                for row_data_item in response["items"]
+            ]
 
-            # If multiple rows are added, return a list of Row objects, else return a single Row object
-            if isinstance(rows_data, list):
-                return [
-                    Row(row_data=row_data_item, table=self, client=self.client)
-                    for row_data_item in response["items"]
-                ]
-            else:
+        if isinstance(rows_data, dict):
+            # Single row addition
+            api_endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
+            data_payload = rows_data
+            try:
+                response = self.client.make_api_request(
+                    api_endpoint, method="POST", data=data_payload
+                )
                 return Row(row_data=response, table=self, client=self.client)
+            except Exception as e:
+                error_message = f"Failed to add row to table {self.id}. Error: {e}"
+                self.logger.error(error_message)
+                raise Exception(error_message)
+        elif isinstance(rows_data, list):
+            # Multiple rows addition with batching
+            added_rows = []
+            for i in range(0, len(rows_data), batch_size):
+                chunk = rows_data[i : i + batch_size]
+                try:
+                    added_rows.extend(_add_rows_chunk(chunk))
+                except Exception as e:
+                    error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
+                    self.logger.error(error_message)
+                    raise Exception(error_message)
+            return added_rows
+        else:
+            raise ValueError(
+                "Invalid input: rows_data must be a dictionary or a list of dictionaries."
+            )
 
-        except Exception as e:
-            error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
-            self.logger.error(error_message)
-            raise Exception(error_message)
-
-    def update_rows(self, rows_data: List[Union[Dict[str, Any], Row]]) -> List[Row]:
+    def update_rows(
+        self,
+        rows_data: Union[List[Union[Dict[str, Any], Row]], RowIterator],
+        batch_size: int = 10,
+    ) -> List[Row]:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
 
-        This method accepts a list of Row objects or dictionaries. For each item:
-        - If it's a dictionary, the method checks that all keys correspond to valid,
-        editable fields in the table, validates the provided values, and ensures that
-        an 'id' key is present with the row ID.
-        - If it's a Row object, the method extracts its values, excluding any that
-        are read-only.
-
-        :param rows_data: A list of dictionaries or Row objects. Each dictionary should
-                        contain the field values for updating a specific row and include
-                        the ID of the row to be updated. Row objects represent the rows
-                        to be updated.
-        :type rows_data: list[Union[dict, Row]]
+        :param rows_data: A list of dictionaries or Row objects, or a RowIterator.
+                        Each dictionary should contain the field values for updating
+                        a specific row and include the ID of the row to be updated.
+                        Row objects represent the rows to be updated.
+        :type rows_data: list[Union[dict, Row]] or RowIterator
+        :param batch_size: The number of rows to process in each batch.
+        :type batch_size: int
 
         :return: A list of Row objects representing the updated rows.
         :rtype: list[Row]
@@ -606,6 +643,10 @@ class Table:
             self.logger.warning(warning_msg)
             raise ValueError(warning_msg)
 
+        # Handle RowIterator input by converting it to a list
+        if isinstance(rows_data, Table.RowIterator):
+            rows_data = list(rows_data)
+
         # Convert Row objects to dictionaries and validate dictionaries
         formatted_data = []
         for item in rows_data:
@@ -616,11 +657,9 @@ class Table:
                     )
 
                 for key, value in item.items():
-                    # Skip "id" as it's already checked
                     if key == "id":
                         continue
 
-                    # Validate 'order' value
                     if key == "order":
                         if not isinstance(value, (int, float)) or value <= 0:
                             raise ValueError(
@@ -633,7 +672,6 @@ class Table:
 
                     field_object = self.fields[key]
 
-                    # Check if the field is read-only
                     if field_object.is_read_only:
                         raise ValueError(
                             f"Field '{key}' is read-only and cannot be updated."
@@ -642,13 +680,12 @@ class Table:
                     try:
                         field_object.validate_value(value)
                     except ValueError as ve:
-                        raise ValueError(
-                            f"Invalid value for field '{key}': {ve}"
-                        ) from ve
+                        raise ValueError(f"Invalid value for field '{key}': {ve}") from ve
+
                 formatted_data.append(item)
 
             elif isinstance(item, Row):
-                row_data = {"id": item.id}  # Start with the row ID
+                row_data = {"id": item.id}
                 for rv in item.values:
                     if not rv.is_read_only:
                         row_data[rv.name] = rv.format_for_api()
@@ -660,25 +697,30 @@ class Table:
                 )
 
         try:
-            endpoint = (
-                f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
-            )
-            response = self.client.make_api_request(
-                endpoint, method="PATCH", data={"items": formatted_data}
-            )
+            endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+            updated_rows = []
 
-            # Convert the response to a list of Row objects
-            updated_rows = [
-                Row(row_data=item, table=self, client=self.client)
-                for item in response["items"]
-            ]
+            # Process in batches
+            for i in range(0, len(formatted_data), batch_size):
+                batch_data = formatted_data[i : i + batch_size]
+                response = self.client.make_api_request(
+                    endpoint, method="PATCH", data={"items": batch_data}
+                )
+
+                # Convert the response to a list of Row objects
+                updated_rows.extend(
+                    [
+                        Row(row_data=item, table=self, client=self.client)
+                        for item in response["items"]
+                    ]
+                )
 
             return updated_rows
         except Exception as e:
             self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
             raise
 
-    def delete_rows(self, rows_data: List[Union[Row, int]]) -> bool:
+    def delete_rows(self, rows_data: List[Union[Row, int]], batch_size: int = 10) -> bool:
         """
         Deletes multiple rows from the table using the Baserow batch-delete endpoint.
 
@@ -690,6 +732,10 @@ class Table:
                         the rows to be deleted, while integers represent the row IDs
                         to be deleted.
         :type rows_data: list[Union[Row, int]]
+
+        :param batch_size: The number of rows to include in each batch request when deleting multiple rows.
+                        Defaults to 10.
+        :type batch_size: int
 
         :return: True if rows are successfully deleted, otherwise an exception is raised.
         :rtype: bool
@@ -718,11 +764,18 @@ class Table:
         if not row_ids:
             raise ValueError("The rows_data list is empty. Nothing to delete.")
 
-        try:
+        def _delete_rows_chunk(chunk):
+            """
+            Helper function to delete a chunk of rows.
+            """
             endpoint = f"/api/database/rows/table/{self.id}/batch-delete/"
-            response = self.client.make_api_request(
-                endpoint, method="POST", data={"items": row_ids}
-            )
+            self.client.make_api_request(endpoint, method="POST", data={"items": chunk})
+
+        try:
+            # Batch delete rows using the specified batch size
+            for i in range(0, len(row_ids), batch_size):
+                chunk = row_ids[i : i + batch_size]
+                _delete_rows_chunk(chunk)
             return True
         except Exception as e:
             self.logger.error(f"Failed to delete rows from table {self.id}. Error: {e}")

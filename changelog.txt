@@ -1,1 +1,15 @@
-2023-10-15: 0.1.0b1 released.
+### Changelog
+
+#### 2024-08-03: 0.1.0b2
+- **Enhancements:**
+  - **Improved Filter Handling:** The `_build_request_url` method of the `Table` class now uses a JSON serialized filter tree for more efficient and accurate filtering.
+  - **RowIterator Enhancements:** Added `reset` and `reset_index` methods to `RowIterator` objects. `reset` will refetch data from the API, while `reset_index` only resets the internal index without refetching.
+  - **Batch Size Parameter:** Added `batch_size` parameter to `Table` methods `add_row`, `update_rows`, and `delete_rows` to avoid excessively large API calls. The default `batch_size` is set to 10 rows.
+  - **Paging Fixes:** Improved `RowIterator` and `make_api_request` functions to handle paging correctly.
+
+- **Bug Fixes:**
+  - **Parameter Correction:** Fixed incorrect "page_size" parameter in `Table.get_rows` method, changing it to "size".
+  - **Test Updates:** Removed tests for the obsolete `FieldValidator` class.
+
+#### 2023-10-15: 0.1.0b1
+- Initial beta release.

@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>baserowapi.models.row_value &mdash; Baserow API Package 0.1.0b2 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d31d1d1e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Baserow API Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../client.html">Baserow Client Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Baserow API Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">baserowapi.models.row_value</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for baserowapi.models.row_value</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">baserowapi.models.field</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+
+<div class="viewcode-block" id="RowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.RowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">RowValue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a value in a Baserow row associated with a specific field.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`Field`): The associated Field object.</span>
+<span class="sd">        _raw_value (Optional[Any]): The raw value as returned/fetched from the API.</span>
+<span class="sd">        logger (logging.Logger): Logger instance for the class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;Field&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a RowValue object.</span>
+
+<span class="sd">        :param field: The associated Field object.</span>
+<span class="sd">        :param raw_value: The raw value as returned/fetched from the API.</span>
+<span class="sd">        :param client: The Baserow class API client. Some child classes of RowValue need access to the API.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the Field class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">Field</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the Field class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">raw_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized RowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide a string representation of the RowValue object.</span>
+
+<span class="sd">        :return: String representation of the Row value.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Baserow row value &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; of type &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&#39; with value &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format.</span>
+<span class="sd">        By default, this returns the raw value, but child classes can override this</span>
+<span class="sd">        for type-specific formatting or conversion.</span>
+
+<span class="sd">        :return: User-friendly formatted value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        This should handle validation and potentially conversion to a format suitable for the API.</span>
+
+<span class="sd">        :param new_value: New value to set.</span>
+<span class="sd">        :raises Exception: If the validation of the new value fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">new_value</span>  <span class="c1"># Child classes can transform this value before setting</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set new value </span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2"> for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
+
+<div class="viewcode-block" id="RowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.RowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value for API submission.</span>
+<span class="sd">        By default, returns the value as-is, but child classes can override for type-specific formatting.</span>
+
+<span class="sd">        :return: Formatted value for API submission.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_read_only</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the associated field is read-only.</span>
+
+<span class="sd">        :return: True if the field is read-only, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">is_read_only</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the type of the associated field.</span>
+
+<span class="sd">        :return: Type of the field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the name of the associated field.</span>
+
+<span class="sd">        :return: Name of the field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span></div>
+
+
+
+<div class="viewcode-block" id="TextRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.TextRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">TextRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically for a TextField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`TextField`): The associated TextField object.</span>
+<span class="sd">        raw_value (Optional[Any]): The raw value as returned/fetched from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;TextField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a TextRowValue object.</span>
+
+<span class="sd">        :param field: The associated TextField object.</span>
+<span class="sd">        :param raw_value: The raw value as returned/fetched from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may need access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the TextField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">TextField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the TextField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized TextRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LongTextRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.LongTextRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">LongTextRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically for a LongTextField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`LongTextField`): The associated LongTextField object.</span>
+<span class="sd">        raw_value (Optional[Any]): The raw value as returned/fetched from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;LongTextField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a LongTextRowValue object.</span>
+
+<span class="sd">        :param field: The associated LongTextField object.</span>
+<span class="sd">        :param raw_value: The raw value as returned/fetched from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may need access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the LongTextField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">LongTextField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the LongTextField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized LongTextRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UrlRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.UrlRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">UrlRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically for a UrlField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`UrlField`): The associated UrlField object.</span>
+<span class="sd">        raw_value (Optional[Any]): The raw value as returned/fetched from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may need access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;UrlField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a UrlRowValue object.</span>
+
+<span class="sd">        :param field: The associated UrlField object.</span>
+<span class="sd">        :param raw_value: The raw value as returned/fetched from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may need access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the UrlField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">UrlField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the UrlField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized UrlRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EmailRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.EmailRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">EmailRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for an EmailField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`EmailField`): The associated EmailField object.</span>
+<span class="sd">        raw_value (Optional[Any]): The raw value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;EmailField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize an EmailRowValue object.</span>
+
+<span class="sd">        :param field: The associated EmailField object.</span>
+<span class="sd">        :param raw_value: The raw value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the EmailField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">EmailField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the EmailField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized EmailRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PhoneNumberRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.PhoneNumberRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">PhoneNumberRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a PhoneNumberField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`PhoneNumberField`): The associated PhoneNumberField object.</span>
+<span class="sd">        raw_value (Optional[Any]): The raw value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;PhoneNumberField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a PhoneNumberRowValue object.</span>
+
+<span class="sd">        :param field: The associated PhoneNumberField object.</span>
+<span class="sd">        :param raw_value: The raw value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the PhoneNumberField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">PhoneNumberField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the PhoneNumberField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized PhoneNumberRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="NumberRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.NumberRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">NumberRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a NumberField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`NumberField`): The associated NumberField object.</span>
+<span class="sd">        raw_value (Optional[Union[int, float]]): The raw numeric value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;NumberField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a NumberRowValue object.</span>
+
+<span class="sd">        :param field: The associated NumberField object.</span>
+<span class="sd">        :param raw_value: The raw numeric value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the NumberField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">NumberField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the NumberField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized NumberRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format.</span>
+<span class="sd">        For NumberRowValue, this returns the raw value as a formatted string based on decimal places.</span>
+
+<span class="sd">        :return: Formatted value based on the decimal places or the raw value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">format_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">:.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">decimal_places</span><span class="si">}</span><span class="s2">f</span><span class="se">}}</span><span class="s2">&quot;</span>
+            <span class="k">return</span> <span class="n">format_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        This should handle validation specific to NumberRowValue using the associated NumberField&#39;s validate_value method.</span>
+
+<span class="sd">        :param new_value: The new numeric value to set.</span>
+<span class="sd">        :raises Exception: If the value is not valid as per the associated NumberField&#39;s validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Use the validate_value method of the corresponding NumberField class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set new value </span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2"> for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+
+<div class="viewcode-block" id="BooleanRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.BooleanRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">BooleanRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a BooleanField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`BooleanField`): The associated BooleanField object.</span>
+<span class="sd">        raw_value (Optional[bool]): The raw boolean value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;BooleanField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BooleanRowValue object.</span>
+
+<span class="sd">        :param field: The associated BooleanField object.</span>
+<span class="sd">        :param raw_value: The raw boolean value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the BooleanField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">BooleanField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the BooleanField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized BooleanRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format.</span>
+<span class="sd">        For BooleanRowValue, this returns the raw value as a boolean.</span>
+
+<span class="sd">        :return: The boolean value of the raw_value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">)</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        This should handle validation specific to BooleanRowValue using the associated BooleanField&#39;s validate_value method.</span>
+
+<span class="sd">        :param new_value: The new boolean value to set.</span>
+<span class="sd">        :raises Exception: If the value is not valid as per the associated BooleanField&#39;s validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Use the validate_value method of the corresponding BooleanField class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set new value </span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2"> for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+
+<div class="viewcode-block" id="RatingRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.RatingRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">RatingRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a RatingField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`RatingField`): The associated RatingField object.</span>
+<span class="sd">        raw_value (Optional[Union[int, float]]): The raw numerical value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;RatingField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a RatingRowValue object.</span>
+
+<span class="sd">        :param field: The associated RatingField object.</span>
+<span class="sd">        :param raw_value: The raw numerical value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the RatingField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">RatingField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the RatingField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized RatingRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format.</span>
+<span class="sd">        For RatingRowValue, this returns the raw value directly as it&#39;s already user-friendly.</span>
+
+<span class="sd">        :return: The numerical value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        This should handle validation specific to RatingRowValue using the associated RatingField&#39;s validate_value method.</span>
+
+<span class="sd">        :param new_value: The new numerical value to set.</span>
+<span class="sd">        :raises Exception: If the value is not valid as per the associated RatingField&#39;s validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Use the validate_value method of the corresponding RatingField class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set new value </span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2"> for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+
+<div class="viewcode-block" id="BaseDateRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.BaseDateRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseDateRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a BaseDateField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`BaseDateField`): The associated BaseDateField object.</span>
+<span class="sd">        raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;BaseDateField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BaseDateRowValue object.</span>
+
+<span class="sd">        :param field: The associated BaseDateField object.</span>
+<span class="sd">        :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the BaseDateField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">BaseDateField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the BaseDateField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized BaseDateRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in ISO format.</span>
+
+<span class="sd">        :return: The value in ISO format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+<div class="viewcode-block" id="BaseDateRowValue.as_datetime">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.BaseDateRowValue.as_datetime">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_datetime</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert and return the value as a Python datetime object.</span>
+
+<span class="sd">        :return: The value as a datetime object.</span>
+<span class="sd">        :raises Exception: If the conversion from ISO format to datetime fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the string ends with &#39;Z&#39;, it&#39;s indicating UTC timezone.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="s2">&quot;+00:00&quot;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to convert value to datetime for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        If the new value is a datetime object, it will be converted to ISO format.</span>
+<span class="sd">        This method also validates the new value using the associated BaseDateField&#39;s validate_value method.</span>
+
+<span class="sd">        :param new_value: The new value to set, either as a datetime object or in ISO format.</span>
+<span class="sd">        :raises Exception: If the value is not valid as per the associated BaseDateField&#39;s validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Check if the new_value is a datetime object, and if so, convert it to ISO format</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">new_value</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;Z&quot;</span>
+
+            <span class="c1"># Use the validate_value method of the corresponding BaseDateField class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set new value </span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2"> for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">formatted_date</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the field&#39;s value to a formatted string based on the field&#39;s settings.</span>
+
+<span class="sd">        The method formats the date and time based on field settings such as `date_format`,</span>
+<span class="sd">        `date_time_format`, and `date_show_tzinfo`.</span>
+
+<span class="sd">        :return: The formatted representation of the date or datetime.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :raises ValueError: If the value doesn&#39;t match the expected format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Define format patterns</span>
+        <span class="n">date_str_formats</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;US&quot;</span><span class="p">:</span> <span class="s2">&quot;%m-</span><span class="si">%d</span><span class="s2">-%Y&quot;</span><span class="p">,</span> <span class="s2">&quot;EU&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-%m-%Y&quot;</span><span class="p">,</span> <span class="s2">&quot;ISO&quot;</span><span class="p">:</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="n">time_str_formats</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;12&quot;</span><span class="p">:</span> <span class="s2">&quot;%I:%M:%S %p&quot;</span><span class="p">,</span> <span class="s2">&quot;24&quot;</span><span class="p">:</span> <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">}</span>
+
+        <span class="c1"># Determine the timezone</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tzinfo</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span><span class="o">.</span><span class="n">tzinfo</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to determine the timezone. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to determine the timezone. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Format the date and time based on settings</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">date_include_time</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dt_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.</span><span class="si">%f</span><span class="s2">Z&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">dt_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S%z&quot;</span><span class="p">)</span>
+
+                <span class="n">dt_object</span> <span class="o">=</span> <span class="n">dt_object</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">tzinfo</span><span class="p">)</span>
+                <span class="n">date_str</span> <span class="o">=</span> <span class="n">dt_object</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+                    <span class="n">date_str_formats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">date_format</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">time_str</span> <span class="o">=</span> <span class="n">dt_object</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+                    <span class="n">time_str_formats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">date_time_format</span><span class="p">,</span> <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="n">formatted_date</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">date_str</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">time_str</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">date_show_tzinfo</span><span class="p">:</span>
+                    <span class="n">formatted_date</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">dt_object</span><span class="o">.</span><span class="n">tzname</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                <span class="k">return</span> <span class="n">formatted_date</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dt_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">dt_object</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+                    <span class="n">date_str_formats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">date_format</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid date format for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+
+<div class="viewcode-block" id="DateRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.DateRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">DateRowValue</span><span class="p">(</span><span class="n">BaseDateRowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a DateField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`DateField`): The associated DateField object.</span>
+<span class="sd">        raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;DateField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a DateRowValue object.</span>
+
+<span class="sd">        :param field: The associated DateField object.</span>
+<span class="sd">        :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the DateField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">DateField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the DateField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LastModifiedRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.LastModifiedRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">LastModifiedRowValue</span><span class="p">(</span><span class="n">BaseDateRowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a LastModifiedField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`LastModifiedField`): The associated LastModifiedField object.</span>
+<span class="sd">        raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;LastModifiedField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a LastModifiedRowValue object.</span>
+
+<span class="sd">        :param field: The associated LastModifiedField object.</span>
+<span class="sd">        :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the LastModifiedField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">LastModifiedField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the LastModifiedField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+    <span class="nd">@BaseDateRowValue</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for LastModifiedRowValue.</span>
+<span class="sd">        As LastModifiedRowValue is read-only, it will raise an error if there&#39;s an attempt to set a value.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :raises ValueError: If there&#39;s an attempt to set a value for a read-only field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot set value for a read-only LastModifiedRowValue.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CreatedOnRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.CreatedOnRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">CreatedOnRowValue</span><span class="p">(</span><span class="n">BaseDateRowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a CreatedOnField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (:class:`CreatedOnField`): The associated CreatedOnField object.</span>
+<span class="sd">        raw_value (Optional[str]): The raw date value as fetched/returned from the API, typically in ISO format.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;CreatedOnField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a CreatedOnRowValue object.</span>
+
+<span class="sd">        :param field: The associated CreatedOnField object.</span>
+<span class="sd">        :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the CreatedOnField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">CreatedOnField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the CreatedOnField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+    <span class="nd">@BaseDateRowValue</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for CreatedOnRowValue.</span>
+<span class="sd">        As CreatedOnRowValue is read-only, it will raise an error if there&#39;s an attempt to set a value.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :raises ValueError: If there&#39;s an attempt to set a value for a read-only field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot set value for a read-only CreatedOnRowValue.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SingleSelectRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.SingleSelectRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">SingleSelectRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue specifically designed for a SingleSelectField.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        field (SingleSelectField): The associated SingleSelectField object.</span>
+<span class="sd">        raw_value (dict): The raw value as fetched/returned from the API.</span>
+<span class="sd">        client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;SingleSelectField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a SingleSelectRowValue object.</span>
+
+<span class="sd">        :param field: The associated SingleSelectField object.</span>
+<span class="sd">        :param raw_value: The raw value as fetched/returned from the API. Default is None.</span>
+<span class="sd">        :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.</span>
+<span class="sd">        :raises ValueError: If the provided field is not an instance of the SingleSelectField class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">raw_value</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">SingleSelectField</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the SingleSelectField class.&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized SingleSelectRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of available option values for the associated SingleSelectField.</span>
+
+<span class="sd">        This property fetches the &quot;options&quot; attribute from the associated field</span>
+
+<span class="sd">        :return: A list of available option values.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        :raises AttributeError: If the associated field does not have the &quot;options&quot; attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">options</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The associated field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> does not have the &#39;options&#39; attribute.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format.</span>
+<span class="sd">        For SingleSelectRowValue, this returns the option&#39;s text or &quot;None&quot; if no option is selected.</span>
+
+<span class="sd">        :return: The selected option&#39;s text or &quot;None&quot; if no option is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">)</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value.</span>
+<span class="sd">        This should handle validation specific to SingleSelectRowValue using the associated SingleSelectField&#39;s validate_value method.</span>
+
+<span class="sd">        :param new_value: The new value to be set, which can be either an ID or a string corresponding to an option value.</span>
+<span class="sd">        :raises ValueError: If the provided value doesn&#39;t match any select option by ID or value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option_details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">options_details</span>
+
+        <span class="c1"># Determine the criteria based on the type of new_value</span>
+        <span class="n">criteria</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;id&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">&quot;value&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">criteria</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid input type for value. Expected int or str, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">matching_option</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">option</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">option_details</span> <span class="k">if</span> <span class="n">option</span><span class="p">[</span><span class="n">criteria</span><span class="p">]</span> <span class="o">==</span> <span class="n">new_value</span><span class="p">),</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matching_option</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The provided </span><span class="si">{</span><span class="n">criteria</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2">&#39; doesn&#39;t match any select option.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">matching_option</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">matching_option</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="SingleSelectRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.SingleSelectRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value for API submission.</span>
+<span class="sd">        This method will extract the &#39;id&#39; of the option from the raw_value for API submission.</span>
+
+<span class="sd">        :return: The option&#39;s id suitable for API submission or None if raw_value is None.</span>
+<span class="sd">        :raises ValueError: If there&#39;s an error in formatting the value for API submission.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Extracting the &#39;id&#39; from the raw_value for API submission</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to format value for API submission for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MultipleSelectRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.MultipleSelectRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">MultipleSelectRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a MultipleSelectField.</span>
+
+<span class="sd">    :param field: The associated MultipleSelectField object.</span>
+<span class="sd">    :type field: MultipleSelectField</span>
+<span class="sd">    :param raw_value: The raw values as fetched/returned from the API. Defaults to None.</span>
+<span class="sd">    :type raw_value: List[Optional[Any]], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the MultipleSelectField class.</span>
+
+<span class="sd">    :ivar MultipleSelectField field: The associated MultipleSelectField object.</span>
+<span class="sd">    :ivar List[Optional[Any]] raw_value: The raw values as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;MultipleSelectField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">raw_value</span> <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">MultipleSelectField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the MultipleSelectField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized MultipleSelectRowValue with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and value </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of available option values for the associated SingleSelectField.</span>
+
+<span class="sd">        This property fetches the &quot;options&quot; attribute from the associated field</span>
+
+<span class="sd">        :return: A list of available option values.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        :raises AttributeError: If the associated field does not have the &quot;options&quot; attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">options</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The associated field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> does not have the &#39;options&#39; attribute.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the values in a user-friendly format. This method returns a list of option names.</span>
+
+<span class="sd">        :return: A list of the selected option names.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">option</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">option</span><span class="p">]</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set new values. This method handles validation specific to MultipleSelectRowValue.</span>
+
+<span class="sd">        :param new_values: The new values to be set.</span>
+<span class="sd">        :type new_values: Union[List[int], List[str]]</span>
+<span class="sd">        :raises ValueError: If one of the values doesn&#39;t match any select option or other errors occur.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The provided values should be a list.&quot;</span><span class="p">)</span>
+
+        <span class="n">option_dicts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">new_value</span> <span class="ow">in</span> <span class="n">new_values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">_get_option_by_id_or_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">option</span><span class="p">:</span>
+                    <span class="n">option_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The value &#39;</span><span class="si">{</span><span class="n">new_value</span><span class="si">}</span><span class="s2">&#39; doesn&#39;t match any select option.&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid type &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; for value. Expected int or str.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">option_dicts</span>
+
+<div class="viewcode-block" id="MultipleSelectRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.MultipleSelectRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the values suitable for API submission.</span>
+
+<span class="sd">        :return: The formatted values suitable for API submission.</span>
+<span class="sd">        :rtype: List[int]</span>
+<span class="sd">        :raises ValueError: If there&#39;s an error in formatting the values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Extracting the &#39;id&#39; from each option dictionary in the raw_value for API submission</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">option</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to format values for API submission for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FormulaRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.FormulaRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">FormulaRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a FormulaField.</span>
+
+<span class="sd">    :param field: The associated FormulaField object.</span>
+<span class="sd">    :type field: FormulaField</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[Any], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the FormulaField class.</span>
+
+<span class="sd">    :ivar FormulaField field: The associated FormulaField object.</span>
+<span class="sd">    :ivar Optional[Any] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;FormulaField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">FormulaField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the FormulaField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format. This method returns the raw value.</span>
+
+<span class="sd">        :return: The raw value of the FormulaRowValue.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value. As FormulaRowValue is read-only, this method raises an error.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :type new_value: Any</span>
+<span class="sd">        :raises ValueError: As the FormulaRowValue is read-only, setting a value will always raise this error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set value for a read-only FormulaRowValue.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FormulaRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.FormulaRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value suitable for API submission. This method returns the raw value.</span>
+
+<span class="sd">        :return: The raw value suitable for API submission.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TableLinkRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.TableLinkRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">TableLinkRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a TableLinkField.</span>
+
+<span class="sd">    :param field: The associated TableLinkField object.</span>
+<span class="sd">    :type field: TableLinkField</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[List[Union[int, str]]], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the TableLinkField class.</span>
+
+<span class="sd">    :ivar TableLinkField field: The associated TableLinkField object.</span>
+<span class="sd">    :ivar Optional[List[Union[int, str]]] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;TableLinkField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">TableLinkField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the TableLinkField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format. This method returns a list of primary field values or IDs.</span>
+
+<span class="sd">        :return: A list of primary field values or IDs.</span>
+<span class="sd">        :rtype: List[Union[int, str]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">]</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for TableLinkRowValue. Accepts either primary field values or row IDs from the linked table.</span>
+
+<span class="sd">        :param new_value: The new values to be set.</span>
+<span class="sd">        :type new_value: List[Union[int, str]]</span>
+<span class="sd">        :raises ValueError: If the provided values are not in the expected format or there are mixed types of IDs and values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided value for TableLinkRowValue should be a list.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">val</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">val</span><span class="p">}</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_value</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">val</span><span class="p">}</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_value</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Mixed types of IDs and values provided for TableLinkRowValue.&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="TableLinkRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.TableLinkRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value suitable for API submission. This method returns a list of IDs if they exist or values otherwise.</span>
+
+<span class="sd">        :return: A list of IDs or values suitable for API submission.</span>
+<span class="sd">        :rtype: List[Union[int, str]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TableLinkRowValue.get_related_table">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.TableLinkRowValue.get_related_table">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_related_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches and returns the related table associated with the `TableLinkRowValue`.</span>
+
+<span class="sd">        This method utilizes the `link_row_table_id` attribute from the associated `TableLinkField`</span>
+<span class="sd">        to fetch the table data from the Baserow API.</span>
+
+<span class="sd">        :return: The related table object.</span>
+<span class="sd">        :rtype: Table (or whatever the type returned by client.get_table() is)</span>
+<span class="sd">        :raises ValueError: If there&#39;s an error fetching the related table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Fetch the related table using the client&#39;s get_table method</span>
+            <span class="n">related_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">link_row_table_id</span><span class="p">)</span>
+
+            <span class="c1"># Logging the successful fetch operation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Fetched related table with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">link_row_table_id</span><span class="si">}</span><span class="s2"> for TableLinkRowValue associated with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">related_table</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Logging the error</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to fetch related table with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">link_row_table_id</span><span class="si">}</span><span class="s2"> for TableLinkRowValue associated with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Raising an error for external handling or informing the caller</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to fetch the related table. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TableLinkRowValue.get_options">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.TableLinkRowValue.get_options">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches and returns the primary values from the related table that are possible</span>
+<span class="sd">        for the TableLinkRowValue.</span>
+
+<span class="sd">        This method retrieves the rows from the related table and extracts the primary</span>
+<span class="sd">        field values from each row.</span>
+
+<span class="sd">        :return: A list of primary field values from the related table.</span>
+<span class="sd">        :raises ValueError: If there&#39;s an error fetching the primary values from the related table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">related_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_related_table</span><span class="p">()</span>
+            <span class="n">primary_field_name</span> <span class="o">=</span> <span class="n">related_table</span><span class="o">.</span><span class="n">primary_field</span>
+            <span class="n">returned_rows</span> <span class="o">=</span> <span class="n">related_table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="n">primary_field_name</span><span class="p">])</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">primary_field_name</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">returned_rows</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Retrieved </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="si">}</span><span class="s2"> options for TableLinkRowValue associated with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> from related table </span><span class="si">{</span><span class="n">related_table</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">options</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to retrieve options for TableLinkRowValue associated with field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to retrieve options from the related table. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CountRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.CountRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">CountRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a CountField.</span>
+
+<span class="sd">    :param field: The associated CountField object.</span>
+<span class="sd">    :type field: CountField</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API, representing the main (primary) field text values of the linked rows. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[Any], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the CountField class.</span>
+
+<span class="sd">    :ivar CountField field: The associated CountField object.</span>
+<span class="sd">    :ivar Optional[Any] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;CountField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">CountField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the CountField class.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format. This method returns the main (primary) field text values of the linked rows.</span>
+
+<span class="sd">        :return: The main (primary) field text values of the linked rows.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for CountRowValue. Since CountRowValue is read-only, setting a value will raise an error.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :type new_value: Any</span>
+<span class="sd">        :raises ValueError: As the CountRowValue is read-only, setting a value will always raise an error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set value for a read-only CountRowValue.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CountRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.CountRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value suitable for API submission. This method directly returns the raw value.</span>
+
+<span class="sd">        :return: The value formatted for API submission.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LookupRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.LookupRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">LookupRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a LookupField.</span>
+
+<span class="sd">    :param field: The associated LookupField object.</span>
+<span class="sd">    :type field: LookupField</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API, representing an array of values and row IDs. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[Any], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the LookupField class.</span>
+
+<span class="sd">    :ivar LookupField field: The associated LookupField object.</span>
+<span class="sd">    :ivar Optional[Any] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;LookupField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">LookupField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the LookupField class.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format. This method returns the raw value (an array of values and row IDs).</span>
+
+<span class="sd">        :return: The raw value, which is an array of values and row IDs.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for LookupRowValue. Since LookupRowValue is read-only, setting a value will raise an error.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :type new_value: Any</span>
+<span class="sd">        :raises ValueError: As the LookupRowValue is read-only, setting a value will always raise an error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set value for a read-only LookupRowValue.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LookupRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.LookupRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value suitable for API submission. This method directly returns the raw value.</span>
+
+<span class="sd">        :return: The value formatted for API submission.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MultipleCollaboratorsRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.MultipleCollaboratorsRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">MultipleCollaboratorsRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a MultipleCollaboratorsField.</span>
+
+<span class="sd">    :param field: The associated MultipleCollaboratorsField object.</span>
+<span class="sd">    :type field: MultipleCollaboratorsField</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[Any], optional</span>
+<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
+<span class="sd">    :type client: Optional[Any], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the MultipleCollaboratorsField class.</span>
+
+<span class="sd">    :ivar MultipleCollaboratorsField field: The associated MultipleCollaboratorsField object.</span>
+<span class="sd">    :ivar Optional[Any] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    :ivar Optional[Any] client: The Baserow class API client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;MultipleCollaboratorsField&quot;</span><span class="p">,</span>
+        <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value in a user-friendly format. This method returns the raw value.</span>
+
+<span class="sd">        :return: The raw value.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate and set the new value for MultipleCollaboratorsRowValue.</span>
+
+<span class="sd">        :param new_value: The new value to be set.</span>
+<span class="sd">        :type new_value: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
+
+<div class="viewcode-block" id="MultipleCollaboratorsRowValue.format_for_api">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.MultipleCollaboratorsRowValue.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the value suitable for API submission. This method formats it in a way that only returns the IDs of the collaborators.</span>
+
+<span class="sd">        :return: The value formatted for API submission.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FileRowValue">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.FileRowValue">[docs]</a>
+<span class="k">class</span> <span class="nc">FileRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a RowValue designed for a FileField.</span>
+
+<span class="sd">    :param field: The associated FileField object.</span>
+<span class="sd">    :type field: FileField</span>
+<span class="sd">    :param client: The Baserow class API client to make API requests.</span>
+<span class="sd">    :type client: Any</span>
+<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
+<span class="sd">    :type raw_value: Optional[List[Any]], optional</span>
+<span class="sd">    :raises ValueError: If the provided field is not an instance of the FileField class.</span>
+
+<span class="sd">    :ivar FileField field: The associated FileField object.</span>
+<span class="sd">    :ivar Any client: The Baserow class API client to make API requests.</span>
+<span class="sd">    :ivar Optional[List[Any]] raw_value: The raw value as fetched/returned from the API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="s2">&quot;FileField&quot;</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">FileField</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided field is not an instance of the FileField class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="FileRowValue.upload_file_to_server">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.FileRowValue.upload_file_to_server">[docs]</a>
+    <span class="k">def</span> <span class="nf">upload_file_to_server</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upload a file or files to Baserow either from a local path or by downloading it from a provided URL.</span>
+<span class="sd">        The method either appends or replaces the current value based on the &#39;replace&#39; flag.</span>
+
+<span class="sd">        Note: This function updates the in-memory representation of the row value.</span>
+<span class="sd">        Use `row.update()` to save the updated value to the server.</span>
+
+<span class="sd">        :param file_path: Path to the file or directory to be uploaded. Defaults to None.</span>
+<span class="sd">        :type file_path: Optional[str]</span>
+<span class="sd">        :param url: The URL of the file to download and upload. Defaults to None.</span>
+<span class="sd">        :type url: Optional[str]</span>
+<span class="sd">        :param replace: If True, replaces the current value with the uploaded file&#39;s data.</span>
+<span class="sd">                        Otherwise, appends. Defaults to False.</span>
+<span class="sd">        :type replace: bool</span>
+<span class="sd">        :return: A list of file object representations returned by Baserow.</span>
+<span class="sd">        :rtype: List[Any]</span>
+<span class="sd">        :raises ValueError: If neither file_path nor url is provided.</span>
+<span class="sd">        :raises Exception: If there&#39;s an error during the upload process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either file_path or url must be provided.&quot;</span><span class="p">)</span>
+
+        <span class="n">endpoint_file</span> <span class="o">=</span> <span class="s2">&quot;/api/user-files/upload-file/&quot;</span>
+        <span class="n">endpoint_url</span> <span class="o">=</span> <span class="s2">&quot;/api/user-files/upload-via-url/&quot;</span>
+        <span class="n">uploaded_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Upload local files</span>
+        <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+                <span class="n">files_to_upload</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">files_to_upload</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_path</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files_to_upload</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                            <span class="n">endpoint_file</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="n">f</span><span class="p">}</span>
+                        <span class="p">)</span>
+                        <span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to upload file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+        <span class="c1"># Upload file from URL</span>
+        <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">}</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                    <span class="n">endpoint_url</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span>
+                <span class="p">)</span>
+                <span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to upload file from URL </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># Update in-memory value based on the &#39;replace&#39; flag</span>
+        <span class="k">if</span> <span class="n">replace</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">uploaded_files</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">uploaded_files</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">uploaded_files</span></div>
+
+
+<div class="viewcode-block" id="FileRowValue.download_files">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.FileRowValue.download_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">download_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Downloads all file objects in the FileRowValue to the specified directory.</span>
+
+<span class="sd">        :param directory_path: The path to the directory where the files should be downloaded.</span>
+<span class="sd">        :type directory_path: str</span>
+<span class="sd">        :return: List of filenames that were successfully downloaded.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        :raises Exception: If there&#39;s an error during the download process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">downloaded_files</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[]</span>
+        <span class="p">)</span>  <span class="c1"># List to store the names of successfully downloaded files</span>
+
+        <span class="c1"># Ensure the target directory exists</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">:</span>
+            <span class="n">file_url</span> <span class="o">=</span> <span class="n">file_obj</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_obj</span><span class="p">[</span><span class="s2">&quot;original_name&quot;</span><span class="p">]</span>
+            <span class="n">target_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+
+            <span class="c1"># Check if the file already exists in the target directory</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">target_file_path</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> already exists in </span><span class="si">{</span><span class="n">directory_path</span><span class="si">}</span><span class="s2">. Skipping download.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Download the file</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+                <span class="c1"># Save the downloaded file to the target directory</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_file_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">):</span>
+                        <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> downloaded successfully to </span><span class="si">{</span><span class="n">directory_path</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">downloaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">file_name</span>
+                <span class="p">)</span>  <span class="c1"># Append the file name to the downloaded_files list</span>
+
+            <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to download file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">file_url</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to download file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">downloaded_files</span>  <span class="c1"># Return the list of successfully downloaded files</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RowValueList">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.RowValueList">[docs]</a>
+<span class="k">class</span> <span class="nc">RowValueList</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A list-like container for RowValue objects.</span>
+
+<span class="sd">    :ivar row_values: A list of RowValue objects.</span>
+<span class="sd">    :vartype row_values: List[RowValue]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s2">&quot;RowValue&quot;</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes a RowValueList instance.</span>
+
+<span class="sd">        :param row_values: A list of RowValue objects. Defaults to an empty list if not provided.</span>
+<span class="sd">        :type row_values: Union[List[RowValue], None], optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_values</span> <span class="o">=</span> <span class="n">row_values</span> <span class="k">if</span> <span class="n">row_values</span> <span class="k">else</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides a string representation of the RowValueList object.</span>
+
+<span class="sd">        :return: A string representation of the RowValueList object.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_values_to_show</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">value_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_values_to_show</span><span class="p">:</span>
+            <span class="n">value_names</span> <span class="o">=</span> <span class="n">value_names</span><span class="p">[:</span><span class="n">max_values_to_show</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;...&quot;</span><span class="p">]</span>
+
+        <span class="n">values_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value_names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;RowValueList(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="p">)</span><span class="si">}</span><span class="s2"> values: [</span><span class="si">{</span><span class="n">values_str</span><span class="si">}</span><span class="s2">])&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;RowValue&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a RowValue object from the list by its field name.</span>
+
+<span class="sd">        :param field_name: The name of the field to search for.</span>
+<span class="sd">        :type field_name: str</span>
+<span class="sd">        :raises KeyError: If the field name is not found in the list.</span>
+<span class="sd">        :return: The found RowValue object.</span>
+<span class="sd">        :rtype: RowValue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">field_name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">value</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RowValue with field name &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allows iteration over the RowValue objects in the list.</span>
+
+<span class="sd">        :return: An iterator over the RowValue objects.</span>
+<span class="sd">        :rtype: Iterator[RowValue]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the number of RowValue objects in the list.</span>
+
+<span class="sd">        :return: The number of RowValue objects.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RowValueList.add">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row_value.RowValueList.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_value</span><span class="p">:</span> <span class="s2">&quot;RowValue&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a RowValue object to the list.</span>
+
+<span class="sd">        :param row_value: The RowValue object to be added.</span>
+<span class="sd">        :type row_value: RowValue</span>
+<span class="sd">        :raises TypeError: If the provided object is not an instance of RowValue.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_value</span><span class="p">,</span> <span class="n">RowValue</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided object is not an instance of the RowValue class.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_value</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
