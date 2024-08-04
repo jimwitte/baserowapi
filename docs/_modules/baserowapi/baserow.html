@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>baserowapi.baserow &mdash; Baserow API Package 0.1.0b2 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d31d1d1e"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Baserow API Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html">Baserow Client Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Baserow API Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">baserowapi.baserow</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for baserowapi.baserow</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">baserowapi.models.table</span> <span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+
+<div class="viewcode-block" id="Baserow">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow">[docs]</a>
+<span class="k">class</span> <span class="nc">Baserow</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A client class for interacting with the Baserow API.</span>
+
+<span class="sd">    :ivar url: The base URL for the Baserow API.</span>
+<span class="sd">    :ivar token: The authentication token.</span>
+<span class="sd">    :ivar ERROR_MESSAGES: A dictionary mapping HTTP error codes to error messages.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ERROR_MESSAGES</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="s2">&quot;Bad request to </span><span class="si">{url}</span><span class="s2">. The request contains invalid values or the JSON could not be parsed.&quot;</span><span class="p">,</span>
+        <span class="mi">401</span><span class="p">:</span> <span class="s2">&quot;Unauthorized request to </span><span class="si">{url}</span><span class="s2">. Accessing an endpoint without a valid database token.&quot;</span><span class="p">,</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="s2">&quot;Resource not found at </span><span class="si">{url}</span><span class="s2">. Row or table is not found.&quot;</span><span class="p">,</span>
+        <span class="mi">413</span><span class="p">:</span> <span class="s2">&quot;Request entity too large at </span><span class="si">{url}</span><span class="s2">. The request exceeded the maximum allowed payload size.&quot;</span><span class="p">,</span>
+        <span class="mi">415</span><span class="p">:</span> <span class="s2">&quot;Unsupported media type in request at </span><span class="si">{url}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="s2">&quot;Internal server error at </span><span class="si">{url}</span><span class="s2">. The server encountered an unexpected condition.&quot;</span><span class="p">,</span>
+        <span class="mi">502</span><span class="p">:</span> <span class="s2">&quot;Bad gateway at </span><span class="si">{url}</span><span class="s2">. Baserow is restarting or an unexpected outage is in progress.&quot;</span><span class="p">,</span>
+        <span class="mi">503</span><span class="p">:</span> <span class="s2">&quot;Service unavailable at </span><span class="si">{url}</span><span class="s2">. The server could not process your request in time.&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;https://api.baserow.io&quot;</span><span class="p">,</span>
+        <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">logging_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+        <span class="n">log_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Baserow client.</span>
+
+<span class="sd">        :param url: The base URL for the Baserow API. Defaults to &#39;https://api.baserow.io&#39;.</span>
+<span class="sd">        :param token: The authentication token. Defaults to None.</span>
+<span class="sd">        :param logging_level: The logging level. Defaults to logging.WARNING.</span>
+<span class="sd">        :param log_file: The path to a log file. Defaults to None.</span>
+<span class="sd">        :ivar headers: Headers for the API request.</span>
+<span class="sd">        :ivar session: A session object for making API requests.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Token </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure_logging</span><span class="p">(</span><span class="n">logging_level</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Baserow.configure_logging">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.configure_logging">[docs]</a>
+    <span class="k">def</span> <span class="nf">configure_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configure logging for the Baserow client.</span>
+
+<span class="sd">        :param level: The logging level.</span>
+<span class="sd">        :param log_file: The path to a log file. If provided, logs will also be written to this file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
+            <span class="n">handlers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">log_file</span><span class="p">))</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+            <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(name)s</span><span class="s2"> - </span><span class="si">%(levelname)s</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">handlers</span><span class="o">=</span><span class="n">handlers</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide a string representation of the Baserow client.</span>
+
+<span class="sd">        :return: A string representing the Baserow client with its base URL.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Baserow client for base url </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="Baserow.get_table">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_table">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Table</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a table instance based on its ID.</span>
+
+<span class="sd">        :param table_id: The unique identifier of the table.</span>
+<span class="sd">        :return: An instance of the Table class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Baserow.make_api_request">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.make_api_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">make_api_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make an API request to the specified endpoint.</span>
+
+<span class="sd">        :param endpoint: The API endpoint to make the request to.</span>
+<span class="sd">        :param method: The HTTP method to use, by default &quot;GET&quot;.</span>
+<span class="sd">        :param data: The data payload to send with the request, by default None.</span>
+<span class="sd">        :param headers: Additional headers to send with the request, by default None.</span>
+<span class="sd">        :param timeout: The maximum number of seconds to wait for the server response, by default 10.</span>
+<span class="sd">        :param files: Files to be sent with the request, by default None.</span>
+<span class="sd">        :return: The parsed response data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="c1"># URLs returned during paging may include the full URL, but use http rather than the scheme used in the initial api call</span>
+        <span class="c1"># To ensure consistency, adjust the scheme of the endpoint to match the scheme of self.url</span>
+
+        <span class="k">if</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http://&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">):</span>
+            <span class="n">parsed_base_url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+            <span class="n">parsed_endpoint_url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+
+            <span class="c1"># Replace the scheme of the endpoint with the scheme of self.url</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">parsed_endpoint_url</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">scheme</span><span class="o">=</span><span class="n">parsed_base_url</span><span class="o">.</span><span class="n">scheme</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">geturl</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">+</span> <span class="n">endpoint</span>
+
+        <span class="n">combined_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_combined_headers</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_request</span><span class="p">(</span>
+            <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">combined_headers</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">files</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ERROR_MESSAGES</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ERROR_MESSAGES</span><span class="p">[</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Baserow.get_combined_headers">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_combined_headers">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_combined_headers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">additional_headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combines the default headers with any additional headers provided.</span>
+
+<span class="sd">        :param additional_headers: Additional headers to combine with the default headers.</span>
+<span class="sd">        :return: Combined headers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">additional_headers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_headers</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span></div>
+
+
+<div class="viewcode-block" id="Baserow.perform_request">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.perform_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">perform_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs an HTTP request using the given parameters.</span>
+
+<span class="sd">        :param method: The HTTP method to use (e.g., &quot;GET&quot;, &quot;POST&quot;).</span>
+<span class="sd">        :param url: The complete URL to make the request to.</span>
+<span class="sd">        :param headers: Headers to send with the request.</span>
+<span class="sd">        :param data: The data payload to send with the request.</span>
+<span class="sd">        :param timeout: The maximum number of seconds to wait for the server response.</span>
+<span class="sd">        :param files: The files to send with the request, if any. The dictionary keys are</span>
+<span class="sd">                    the form field names, and the values are the file data.</span>
+<span class="sd">        :return: The server&#39;s response to the request.</span>
+<span class="sd">        :raises requests.exceptions.HTTPError: If the response status code is in the defined ERROR_MESSAGES.</span>
+<span class="sd">        :raises requests.exceptions.Timeout: If the request times out.</span>
+<span class="sd">        :raises requests.exceptions.RequestException: For other request-related exceptions like connectivity issues.</span>
+<span class="sd">        :raises Exception: For any other unexpected exceptions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Making API request: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Conditionally adjust headers for file uploads</span>
+            <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;API file upload request </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="c1"># session.request seems to insist on header &quot;Content: application/json&quot; :-(</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Checking status code from ERROR_MESSAGES directly</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ERROR_MESSAGES</span><span class="p">:</span>
+                <span class="n">error_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ERROR_MESSAGES</span><span class="p">[</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">url</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">(</span><span class="n">error_message</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Timeout</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> timed out.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Handle any other exceptions here</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unexpected error occurred while making a request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON payload: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Baserow.parse_response">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.parse_response">[docs]</a>
+    <span class="k">def</span> <span class="nf">parse_response</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses the response received from an HTTP request.</span>
+
+<span class="sd">        If the response has a status code of 204, it will return the status code.</span>
+<span class="sd">        If the response body is empty and the method is not &quot;DELETE&quot; or the status code is not 204,</span>
+<span class="sd">        a warning is logged.</span>
+<span class="sd">        If the response body contains JSON, it attempts to parse and return the JSON.</span>
+<span class="sd">        Otherwise, the raw response text is returned.</span>
+
+<span class="sd">        :param response: The response object received from an HTTP request.</span>
+<span class="sd">        :param method: The HTTP method that was used for the request.</span>
+<span class="sd">        :param url: The complete URL the request was made to.</span>
+<span class="sd">        :return: Either the status code, a dictionary parsed from the JSON response, or the raw response text.</span>
+<span class="sd">        :raises ValueError: If the response cannot be parsed as JSON.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;DELETE&quot;</span> <span class="ow">or</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">204</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No response body received from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to parse response as JSON. Received: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
