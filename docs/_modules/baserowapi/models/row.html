@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baserowapi.models.row &mdash; Baserow API Package 0.1.0b2 documentation</title>
+  <title>baserowapi.models.row &mdash; Baserow API Package 0.1.0b3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=d31d1d1e"></script>
+        <script src="../../../_static/documentation_options.js?v=77659907"></script>
         <script src="../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -111,6 +111,8 @@
     <span class="n">LookupRowValue</span><span class="p">,</span>
     <span class="n">MultipleCollaboratorsRowValue</span><span class="p">,</span>
     <span class="n">FileRowValue</span><span class="p">,</span>
+    <span class="n">GenericRowValue</span><span class="p">,</span>
+    <span class="n">PasswordRowValue</span>
 <span class="p">)</span>
 
 <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">RowValue</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -133,6 +135,8 @@
     <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">CountRowValue</span><span class="p">,</span>
     <span class="s2">&quot;lookup&quot;</span><span class="p">:</span> <span class="n">LookupRowValue</span><span class="p">,</span>
     <span class="s2">&quot;multiple_collaborators&quot;</span><span class="p">:</span> <span class="n">MultipleCollaboratorsRowValue</span><span class="p">,</span>
+    <span class="s2">&quot;generic&quot;</span><span class="p">:</span> <span class="n">GenericRowValue</span><span class="p">,</span>
+    <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">PasswordRowValue</span>
 <span class="p">}</span>
 
 
@@ -256,8 +260,8 @@
 
         <span class="n">row_value_class</span> <span class="o">=</span> <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">row_value_class</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field type &#39;</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">&#39; not supported.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field type &#39;</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">&#39; not supported.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field type &#39;</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">&#39; not supported, using GenericRowValue.&quot;</span><span class="p">)</span>
+            <span class="n">row_value_class</span> <span class="o">=</span> <span class="n">GenericRowValue</span>  <span class="c1"># Use GenericRowValue for unsupported types</span>
         <span class="k">return</span> <span class="n">row_value_class</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

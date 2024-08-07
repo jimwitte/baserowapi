@@ -29,6 +29,8 @@ from baserowapi.models.row_value import (
     LookupRowValue,
     MultipleCollaboratorsRowValue,
     FileRowValue,
+    GenericRowValue,
+    PasswordRowValue
 )
 
 ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
@@ -51,6 +53,8 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
     "count": CountRowValue,
     "lookup": LookupRowValue,
     "multiple_collaborators": MultipleCollaboratorsRowValue,
+    "generic": GenericRowValue,
+    "password": PasswordRowValue
 }
 
 
@@ -172,8 +176,8 @@ class Row:
 
         row_value_class = ROW_VALUE_TYPE_MAPPING.get(field_type)
         if not row_value_class:
-            self.logger.error(f"Field type '{field_type}' not supported.")
-            raise ValueError(f"Field type '{field_type}' not supported.")
+            self.logger.warning(f"Field type '{field_type}' not supported, using GenericRowValue.")
+            row_value_class = GenericRowValue  # Use GenericRowValue for unsupported types
         return row_value_class
 
     def __repr__(self) -> str:

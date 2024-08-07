@@ -20,7 +20,7 @@ This class represents the tables in Baserow. Each table comprises various fields
 Row Class
 ---------
 
-This class stands for the rows in a Baserow table, encompassing:
+This class represents rows in a Baserow table, encompassing:
 
 - **Values Property**: A property containing the value of a `RowValueList` object. The `RowValueList` embeds multiple `RowValue` objects, each correlating to a specific field object.
 

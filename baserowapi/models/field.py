@@ -9,7 +9,7 @@ class Field:
     Represents a field in Baserow and provides methods to interact with its properties.
     """
 
-    def __init__(self, name: str, field_data: Dict[str, Any]) -> None:
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a Field object.
 
@@ -17,6 +17,8 @@ class Field:
         :type name: str
         :param field_data: A dictionary containing the field's attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         :raises ValueError: If the name is empty or if field_data is not a valid dictionary.
         """
         self.logger = logging.getLogger(__name__)
@@ -31,6 +33,7 @@ class Field:
 
         self.name = name
         self.field_data = field_data
+        self.client = client
         self.logger.debug(
             f"Initialized field '{self.name}' with attributes '{self.field_data}'"
         )
@@ -160,6 +163,19 @@ class Field:
 class BaseTextClass(Field):
     """A base class for text-based fields in Baserow."""
 
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
+        """
+        Initialize a BaseTextClass object.
+
+        :param name: The name of the field.
+        :type name: str
+        :param field_data: A dictionary containing the field's attributes.
+        :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
+        """
+        super().__init__(name, field_data, client)
+
     def validate_value(self, value: Any) -> None:
         """
         Validate the value for a text-based Field.
@@ -197,7 +213,7 @@ class TextField(BaseTextClass):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a TextField object.
 
@@ -205,9 +221,11 @@ class TextField(BaseTextClass):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         :raises ValueError: If the 'text_default' value in field_data is not a string.
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
         text_default_value = field_data.get("text_default", "")
         if not isinstance(text_default_value, str):
@@ -262,7 +280,7 @@ class LongTextField(BaseTextClass):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a LongTextField object.
 
@@ -270,8 +288,45 @@ class LongTextField(BaseTextClass):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
+        :raises ValueError: If the 'text_default' value in field_data is not a string or
+                            if the 'long_text_enable_rich_text' value in field_data is not a boolean.
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
+
+        text_default_value = field_data.get("text_default", "")
+        self.validate_value(text_default_value)
+        self._text_default = text_default_value
+
+        long_text_enable_rich_text_value = field_data.get(
+            "long_text_enable_rich_text", False
+        )
+        if not isinstance(long_text_enable_rich_text_value, bool):
+            raise ValueError(
+                f"Expected a boolean value for long_text_enable_rich_text but got {type(long_text_enable_rich_text_value)}"
+            )
+        self._long_text_enable_rich_text = long_text_enable_rich_text_value
+
+    @property
+    def text_default(self) -> str:
+        """
+        Get the default text value for this LongTextField.
+
+        :return: The default text value.
+        :rtype: str
+        """
+        return self._text_default
+
+    @property
+    def long_text_enable_rich_text(self) -> bool:
+        """
+        Get the rich text enable status for this LongTextField.
+
+        :return: The rich text enable status.
+        :rtype: bool
+        """
+        return self._long_text_enable_rich_text
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -305,7 +360,7 @@ class UrlField(BaseTextClass):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a UrlField object.
 
@@ -313,8 +368,10 @@ class UrlField(BaseTextClass):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -348,7 +405,7 @@ class EmailField(BaseTextClass):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize an EmailField object.
 
@@ -356,8 +413,10 @@ class EmailField(BaseTextClass):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -389,7 +448,7 @@ class PhoneNumberField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a PhoneNumberField object.
 
@@ -397,8 +456,10 @@ class PhoneNumberField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.valid_characters = re.compile(r"^[0-9 Nx,._+*()#=;/-]{1,100}$")
         self.logger = logging.getLogger(__name__)
 
@@ -460,7 +521,7 @@ class BooleanField(Field):
     TYPE = "boolean"
     _COMPATIBLE_FILTERS = ["boolean", "empty", "not_empty"]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a BooleanField object.
 
@@ -468,8 +529,10 @@ class BooleanField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -514,13 +577,15 @@ class NumberField(Field):
         "contains",
         "contains_not",
         "higher_than",
+        "higher_than_or_equal",
         "lower_than",
+        "lower_than_or_equal",
         "is_even_and_whole",
         "empty",
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a NumberField object.
 
@@ -528,8 +593,10 @@ class NumberField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
         # Retrieve the number of decimal places allowed for this field
@@ -568,17 +635,29 @@ class NumberField(Field):
         """
         return self.number_negative
 
-    def validate_value(self, value: Union[int, float]) -> None:
+    def validate_value(self, value: Union[int, float, str]) -> None:
         """
         Validate the value for a NumberField.
 
         :param value: The number value to be validated.
-        :type value: Union[int, float]
+        :type value: Union[int, float, str]
         :raises ValueError: If the value doesn't match the expected type or constraints.
         """
         if value is None:
             return
-        elif not isinstance(value, (int, float)):
+
+        if isinstance(value, str):
+            try:
+                value = float(value)
+            except ValueError:
+                self.logger.error(
+                    f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
+                )
+                raise ValueError(
+                    f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
+                )
+
+        if not isinstance(value, (int, float)):
             self.logger.error(
                 f"Expected a number value for NumberField but got {type(value)}"
             )
@@ -615,7 +694,7 @@ class RatingField(Field):
     TYPE = "rating"
     _COMPATIBLE_FILTERS = ["equal", "not_equal", "higher_than", "lower_than"]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a RatingField object.
 
@@ -623,8 +702,10 @@ class RatingField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
         # Extract max_value, color, and style attributes
@@ -695,7 +776,7 @@ class BaseDateField(Field):
 
     TYPE = "base_date"
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a BaseDateField object.
 
@@ -703,8 +784,10 @@ class BaseDateField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
         # Common attributes for date fields
         self.date_format: str = field_data.get("date_format", "EU")
@@ -767,9 +850,14 @@ class BaseDateField(Field):
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
                 raise ValueError(f"Invalid date format for {self.TYPE}: {value}")
         else:
-            # If only date is expected but value contains time, strip the time portion
+            # If only date is expected but value contains time, raise an error
             if "T" in value:
-                value = value.split("T")[0]
+                self.logger.error(
+                    f"Time information not allowed for {self.TYPE}: {value}"
+                )
+                raise ValueError(
+                    f"Time information not allowed for {self.TYPE}: {value}"
+                )
 
             try:
                 datetime.strptime(value, "%Y-%m-%d")
@@ -814,7 +902,7 @@ class DateField(BaseDateField):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a DateField object.
 
@@ -822,8 +910,10 @@ class DateField(BaseDateField):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -873,7 +963,7 @@ class LastModifiedField(BaseDateField):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a LastModifiedField object.
 
@@ -881,8 +971,10 @@ class LastModifiedField(BaseDateField):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -942,7 +1034,7 @@ class CreatedOnField(BaseDateField):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a CreatedOnField object.
 
@@ -950,8 +1042,10 @@ class CreatedOnField(BaseDateField):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -963,36 +1057,6 @@ class CreatedOnField(BaseDateField):
         :rtype: List[str]
         """
         return self._COMPATIBLE_FILTERS
-
-    @property
-    def is_read_only(self) -> bool:
-        """
-        Determine if the CreatedOnField is read-only.
-
-        :return: True, as this field type is always read-only.
-        :rtype: bool
-        """
-        return True
-
-    """
-    Represents a field in Baserow that indicates the creation date.
-
-    :ivar TYPE: The type of the field, which is 'created_on'.
-    :vartype TYPE: str
-    """
-
-    TYPE = "created_on"
-
-    def __init__(self, name: str, field_data: Dict[str, Any]):
-        """
-        Initialize a CreatedOnField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        """
-        super().__init__(name, field_data)
 
     @property
     def is_read_only(self) -> bool:
@@ -1016,7 +1080,7 @@ class FileField(Field):
     TYPE = "file"
     _COMPATIBLE_FILTERS = ["filename_contains", "has_file_type", "empty", "not_empty"]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a FileField object.
 
@@ -1024,8 +1088,10 @@ class FileField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -1073,12 +1139,10 @@ class FileField(Field):
 
 class SingleSelectField(Field):
     """
-    Utility method to retrieve an option by its id or value.
+    Represents a single select field in Baserow.
 
-    :param value: The id or value of the option to retrieve.
-    :type value: Union[int, str]
-    :return: The option if found, otherwise None.
-    :rtype: Optional[Dict[str, Any]]
+    :ivar TYPE: The type of the field, which is 'single_select'.
+    :vartype TYPE: str
     """
 
     TYPE = "single_select"
@@ -1093,16 +1157,18 @@ class SingleSelectField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
-        Initializes a SingleSelectField object.
+        Initialize a SingleSelectField object.
 
         :param name: The name of the field.
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
         if "select_options" not in field_data or not isinstance(
             field_data["select_options"], list
@@ -1215,16 +1281,18 @@ class MultipleSelectField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
-        Initializes a MultipleSelectField object.
+        Initialize a MultipleSelectField object.
 
         :param name: The name of the field.
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
         if "select_options" not in field_data or not isinstance(
             field_data["select_options"], list
@@ -1344,7 +1412,7 @@ class FormulaField(Field):
     TYPE = "formula"
     _COMPATIBLE_FILTERS = []
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initializes a FormulaField object.
 
@@ -1352,8 +1420,10 @@ class FormulaField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
         # Attributes specific to the FormulaField
         self._formula = field_data.get("formula")
@@ -1379,7 +1449,6 @@ class FormulaField(Field):
         :return: The formula of the field.
         :rtype: Optional[str]
         """
-
         return self._formula
 
     @property
@@ -1390,7 +1459,6 @@ class FormulaField(Field):
         :return: The formula type of the field.
         :rtype: Optional[str]
         """
-
         return self._formula_type
 
     @property
@@ -1401,7 +1469,6 @@ class FormulaField(Field):
         :return: The error associated with the formula.
         :rtype: Optional[str]
         """
-
         return self._error
 
     @property
@@ -1412,7 +1479,6 @@ class FormulaField(Field):
         :return: The array formula type of the field.
         :rtype: Optional[str]
         """
-
         return self._array_formula_type
 
     @property
@@ -1423,7 +1489,6 @@ class FormulaField(Field):
         :return: Always returns True for a FormulaField.
         :rtype: bool
         """
-
         return True
 
 
@@ -1445,7 +1510,7 @@ class TableLinkField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None):
         """
         Initializes a TableLinkField object.
 
@@ -1453,9 +1518,11 @@ class TableLinkField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         :raises ValueError: If the field type doesn't match the expected type.
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
         if self.type != self.TYPE:
             self.logger.error(
                 f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
@@ -1472,7 +1539,6 @@ class TableLinkField(Field):
         :return: The list of compatible filters.
         :rtype: List[str]
         """
-
         return self._COMPATIBLE_FILTERS
 
     def format_for_api(self, value: List[Union[int, str]]) -> List[Union[int, str]]:
@@ -1488,23 +1554,7 @@ class TableLinkField(Field):
         :rtype: List[Union[int, str]]
         :raises ValueError: If the provided value is not a list or if its entries are not integers or strings.
         """
-
-        # Ensure the value is a list
-        if not isinstance(value, list):
-            self.logger.error("Value provided for TableLinkField should be a list.")
-            raise ValueError("Value provided for TableLinkField should be a list.")
-
-        # Validate each entry in the list to be either an integer or string
-        for entry in value:
-            if not isinstance(entry, (int, str)):
-                self.logger.error(
-                    "Each entry in the list should be an integer or string."
-                )
-                raise ValueError(
-                    "Each entry in the list should be an integer or string."
-                )
-
-        # Since the API expects a simple list of integers or strings, return the value as-is
+        self.validate_value(value)
         return value
 
     @property
@@ -1528,26 +1578,68 @@ class TableLinkField(Field):
         return self.field_data.get("link_row_related_field_id", None)
 
     @property
-    def link_row_table(self) -> Optional[Dict[str, Any]]:
+    def link_row_limit_selection_view_id(self) -> Optional[int]:
         """
-        Retrieve the link_row_table from field_data.
+        Retrieve the link_row_limit_selection_view_id of the field from field_data.
 
-        :return: Details of the linked table.
-        :rtype: Optional[Dict[str, Any]]
+        :return: The link_row_limit_selection_view_id of the field.
+        :rtype: Optional[int]
         """
+        return self.field_data.get("link_row_limit_selection_view_id", None)
 
-        return self.field_data.get("link_row_table", None)
-
-    @property
-    def link_row_related_field(self) -> Optional[Dict[str, Any]]:
+    def get_options(self) -> List[str]:
         """
-        Retrieve the link_row_related_field from field_data.
+        Fetches and returns the primary values from the related table that are possible
+        for the TableLinkRowValue.
 
-        :return: Details of the related field in the linked table.
-        :rtype: Optional[Dict[str, Any]]
+        This method retrieves the rows from the related table and extracts the primary
+        field values from each row.
+
+        :return: A list of primary field values from the related table.
+        :raises ValueError: If there's an error fetching the primary values from the related table.
         """
+        if self.client is None:
+            self.logger.error("Baserow client not provided.")
+            raise ValueError("Baserow client not provided.")
 
-        return self.field_data.get("link_row_related_field", None)
+        try:
+            related_table = self.client.get_table(self.link_row_table_id)
+            primary_field_name = related_table.primary_field
+            returned_rows = related_table.get_rows(include=[primary_field_name])
+            options = [row[primary_field_name] for row in returned_rows]
+
+            self.logger.debug(
+                f"Retrieved {len(options)} options for TableLinkField '{self.name}' from related table {related_table.id}"
+            )
+            return options
+        except Exception as e:
+            self.logger.error(
+                f"Failed to retrieve options for TableLinkField '{self.name}'. Error: {e}"
+            )
+            raise ValueError(
+                f"Failed to retrieve options from the related table. Error: {e}"
+            )
+
+    def validate_value(self, value: Any) -> None:
+        """
+        Validate the value for the TableLinkField. Ensure it's a list of integers or strings.
+
+        :param value: The value to be validated.
+        :type value: Any
+        :raises ValueError: If the value is not a list or if its entries are not integers or strings.
+        """
+        if not isinstance(value, list):
+            self.logger.error("Value provided for TableLinkField should be a list.")
+            raise ValueError("Value provided for TableLinkField should be a list.")
+
+        for entry in value:
+            if not isinstance(entry, (int, str)):
+                self.logger.error(
+                    "Each entry in the list should be an integer or string."
+                )
+                raise ValueError(
+                    "Each entry in the list should be an integer or string."
+                )
 
 
 class CountField(Field):
@@ -1571,7 +1663,7 @@ class CountField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initializes a CountField object.
 
@@ -1579,8 +1671,10 @@ class CountField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1602,7 +1696,7 @@ class CountField(Field):
         """
         return True
 
-    def validate_value(self, value: int):
+    def validate_value(self, value: int) -> None:
         """
         Validate the value for a CountField.
 
@@ -1625,14 +1719,22 @@ class CountField(Field):
         :return: The id of the linking field.
         :rtype: Optional[str]
         """
-
         return self.field_data.get("through_field_id", None)
+
+    @property
+    def table_id(self) -> Optional[int]:
+        """
+        Retrieve the table_id of the field from field_data.
+
+        :return: The table_id of the field.
+        :rtype: Optional[int]
+        """
+        return self.field_data.get("table_id", None)
 
 
 class LookupField(Field):
     """
-    Represents a field field connected to a link to table field
-    which returns an array of values and row ids from the chosen
+    Represents a field connected to a link to table field which returns an array of values and row ids from the chosen
     lookup field in the linked table.
 
     :ivar TYPE: The type of the field, which is 'lookup'.
@@ -1640,9 +1742,19 @@ class LookupField(Field):
     """
 
     TYPE = "lookup"
-    _COMPATIBLE_FILTERS = []
+    _COMPATIBLE_FILTERS = [
+        "has_empty_value",
+        "has_not_empty_value",
+        "has_value_equal",
+        "has_not_value_equal",
+        "has_value_contains",
+        "has_not_value_contains",
+        "has_value_contains_word",
+        "has_not_value_contains_word",
+        "has_value_length_is_lower_than",
+    ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initializes a LookupField object.
 
@@ -1650,9 +1762,11 @@ class LookupField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         :raises ValueError: If the field is not read-only.
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
         if not self.is_read_only:
             self.logger.error("LookupField should be read-only.")
@@ -1666,7 +1780,6 @@ class LookupField(Field):
         :return: The list of compatible filters.
         :rtype: List[str]
         """
-
         return self._COMPATIBLE_FILTERS
 
     @property
@@ -1677,7 +1790,6 @@ class LookupField(Field):
         :return: The id of the linking field.
         :rtype: Optional[int]
         """
-
         return self.field_data.get("through_field_id", None)
 
     @property
@@ -1688,7 +1800,6 @@ class LookupField(Field):
         :return: The name of the linking field.
         :rtype: Optional[int]
         """
-
         return self.field_data.get("through_field_name", None)
 
     @property
@@ -1699,7 +1810,6 @@ class LookupField(Field):
         :return: The id of the target field.
         :rtype: Optional[int]
         """
-
         return self.field_data.get("target_field_id", None)
 
     @property
@@ -1710,7 +1820,6 @@ class LookupField(Field):
         :return: The name of the target field.
         :rtype: Optional[str]
         """
-
         return self.field_data.get("target_field_name", None)
 
 
@@ -1730,7 +1839,7 @@ class MultipleCollaboratorsField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any]):
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initializes a MultipleCollaboratorsField object.
 
@@ -1738,8 +1847,10 @@ class MultipleCollaboratorsField(Field):
         :type name: str
         :param field_data: A dictionary containing the field's data and attributes.
         :type field_data: Dict[str, Any]
+        :param client: The Baserow API client. Defaults to None.
+        :type client: Optional[Any]
         """
-        super().__init__(name, field_data)
+        super().__init__(name, field_data, client)
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -1777,7 +1888,7 @@ class MultipleCollaboratorsField(Field):
             )
         return value  # Return value as-is since it's already in the expected format
 
-    def validate_value(self, value: List[Dict[str, Any]]):
+    def validate_value(self, value: List[Dict[str, Any]]) -> None:
         """
         Validate the value for a MultipleCollaboratorsField.
 
@@ -1794,6 +1905,66 @@ class MultipleCollaboratorsField(Field):
                 raise ValueError(
                     "Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key"
                 )
+
+
+class GenericField(Field):
+    """
+    Represents a generic field for unknown or unsupported field types in Baserow.
+    """
+
+    TYPE = "generic"
+
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
+        super().__init__(name, field_data, client)
+        self.logger.warning(
+            f"Initialized a generic field for unsupported type '{self.field_data.get('type')}'"
+        )
+
+    @property
+    def compatible_filters(self) -> List[str]:
+        return []
+
+    def validate_value(self, value: Any) -> None:
+        self.logger.warning(f"No validation available for generic field '{self.name}'.")
+
+    def format_for_api(self, value: Any) -> Any:
+        return value
+
+
+class PasswordField(Field):
+    """
+    Represents a password field in Baserow.
+
+    :ivar TYPE: The type of the field, which is 'password'.
+    :vartype TYPE: str
+    """
+
+    TYPE = "password"
+
+    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
+        super().__init__(name, field_data, client)
+
+    def validate_value(self, value: Any) -> None:
+        """
+        Validate the value for a PasswordField. Ensure it's a string or None.
+        :param value: The value to be validated.
+        :type value: Any
+        :raises ValueError: If the value is not a string or None.
+        """
+        if value is not None and not isinstance(value, str):
+            raise ValueError(
+                f"Expected a string or None for PasswordField but got {type(value)}"
+            )
+
+    def format_for_api(self, value: Any) -> Any:
+        """
+        Format the value for API submission. Returns the value as-is.
+        :param value: The value to be formatted.
+        :type value: Any
+        :return: The formatted value.
+        :rtype: Any
+        """
+        return value
 
 
 class FieldList:

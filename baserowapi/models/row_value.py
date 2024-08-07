@@ -302,14 +302,14 @@ class NumberRowValue(RowValue):
 
     Attributes:
         field (:class:`NumberField`): The associated NumberField object.
-        raw_value (Optional[Union[int, float]]): The raw numeric value as fetched/returned from the API.
+        raw_value (Optional[str]): The raw numeric value as fetched/returned from the API.
         client (Optional[Any]): The Baserow class API client. Some RowValue subclasses may require access to the API.
     """
 
     def __init__(
         self,
         field: "NumberField",
-        raw_value: Optional[Union[int, float]] = None,
+        raw_value: Optional[str] = None,
         client: Optional[Any] = None,
     ) -> None:
         """
@@ -332,30 +332,29 @@ class NumberRowValue(RowValue):
         )
 
     @property
-    def value(self) -> Union[int, float, str]:
+    def value(self) -> str:
         """
         Get the value in a user-friendly format.
-        For NumberRowValue, this returns the raw value as a formatted string based on decimal places.
+        For NumberRowValue, this returns the raw value as a string.
 
-        :return: Formatted value based on the decimal places or the raw value.
+        :return: The raw value as a string.
         """
-        if isinstance(self._raw_value, float):
-            format_str = f"{{:.{self.field.decimal_places}f}}"
-            return format_str.format(self._raw_value)
         return self._raw_value
 
     @value.setter
-    def value(self, new_value: Union[int, float]) -> None:
+    def value(self, new_value: str) -> None:
         """
         Set a new value.
         This should handle validation specific to NumberRowValue using the associated NumberField's validate_value method.
 
-        :param new_value: The new numeric value to set.
+        :param new_value: The new numeric value to set as a string.
         :raises Exception: If the value is not valid as per the associated NumberField's validation.
         """
         try:
+            # Convert the value to float for validation purposes
+            numeric_value = float(new_value)
             # Use the validate_value method of the corresponding NumberField class
-            self.field.validate_value(new_value)
+            self.field.validate_value(numeric_value)
 
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
@@ -1140,65 +1139,6 @@ class TableLinkRowValue(RowValue):
         """
         return [entry.get("id", entry.get("value")) for entry in self._raw_value]
 
-    def get_related_table(self):
-        """
-        Fetches and returns the related table associated with the `TableLinkRowValue`.
-
-        This method utilizes the `link_row_table_id` attribute from the associated `TableLinkField`
-        to fetch the table data from the Baserow API.
-
-        :return: The related table object.
-        :rtype: Table (or whatever the type returned by client.get_table() is)
-        :raises ValueError: If there's an error fetching the related table.
-        """
-        try:
-            # Fetch the related table using the client's get_table method
-            related_table = self.client.get_table(self.field.link_row_table_id)
-
-            # Logging the successful fetch operation
-            self.logger.debug(
-                f"Fetched related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}"
-            )
-
-            return related_table
-        except Exception as e:
-            # Logging the error
-            self.logger.error(
-                f"Failed to fetch related table with ID {self.field.link_row_table_id} for TableLinkRowValue associated with field {self.field.name}. Error: {e}"
-            )
-
-            # Raising an error for external handling or informing the caller
-            raise ValueError(f"Failed to fetch the related table. Error: {e}")
-
-    def get_options(self) -> List[str]:
-        """
-        Fetches and returns the primary values from the related table that are possible
-        for the TableLinkRowValue.
-
-        This method retrieves the rows from the related table and extracts the primary
-        field values from each row.
-
-        :return: A list of primary field values from the related table.
-        :raises ValueError: If there's an error fetching the primary values from the related table.
-        """
-        try:
-            related_table = self.get_related_table()
-            primary_field_name = related_table.primary_field
-            returned_rows = related_table.get_rows(include=[primary_field_name])
-            options = [row[primary_field_name] for row in returned_rows]
-
-            self.logger.debug(
-                f"Retrieved {len(options)} options for TableLinkRowValue associated with field {self.field.name} from related table {related_table.id}"
-            )
-            return options
-        except Exception as e:
-            self.logger.error(
-                f"Failed to retrieve options for TableLinkRowValue associated with field {self.field.name}. Error: {e}"
-            )
-            raise ValueError(
-                f"Failed to retrieve options from the related table. Error: {e}"
-            )
-
 
 class CountRowValue(RowValue):
     """
@@ -1537,6 +1477,89 @@ class FileRowValue(RowValue):
                 raise Exception(f"Failed to download file {file_name}. Error: {e}")
 
         return downloaded_files  # Return the list of successfully downloaded files
+
+
+class GenericRowValue(RowValue):
+    """
+    Represents a RowValue for an unsupported or generic field type.
+    """
+
+    def __init__(
+        self,
+        field: "GenericField",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ):
+        if not isinstance(field, GenericField):
+            raise ValueError(
+                "The provided field is not an instance of the GenericField class."
+            )
+        super().__init__(field, raw_value, client)
+        self.logger.warning(
+            f"Initialized a generic row value for field '{self.field.name}' of unsupported type."
+        )
+
+    @property
+    def value(self) -> Any:
+        return self._raw_value
+
+    @value.setter
+    def value(self, new_value: Any):
+        self.field.validate_value(new_value)
+        self._raw_value = new_value
+
+    def format_for_api(self) -> Any:
+        return self._raw_value
+
+
+class PasswordRowValue(RowValue):
+    """
+    Represents a row value for a password field.
+    """
+
+    def __init__(
+        self,
+        field: "Field",
+        raw_value: Optional[Any] = None,
+        client: Optional[Any] = None,
+    ) -> None:
+        super().__init__(field, raw_value, client)
+        self._password_set = raw_value == "true"
+
+    @property
+    def value(self) -> bool:
+        """
+        Retrieve the value indicating whether the password is set.
+        :return: True if the password is set, otherwise False.
+        :rtype: bool
+        """
+        return self._password_set
+
+    @value.setter
+    def value(self, new_value: Any) -> None:
+        """
+        Set a new password value or unset the password.
+        :param new_value: The new password value or None to unset.
+        :type new_value: Any
+        """
+        if new_value is None:
+            self._raw_value = None
+            self._password_set = False
+        elif not isinstance(new_value, str):
+            raise ValueError(
+                f"Expected a string or None for PasswordRowValue but got {type(new_value)}"
+            )
+        else:
+            self._raw_value = new_value
+            self._password_set = True
+
+    def format_for_api(self) -> Any:
+        """
+        Format the password value for API submission.
+        :return: The formatted value for API submission.
+        :rtype: Any
+        """
+        return self._raw_value
 
 
 class RowValueList:
