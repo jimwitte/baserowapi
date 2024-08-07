@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baserowapi.models.table &mdash; Baserow API Package 0.1.0b2 documentation</title>
+  <title>baserowapi.models.table &mdash; Baserow API Package 0.1.0b3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=d31d1d1e"></script>
+        <script src="../../../_static/documentation_options.js?v=77659907"></script>
         <script src="../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -106,6 +106,8 @@
     <span class="n">CountField</span><span class="p">,</span>
     <span class="n">LookupField</span><span class="p">,</span>
     <span class="n">MultipleCollaboratorsField</span><span class="p">,</span>
+    <span class="n">GenericField</span><span class="p">,</span>
+    <span class="n">PasswordField</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">baserowapi.validators.filter_validator</span> <span class="kn">import</span> <span class="n">FilterValidator</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -144,6 +146,8 @@
         <span class="n">CountField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">CountField</span><span class="p">,</span>
         <span class="n">LookupField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">LookupField</span><span class="p">,</span>
         <span class="n">MultipleCollaboratorsField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">MultipleCollaboratorsField</span><span class="p">,</span>
+        <span class="n">GenericField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">GenericField</span><span class="p">,</span>
+        <span class="n">PasswordField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">PasswordField</span>
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="s2">&quot;Baserow&quot;</span><span class="p">):</span>
@@ -184,7 +188,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">field_type</span> <span class="o">=</span> <span class="n">field_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Table</span><span class="o">.</span><span class="n">FIELD_TYPE_CLASS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">field_type</span><span class="p">,</span> <span class="n">Field</span>
+            <span class="n">field_type</span><span class="p">,</span> <span class="n">GenericField</span>
         <span class="p">)</span>  <span class="c1"># Default to base Field class if type not found</span>
 
     <span class="nd">@property</span>
@@ -208,12 +212,10 @@
                 <span class="n">field_objects</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">fd</span> <span class="ow">in</span> <span class="n">fields_data</span><span class="p">:</span>
                     <span class="n">FieldClass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field_class_from_data</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-                    <span class="n">field_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FieldClass</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">fd</span><span class="p">))</span>
+                    <span class="n">field_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FieldClass</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">fd</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="n">FieldList</span><span class="p">(</span><span class="n">field_objects</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Failed to fetch fields for table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to fetch fields for table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error when fetching fields.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
 
@@ -646,7 +648,9 @@
 <div class="viewcode-block" id="Table.add_row">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.add_row">[docs]</a>
     <span class="k">def</span> <span class="nf">add_row</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a new row (or multiple rows) to the table.</span>
@@ -657,7 +661,7 @@
 <span class="sd">        :type rows_data: dict or list[dict]</span>
 
 <span class="sd">        :param batch_size: The number of rows to include in each batch request when adding multiple rows.</span>
-<span class="sd">                        Defaults to 10.</span>
+<span class="sd">                        Defaults to the client&#39;s batch_size.</span>
 <span class="sd">        :type batch_size: int</span>
 
 <span class="sd">        :return: An instance of the Row model representing the added row or</span>
@@ -699,6 +703,9 @@
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="c1"># Multiple rows addition with batching</span>
+            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
+
             <span class="n">added_rows</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_data</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="n">chunk</span> <span class="o">=</span> <span class="n">rows_data</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
@@ -720,7 +727,7 @@
     <span class="k">def</span> <span class="nf">update_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Row</span><span class="p">]],</span> <span class="n">RowIterator</span><span class="p">],</span>
-        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates multiple rows in the table using the Baserow batch update endpoint.</span>
@@ -805,6 +812,9 @@
             <span class="n">updated_rows</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="c1"># Process in batches</span>
+            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
+
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">formatted_data</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="n">batch_data</span> <span class="o">=</span> <span class="n">formatted_data</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
                 <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
@@ -827,7 +837,9 @@
 
 <div class="viewcode-block" id="Table.delete_rows">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.delete_rows">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">delete_rows</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deletes multiple rows from the table using the Baserow batch-delete endpoint.</span>
 
@@ -841,8 +853,8 @@
 <span class="sd">        :type rows_data: list[Union[Row, int]]</span>
 
 <span class="sd">        :param batch_size: The number of rows to include in each batch request when deleting multiple rows.</span>
-<span class="sd">                        Defaults to 10.</span>
-<span class="sd">        :type batch_size: int</span>
+<span class="sd">                        Defaults to None, in which case the client&#39;s batch_size will be used.</span>
+<span class="sd">        :type batch_size: int, optional</span>
 
 <span class="sd">        :return: True if rows are successfully deleted, otherwise an exception is raised.</span>
 <span class="sd">        :rtype: bool</span>
@@ -880,6 +892,9 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># Batch delete rows using the specified batch size</span>
+            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
+
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_ids</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="n">chunk</span> <span class="o">=</span> <span class="n">row_ids</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
                 <span class="n">_delete_rows_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>

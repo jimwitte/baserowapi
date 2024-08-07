@@ -1,5 +1,26 @@
 ### Changelog
 
+#### 2024--8-06: 0.1.0b3
+- **New Features:**
+  - **Generic Field Type:** Added a generic field type to serve as a default if a specific field type is not available.
+  - **Password Field Type:** Added a password field type.
+  - **Long Text Enhancements:** Introduced `long_text_enable_rich_text` property for long_text field type.
+  - **Link Row Enhancements:** Added `get_options` method for link_row field type, which returns a list of values from the primary field of the related table.
+  - **Link Row Field Properties:** Added `link_row_related_field_name` property to provide the field name for `link_row_related_field_id` in the related table.
+  - **Link Row Limit Selection View:** Added `link_row_limit_selection_view_id` property to link_row fields.
+  - **Count Field Enhancements:** Added `table_id` property to count field type.
+  - **Documentation Updates:** Updated documentation for linked fields.
+
+- **Enhancements:**
+  - **Validation Improvements:** Added basic validation for link_row fields, ensuring the value is a list of strings or integers.
+  - **Client Integration:** Added the baserow client to all Field class objects, enabling them to perform database operations. This was implemented primarily for the `TableLinkField`'s `get_options` function, which retrieves a list of valid options from the primary field of the linked table.
+  - **Filter Corrections:** Corrected the compatible filters list for the lookup field type.
+  - **Field Updates:** Corrected compatible filters for number field.
+
+- **Removals:**
+  - **Deprecated Functions:** Removed `link_row_related_field` and `link_row_related_table` as the API sets these to the same values as `link_row_related_field_id` and `link_row_related_table_id`.
+  - **Redundant Methods:** Removed `get_options` and `get_related_table` functions from the `TableLinkRowValue` class, as these are more appropriate for the field class.
+
 #### 2024-08-03: 0.1.0b2
 - **Enhancements:**
   - **Improved Filter Handling:** The `_build_request_url` method of the `Table` class now uses a JSON serialized filter tree for more efficient and accurate filtering.

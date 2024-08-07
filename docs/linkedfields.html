@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with Linked Fields in Baserow API &mdash; Baserow API Package 0.1.0b2 documentation</title>
+  <title>Working with Linked Fields in Baserow API &mdash; Baserow API Package 0.1.0b3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -13,7 +13,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d31d1d1e"></script>
+        <script src="_static/documentation_options.js?v=77659907"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -103,19 +103,34 @@
 <h2>Working with Linked Fields: Examples<a class="headerlink" href="#working-with-linked-fields-examples" title="Link to this heading"></a></h2>
 <p>Here are some Python code examples to help you work with linked fields:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For the sake of this example, assume you&#39;ve fetched a specific row</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span>
+    <span class="n">url</span><span class="o">=</span><span class="n">BASEROW_URL</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">BASEROW_TOKEN</span>
+<span class="p">)</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
+
 <span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># Retrieve the linked table ID from the linked field</span>
 <span class="n">linked_table_id</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">link_row_table_id</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked Table ID: </span><span class="si">{</span><span class="n">linked_table_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="c1"># Obtain the valid options for linked field values</span>
-<span class="n">options</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
+<span class="c1"># Obtain list of the valid options for linked field values</span>
+<span class="n">options</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Valid Options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+<span class="c1"># Obtain the ID of the field in the related table</span>
+<span class="n">linked_field_id</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">link_row_related_field_id</span>
+
+<span class="c1"># Obtain the ID of the view limiting the selection options</span>
+<span class="n">limit_selection_view_id</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">link_row_limit_selection_view_id</span>
+
 <span class="c1"># Access the related table object - this can be useful for various operations like searching or filtering rows to link</span>
-<span class="n">related_table</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_related_table</span><span class="p">()</span>
+<span class="n">related_table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">linked_table_id</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Related Table: </span><span class="si">{</span><span class="n">related_table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Retrieve all rows from the related table. Could add filters if needed.</span>
+<span class="n">related_rows</span> <span class="o">=</span> <span class="n">related_table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">()</span>
 
 <span class="c1"># Set the in-memory value of the linked field to the first two valid options</span>
 <span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;myTableLink&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">options</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>

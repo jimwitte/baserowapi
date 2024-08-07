@@ -24,6 +24,8 @@ from baserowapi.models.field import (
     CountField,
     LookupField,
     MultipleCollaboratorsField,
+    GenericField,
+    PasswordField
 )
 from baserowapi.validators.filter_validator import FilterValidator
 import logging
@@ -60,6 +62,8 @@ class Table:
         CountField.TYPE: CountField,
         LookupField.TYPE: LookupField,
         MultipleCollaboratorsField.TYPE: MultipleCollaboratorsField,
+        GenericField.TYPE: GenericField,
+        PasswordField.TYPE: PasswordField
     }
 
     def __init__(self, table_id: int, client: "Baserow"):
@@ -100,7 +104,7 @@ class Table:
         """
         field_type = field_data.get("type")
         return Table.FIELD_TYPE_CLASS_MAP.get(
-            field_type, Field
+            field_type, GenericField
         )  # Default to base Field class if type not found
 
     @property
@@ -124,12 +128,10 @@ class Table:
                 field_objects = []
                 for fd in fields_data:
                     FieldClass = self._field_class_from_data(fd)
-                    field_objects.append(FieldClass(fd["name"], fd))
+                    field_objects.append(FieldClass(fd["name"], fd, client=self.client))
                 self._fields = FieldList(field_objects)
             except Exception as e:
-                self.logger.error(
-                    f"Failed to fetch fields for table {self.id}. Error: {e}"
-                )
+                self.logger.error(f"Failed to fetch fields for table {self.id}. Error: {e}")
                 raise Exception("Unexpected error when fetching fields.") from e
         return self._fields
 
@@ -545,7 +547,9 @@ class Table:
             raise Exception(error_message)
 
     def add_row(
-        self, rows_data: Union[Dict[str, Any], List[Dict[str, Any]]], batch_size: int = 10
+        self,
+        rows_data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        batch_size: Optional[int] = None,
     ) -> Union[Row, List[Row]]:
         """
         Add a new row (or multiple rows) to the table.
@@ -556,7 +560,7 @@ class Table:
         :type rows_data: dict or list[dict]
 
         :param batch_size: The number of rows to include in each batch request when adding multiple rows.
-                        Defaults to 10.
+                        Defaults to the client's batch_size.
         :type batch_size: int
 
         :return: An instance of the Row model representing the added row or
@@ -598,6 +602,9 @@ class Table:
                 raise Exception(error_message)
         elif isinstance(rows_data, list):
             # Multiple rows addition with batching
+            if batch_size is None:
+                batch_size = self.client.batch_size
+
             added_rows = []
             for i in range(0, len(rows_data), batch_size):
                 chunk = rows_data[i : i + batch_size]
@@ -616,7 +623,7 @@ class Table:
     def update_rows(
         self,
         rows_data: Union[List[Union[Dict[str, Any], Row]], RowIterator],
-        batch_size: int = 10,
+        batch_size: Optional[int] = None,
     ) -> List[Row]:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
@@ -701,6 +708,9 @@ class Table:
             updated_rows = []
 
             # Process in batches
+            if batch_size is None:
+                batch_size = self.client.batch_size
+
             for i in range(0, len(formatted_data), batch_size):
                 batch_data = formatted_data[i : i + batch_size]
                 response = self.client.make_api_request(
@@ -720,7 +730,9 @@ class Table:
             self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
             raise
 
-    def delete_rows(self, rows_data: List[Union[Row, int]], batch_size: int = 10) -> bool:
+    def delete_rows(
+        self, rows_data: List[Union[Row, int]], batch_size: Optional[int] = None
+    ) -> bool:
         """
         Deletes multiple rows from the table using the Baserow batch-delete endpoint.
 
@@ -734,8 +746,8 @@ class Table:
         :type rows_data: list[Union[Row, int]]
 
         :param batch_size: The number of rows to include in each batch request when deleting multiple rows.
-                        Defaults to 10.
-        :type batch_size: int
+                        Defaults to None, in which case the client's batch_size will be used.
+        :type batch_size: int, optional
 
         :return: True if rows are successfully deleted, otherwise an exception is raised.
         :rtype: bool
@@ -773,6 +785,9 @@ class Table:
 
         try:
             # Batch delete rows using the specified batch size
+            if batch_size is None:
+                batch_size = self.client.batch_size
+
             for i in range(0, len(row_ids), batch_size):
                 chunk = row_ids[i : i + batch_size]
                 _delete_rows_chunk(chunk)

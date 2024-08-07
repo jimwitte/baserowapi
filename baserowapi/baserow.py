@@ -30,6 +30,7 @@ class Baserow:
         token: Optional[str] = None,
         logging_level: int = logging.WARNING,
         log_file: Optional[str] = None,
+        batch_size: int = 10,
     ) -> None:
         """
         Initialize a Baserow client.
@@ -38,6 +39,7 @@ class Baserow:
         :param token: The authentication token. Defaults to None.
         :param logging_level: The logging level. Defaults to logging.WARNING.
         :param log_file: The path to a log file. Defaults to None.
+        :param batch_size: The default batch size for operations. Defaults to 10.
         :ivar headers: Headers for the API request.
         :ivar session: A session object for making API requests.
         """
@@ -50,6 +52,7 @@ class Baserow:
         self.session = requests.Session()
         self.session.headers.update(self.headers)
         self.configure_logging(logging_level, log_file)
+        self.batch_size = batch_size
 
     def configure_logging(self, level: int, log_file: Optional[str]) -> None:
         """
