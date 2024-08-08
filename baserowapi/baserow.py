@@ -4,13 +4,45 @@ from typing import IO, Union, Dict, Optional, Any
 from baserowapi.models.table import Table
 import urllib.parse
 
+
+class BaserowAPIError(Exception):
+    """Base class for exceptions in this module."""
+
+    pass
+
+
+class BaserowHTTPError(BaserowAPIError):
+    """Exception raised for HTTP errors."""
+
+    def __init__(self, status_code: int, message: str):
+        """
+        :param status_code: The HTTP status code.
+        :type status_code: int
+        :param message: The error message.
+        :type message: str
+        """
+        self.status_code = status_code
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        """
+        :return: The string representation of the error.
+        :rtype: str
+        """
+        return f"HTTP {self.status_code}: {self.message}"
+
+
 class Baserow:
     """
     A client class for interacting with the Baserow API.
 
     :ivar url: The base URL for the Baserow API.
+    :vartype url: str
     :ivar token: The authentication token.
+    :vartype token: str
     :ivar ERROR_MESSAGES: A dictionary mapping HTTP error codes to error messages.
+    :vartype ERROR_MESSAGES: dict
     """
 
     ERROR_MESSAGES: Dict[int, str] = {
@@ -36,12 +68,15 @@ class Baserow:
         Initialize a Baserow client.
 
         :param url: The base URL for the Baserow API. Defaults to 'https://api.baserow.io'.
+        :type url: str
         :param token: The authentication token. Defaults to None.
+        :type token: str, optional
         :param logging_level: The logging level. Defaults to logging.WARNING.
+        :type logging_level: int
         :param log_file: The path to a log file. Defaults to None.
+        :type log_file: str, optional
         :param batch_size: The default batch size for operations. Defaults to 10.
-        :ivar headers: Headers for the API request.
-        :ivar session: A session object for making API requests.
+        :type batch_size: int
         """
         self.url = url
         self.token = token
@@ -59,7 +94,9 @@ class Baserow:
         Configure logging for the Baserow client.
 
         :param level: The logging level.
+        :type level: int
         :param log_file: The path to a log file. If provided, logs will also be written to this file.
+        :type log_file: str, optional
         """
         handlers = [logging.StreamHandler()]
         if log_file:
@@ -76,6 +113,7 @@ class Baserow:
         Provide a string representation of the Baserow client.
 
         :return: A string representing the Baserow client with its base URL.
+        :rtype: str
         """
         return f"Baserow client for base url {self.url}"
 
@@ -84,7 +122,9 @@ class Baserow:
         Retrieve a table instance based on its ID.
 
         :param table_id: The unique identifier of the table.
+        :type table_id: int
         :return: An instance of the Table class.
+        :rtype: Table
         """
         return Table(table_id, self)
 
@@ -101,26 +141,27 @@ class Baserow:
         Make an API request to the specified endpoint.
 
         :param endpoint: The API endpoint to make the request to.
+        :type endpoint: str
         :param method: The HTTP method to use, by default "GET".
+        :type method: str
         :param data: The data payload to send with the request, by default None.
+        :type data: dict, optional
         :param headers: Additional headers to send with the request, by default None.
+        :type headers: dict, optional
         :param timeout: The maximum number of seconds to wait for the server response, by default 10.
+        :type timeout: int
         :param files: Files to be sent with the request, by default None.
+        :type files: dict, optional
         :return: The parsed response data.
+        :rtype: Any
+        :raises BaserowHTTPError: If the response status code is in the defined ERROR_MESSAGES.
         """
         logger = logging.getLogger(__name__)
-
-        # URLs returned during paging may include the full URL, but use http rather than the scheme used in the initial api call
-        # To ensure consistency, adjust the scheme of the endpoint to match the scheme of self.url
 
         if endpoint.startswith("http://") or endpoint.startswith("https://"):
             parsed_base_url = urllib.parse.urlparse(self.url)
             parsed_endpoint_url = urllib.parse.urlparse(endpoint)
-
-            # Replace the scheme of the endpoint with the scheme of self.url
-            url = parsed_endpoint_url._replace(
-                scheme=parsed_base_url.scheme
-            ).geturl()
+            url = parsed_endpoint_url._replace(scheme=parsed_base_url.scheme).geturl()
         else:
             url = self.url + endpoint
 
@@ -133,7 +174,7 @@ class Baserow:
         if response.status_code in self.ERROR_MESSAGES:
             error_message = self.ERROR_MESSAGES[response.status_code].format(url=url)
             logger.error(error_message)
-            raise Exception(error_message)
+            raise BaserowHTTPError(response.status_code, error_message)
 
         return self.parse_response(response, method, url)
 
@@ -144,7 +185,9 @@ class Baserow:
         Combines the default headers with any additional headers provided.
 
         :param additional_headers: Additional headers to combine with the default headers.
+        :type additional_headers: dict, optional
         :return: Combined headers.
+        :rtype: dict
         """
         if additional_headers:
             return {**self.headers, **additional_headers}
@@ -163,13 +206,20 @@ class Baserow:
         Performs an HTTP request using the given parameters.
 
         :param method: The HTTP method to use (e.g., "GET", "POST").
+        :type method: str
         :param url: The complete URL to make the request to.
+        :type url: str
         :param headers: Headers to send with the request.
+        :type headers: dict
         :param data: The data payload to send with the request.
+        :type data: dict, optional
         :param timeout: The maximum number of seconds to wait for the server response.
+        :type timeout: int
         :param files: The files to send with the request, if any. The dictionary keys are
-                    the form field names, and the values are the file data.
+                      the form field names, and the values are the file data.
+        :type files: dict, optional
         :return: The server's response to the request.
+        :rtype: requests.Response
         :raises requests.exceptions.HTTPError: If the response status code is in the defined ERROR_MESSAGES.
         :raises requests.exceptions.Timeout: If the request times out.
         :raises requests.exceptions.RequestException: For other request-related exceptions like connectivity issues.
@@ -177,42 +227,44 @@ class Baserow:
         """
         logger = logging.getLogger(__name__)
         try:
-            logger.debug(f"Making API request: {url}")
+            logger.debug(f"Making API request to: {url}")
+            logger.debug(f"Request method: {method}")
+            logger.debug(f"Request payload: {data}")
 
-            # Conditionally adjust headers for file uploads
             if files:
-                logger.debug(f"API file upload request {files}")
+                logger.debug(f"API file upload request: {files}")
                 headers.pop("Content-Type", None)
-                # session.request seems to insist on header "Content: application/json" :-(
-                response = requests.post(url=url, headers=headers, files=files)
+                response = self.session.request(
+                    method="POST",
+                    url=url,
+                    headers=headers,
+                    files=files,
+                    timeout=timeout,
+                )
             else:
                 response = self.session.request(
                     method=method, url=url, headers=headers, json=data, timeout=timeout
                 )
 
-            # Checking status code from ERROR_MESSAGES directly
-            if response.status_code in self.ERROR_MESSAGES:
-                error_message = self.ERROR_MESSAGES[response.status_code].format(
-                    url=url
-                )
-                logger.error(error_message)
-                raise requests.exceptions.HTTPError(error_message, response=response)
-            return response
+            response.raise_for_status()
+
         except requests.exceptions.Timeout:
             logger.error(f"Request to {url} timed out.")
             raise
         except requests.exceptions.RequestException as e:
-            # Handle any other exceptions here
-            error_message = (
+            logger.error(
                 f"Unexpected error occurred while making a request to {url}: {e}"
             )
-            logger.debug(f"JSON payload: {data}")
-            logger.error(error_message)
-            raise Exception(error_message)
+            logger.debug(f"Request payload: {data}")
+            raise Exception(
+                f"Unexpected error occurred while making a request to {url}: {e}"
+            )
+
+        return response
 
     def parse_response(
         self, response: requests.Response, method: str, url: str
-    ) -> Union[int, Dict[str, Any], str]:
+    ) -> Union[int, Dict[str, Any], str, None]:
         """
         Parses the response received from an HTTP request.
 
@@ -223,9 +275,13 @@ class Baserow:
         Otherwise, the raw response text is returned.
 
         :param response: The response object received from an HTTP request.
+        :type response: requests.Response
         :param method: The HTTP method that was used for the request.
+        :type method: str
         :param url: The complete URL the request was made to.
+        :type url: str
         :return: Either the status code, a dictionary parsed from the JSON response, or the raw response text.
+        :rtype: Union[int, dict, str, None]
         :raises ValueError: If the response cannot be parsed as JSON.
         """
         logger = logging.getLogger(__name__)
