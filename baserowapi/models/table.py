@@ -201,10 +201,34 @@ class Table:
         filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         """
         Constructs the URL for the Baserow API request based on the given parameters.
+
+        :param include: A list of field names to include in the results.
+        :type include: list[str], optional
+        :param exclude: A list of field names to exclude from the results.
+        :type exclude: list[str], optional
+        :param search: A search string to apply on the table data.
+        :type search: str, optional
+        :param order_by: Field by which the results should be ordered.
+        :type order_by: list[str], optional
+        :param filter_type: The type of filter to be applied (AND/OR).
+        :type filter_type: str, optional
+        :param filters: A list containing Filter objects to be applied.
+        :type filters: list[Filter], optional
+        :param view_id: ID of the view to consider its filters and sorts.
+        :type view_id: int, optional
+        :param size: The number of rows per page in the response.
+        :type size: int, optional
+        :param kwargs: Additional parameters for the API request.
+        :type kwargs: Any
+
+        :return: The constructed request URL.
+        :rtype: str
+
+        :raises ValueError: If filter_type is not 'AND' or 'OR'.
         """
         base_url = f"/api/database/rows/table/{self.id}/?user_field_names=true"
         query_params_parts = []
@@ -239,8 +263,11 @@ class Table:
         Helper function to append query parameters to the URL.
 
         :param params_list: List to hold query parameters.
+        :type params_list: list[str]
         :param param_name: Name of the query parameter.
+        :type param_name: str
         :param param_value: Value of the query parameter.
+        :type param_value: Union[str, int, list[str]], optional
         """
         if param_value is not None:
             if isinstance(param_value, list):
@@ -256,8 +283,11 @@ class Table:
         Helper function to construct the filter tree for the request URL.
 
         :param filters: List of Filter objects.
+        :type filters: list[Filter]
         :param filter_type: Type of filter (AND/OR).
+        :type filter_type: str
         :return: Dictionary representing the filter tree.
+        :rtype: dict[str, Any]
         """
         filter_dicts = [
             {"field": f.field_name, "type": f.operator, "value": f.value} for f in filters
@@ -269,7 +299,7 @@ class Table:
         Parses the raw data from the API response and transforms it into a list of Row objects.
 
         :param response_data: The raw response data from the Baserow API.
-        :type response_data: dict
+        :type response_data: dict[str, Any]
         :return: List of Row objects.
         :rtype: list[Row]
         """
