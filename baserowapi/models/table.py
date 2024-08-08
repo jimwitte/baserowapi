@@ -569,11 +569,11 @@ class Table:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
 
-        :param rows_data: A list of dictionaries or Row objects, or a generator of Row objects.
-                          Each dictionary should contain the field values for updating
-                          a specific row and include the ID of the row to be updated.
-                          Row objects represent the rows to be updated.
-        :type rows_data: list[Union[dict, Row]] or Generator[Row, None, None]
+        :param rows_data: A list of dictionaries or Row objects.
+                        Each dictionary should contain the field values for updating
+                        a specific row and include the ID of the row to be updated.
+                        Row objects represent the rows to be updated.
+        :type rows_data: list[Union[dict, Row]]
         :param batch_size: The number of rows to process in each batch.
         :type batch_size: int
 
@@ -582,7 +582,7 @@ class Table:
 
         :raises ValueError: If parameters are not valid.
         :raises KeyError: If a dictionary contains a key that doesn't correspond to any field in the table or is missing the 'id' key.
-        :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object.
+        :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.
         :raises Exception: If the API request results in any error responses.
         """
 
@@ -592,7 +592,9 @@ class Table:
             raise ValueError(warning_msg)
 
         if isinstance(rows_data, Generator):
-            rows_data = list(rows_data)
+            raise TypeError(
+                "The update_rows method does not accept generator objects. Please provide a list of rows."
+            )
 
         formatted_data = []
         for item in rows_data:
