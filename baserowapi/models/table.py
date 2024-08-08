@@ -467,7 +467,7 @@ class Table:
             self.logger.error(error_message)
             raise Exception(error_message)
 
-    def add_row(
+    def add_rows(
         self,
         rows_data: Union[Dict[str, Any], List[Dict[str, Any]]],
         batch_size: Optional[int] = None,
