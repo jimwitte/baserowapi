@@ -249,7 +249,6 @@ class Table:
                 encoded_value = urllib.parse.quote(str(param_value))
             params_list.append(f"{param_name}={encoded_value}")
 
-
     def _construct_filter_tree(
         self, filters: List[Filter], filter_type: str
     ) -> Dict[str, Any]:
@@ -274,16 +273,14 @@ class Table:
         :return: List of Row objects.
         :rtype: list[Row]
         """
-
         if not response_data or "results" not in response_data:
             self.logger.warning("Received invalid or empty response data from the API.")
             return []
 
-        parsed_rows = []
-        for row_data in response_data["results"]:
-            parsed_rows.append(Row(row_data=row_data, table=self, client=self.client))
-
-        return parsed_rows
+        return [
+            Row(row_data=row_data, table=self, client=self.client)
+            for row_data in response_data["results"]
+        ]
 
     def row_generator(
         self,
