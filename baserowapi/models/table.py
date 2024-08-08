@@ -197,7 +197,7 @@ class Table:
         exclude: Optional[List[str]] = None,
         search: Optional[str] = None,
         order_by: Optional[List[str]] = None,
-        filter_type: Optional[str] = None,  # Set to None initially
+        filter_type: Optional[str] = None,
         filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
@@ -206,113 +206,64 @@ class Table:
         """
         Constructs the URL for the Baserow API request based on the given parameters.
         """
-        # Base URL construction with user_field_names=true
         base_url = f"/api/database/rows/table/{self.id}/?user_field_names=true"
-
-        # Convert dictionary to query parameters
         query_params_parts = []
 
-        # Handle include and exclude parameters, ensuring they're lists and converting to comma-separated strings
-        if include:
-            if not isinstance(include, list):
-                self.logger.error(
-                    "'include' should be a list, got {type(include)} instead."
-                )
-                raise ValueError("'include' parameter should be a list of field names.")
-            encoded_include = urllib.parse.quote(",".join(include))
-            query_params_parts.append(f"include={encoded_include}")
+        self._append_query_param(query_params_parts, "include", include)
+        self._append_query_param(query_params_parts, "exclude", exclude)
+        self._append_query_param(query_params_parts, "search", search)
+        self._append_query_param(query_params_parts, "order_by", order_by)
+        self._append_query_param(query_params_parts, "view_id", view_id)
+        self._append_query_param(query_params_parts, "size", size)
 
-        if exclude:
-            if not isinstance(exclude, list):
-                self.logger.error(
-                    "'exclude' should be a list, got {type(exclude)} instead."
-                )
-                raise ValueError("'exclude' parameter should be a list of field names.")
-            encoded_exclude = urllib.parse.quote(",".join(exclude))
-            query_params_parts.append(f"exclude={encoded_exclude}")
-
-        # Handle search parameter, ensuring the search string is URL encoded
-        if search:
-            if not isinstance(search, str):
-                self.logger.error(
-                    "'search' should be a string, got {type(search)} instead."
-                )
-                raise ValueError("'search' parameter should be a string.")
-            encoded_search = urllib.parse.quote(search)
-            query_params_parts.append(f"search={encoded_search}")
-
-        # Handle order_by parameter, converting the list to a comma-separated string and URL encoding
-        if order_by:
-            if not isinstance(order_by, list):
-                self.logger.error(
-                    "order_by should be a list, got {type(order_by)} instead."
-                )
-                raise ValueError("order_by parameter should be a list.")
-            encoded_order = urllib.parse.quote(",".join(order_by))
-            query_params_parts.append(f"order_by={encoded_order}")
-
-        # Handle view_id and size parameters
-        if view_id:
-            if not isinstance(view_id, int):
-                self.logger.error(
-                    "'view_id' should be an integer, got {type(view_id)} instead."
-                )
-                raise ValueError("'view_id' parameter should be an integer.")
-            query_params_parts.append(f"view_id={view_id}")
-
-        if size:
-            if not isinstance(size, int):
-                self.logger.error(
-                    "'size' should be an integer, got {type(size)} instead."
-                )
-                raise ValueError("'size' parameter should be an integer.")
-            query_params_parts.append(f"size={size}")
-
-        # Handle filters using the Filter objects' query_string property
         if filters:
-            if not isinstance(filters, list) or not all(
-                isinstance(f, Filter) for f in filters
-            ):
-                self.logger.error("filters should be a list of Filter objects.")
-                raise ValueError(
-                    "filters parameter should be a list of Filter objects."
-                )
-
-            # Ensure filter_type defaults to "AND" if not specified
-            if filter_type is None:
-                filter_type = "AND"
-
-            # Validate the filter_type
+            filter_type = filter_type or "AND"
             if filter_type not in ["AND", "OR"]:
-                self.logger.error(
-                    f"'filter_type' should be either 'AND' or 'OR', got '{filter_type}' instead."
-                )
                 raise ValueError("'filter_type' should be either 'AND' or 'OR'")
-
-            # Construct the filter tree
-            filter_dicts = [
-                {"field": f.field_name, "type": f.operator, "value": f.value}
-                for f in filters
-            ]
-            filter_tree = {
-                "filter_type": filter_type,
-                "filters": filter_dicts,
-                "groups": [],
-            }
-
-            # Log the filter tree before encoding
-            self.logger.debug(f"Filter tree: {filter_tree}")
-
-            # Serialize and URL encode the filter tree
+            filter_tree = self._construct_filter_tree(filters, filter_type)
             filter_string = urllib.parse.quote(json.dumps(filter_tree))
             query_params_parts.append(f"filters={filter_string}")
 
         query_params = "&".join(query_params_parts)
-
-        # Return the fully constructed URL with concatenated query parameters
         full_request_url = f"{base_url}&{query_params}" if query_params else base_url
-        self.logger.debug(f"built request url: '{full_request_url}'")
+        self.logger.debug(f"Built request URL: '{full_request_url}'")
         return full_request_url
+
+    def _append_query_param(
+        self,
+        params_list: List[str],
+        param_name: str,
+        param_value: Optional[Union[str, int, List[str]]],
+    ) -> None:
+        """
+        Helper function to append query parameters to the URL.
+
+        :param params_list: List to hold query parameters.
+        :param param_name: Name of the query parameter.
+        :param param_value: Value of the query parameter.
+        """
+        if param_value is not None:
+            if isinstance(param_value, list):
+                encoded_value = urllib.parse.quote(",".join(param_value))
+            else:
+                encoded_value = urllib.parse.quote(str(param_value))
+            params_list.append(f"{param_name}={encoded_value}")
+
+
+    def _construct_filter_tree(
+        self, filters: List[Filter], filter_type: str
+    ) -> Dict[str, Any]:
+        """
+        Helper function to construct the filter tree for the request URL.
+
+        :param filters: List of Filter objects.
+        :param filter_type: Type of filter (AND/OR).
+        :return: Dictionary representing the filter tree.
+        """
+        filter_dicts = [
+            {"field": f.field_name, "type": f.operator, "value": f.value} for f in filters
+        ]
+        return {"filter_type": filter_type, "filters": filter_dicts, "groups": []}
 
     def _parse_row_data(self, response_data: Dict[str, Any]) -> List[Row]:
         """
