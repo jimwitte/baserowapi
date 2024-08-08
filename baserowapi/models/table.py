@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any
+from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
 
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
@@ -334,113 +334,74 @@ class Table:
 
         return parsed_rows
 
-    class RowIterator:
+    def row_generator(
+        self,
+        include: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        search: Optional[str] = None,
+        order_by: Optional[List[str]] = None,
+        filter_type: Optional[str] = None,
+        filters: Optional[List[Filter]] = None,
+        view_id: Optional[int] = None,
+        size: Optional[int] = None,
+        **kwargs,
+    ) -> Generator[Row, None, None]:
         """
-        An iterator class to iterate over rows fetched from Baserow, handling pagination and next page fetches.
+        Generator function to retrieve rows from the table in a paginated manner.
+
+        :param include: A list of field names to include in the results.
+        :type include: list, optional
+        :param exclude: A list of field names to exclude from the results.
+        :type exclude: list, optional
+        :param search: A search string to apply on the table data.
+        :type search: str, optional
+        :param order_by: Field by which the results should be ordered.
+        :type order_by: list, optional
+        :param filter_type: The type of filter to be applied.
+        :type filter_type: str, optional
+        :param filters: A list containing Filter objects to be applied.
+        :type filters: list, optional
+        :param view_id: ID of the view to consider its filters and sorts.
+        :type view_id: int, optional
+        :param size: The number of rows per page in the response.
+        :type size: int, optional
+        :param kwargs: Additional parameters for the API request.
+        :type kwargs: dict
+
+        :yield: Yields Row objects as they are fetched.
+        :rtype: Generator[Row, None, None]
+        :raises Exception: If any error occurs during the process.
+        :raises ValueError: If parameters are not valid.
         """
+        request_url = self._build_request_url(
+            include=include,
+            exclude=exclude,
+            search=search,
+            order_by=order_by,
+            filter_type=filter_type,
+            filters=filters,
+            view_id=view_id,
+            size=size,
+            **kwargs,
+        )
 
-        MAX_CONSECUTIVE_EMPTY_FETCHES = 5
+        while request_url:
+            self.logger.debug(f"Fetching data from URL: {request_url}")
+            try:
+                response_data = self.client.make_api_request(request_url)
+                rows = self._parse_row_data(response_data)
 
-        def __init__(self, table: "Table", initial_url: str, fetch_data_fn=None) -> None:
-            self.table = table
-            self.initial_url = initial_url
-            self.next_page_url: Optional[str] = None
-            self.current_rows: List[Row] = []
-            self.index = 0
-            self.empty_fetch_count = 0
-            self.logger = logging.getLogger(__name__)
-            self.logger.debug(
-                "RowIterator initialized with initial URL: %s", self.initial_url
-            )
+                for row in rows:
+                    yield row
 
-            # Use the provided fetch function or default to the table's method
-            self.fetch_data_fn = fetch_data_fn or self.table.client.make_api_request
-
-            # Store the initial state for resetting
-            self._initial_state = {
-                "initial_url": initial_url,
-                "next_page_url": None,
-                "current_rows": [],
-                "index": 0,
-                "empty_fetch_count": 0,
-            }
-
-        def _fetch_next_page(self) -> None:
-            if not self.current_rows or self.index >= len(self.current_rows):
-                if not self.next_page_url and not self.initial_url:
-                    # No more pages left to fetch
-                    self.current_rows = []
-                    return
-
-                url_to_fetch = self.next_page_url or self.initial_url
-
-                try:
-                    response_data = self.fetch_data_fn(url_to_fetch)
-                except Exception as e:
-                    self.logger.error(
-                        f"API fetch failed for URL {url_to_fetch}. Error: {e}"
-                    )
-                    self.current_rows = []
-                    return
-
-                if response_data and "results" in response_data:
-                    self.next_page_url = response_data.get("next", None)
-                    self.current_rows = self.table._parse_row_data(response_data)
+                request_url = response_data.get("next", None)
+                if request_url:
+                    self.logger.debug(f"Next page URL: {request_url}")
                 else:
-                    self.logger.warning(
-                        f"Received unexpected response data: {response_data}"
-                    )
-                    self.current_rows = []
-
-                if url_to_fetch == self.initial_url:
-                    self.initial_url = None
-
-                if not self.current_rows:
-                    self.empty_fetch_count += 1
-                    if self.empty_fetch_count > self.MAX_CONSECUTIVE_EMPTY_FETCHES:
-                        self.logger.error(
-                            f"Reached maximum consecutive empty fetches ({self.MAX_CONSECUTIVE_EMPTY_FETCHES}). Stopping iteration."
-                        )
-                        raise StopIteration
-
-                self.index = 0
-
-        def __iter__(self) -> "Table.RowIterator":
-            """Returns the iterator instance."""
-            return self
-
-        def __next__(self) -> Row:
-            """
-            Returns the next row in the iterator. Fetches the next page of rows if necessary.
-            """
-            if not self.current_rows or self.index >= len(self.current_rows):
-                self._fetch_next_page()
-
-                if not self.current_rows:
-                    self.logger.debug("End of rows reached.")
-                    raise StopIteration
-
-            row = self.current_rows[self.index]
-            self.index += 1
-            return row
-
-        def reset(self) -> None:
-            """
-            Resets the iterator to its initial state.
-            """
-            self.initial_url = self._initial_state["initial_url"]
-            self.next_page_url = self._initial_state["next_page_url"]
-            self.current_rows = self._initial_state["current_rows"]
-            self.index = self._initial_state["index"]
-            self.empty_fetch_count = self._initial_state["empty_fetch_count"]
-            self.logger.debug("RowIterator reset.")
-
-        def reset_index(self) -> None:
-            """
-            Resets the iterator's index to the beginning without refetching data from the API.
-            """
-            self.index = 0
-            self.logger.debug("RowIterator index reset to 0.")
+                    self.logger.debug("No more pages to fetch.")
+            except Exception as e:
+                self.logger.error(f"Error fetching rows: {e}")
+                raise e
 
     def get_rows(
         self,
@@ -449,12 +410,12 @@ class Table:
         search: Optional[str] = None,
         order_by: Optional[List[str]] = None,
         filter_type: Optional[str] = None,
-        filters: Optional[List[str]] = None,
+        filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
         return_single: bool = False,
         **kwargs,
-    ) -> Union[Row, "Table.RowIterator"]:
+    ) -> Union[Row, Generator[Row, None, None]]:
         """
         Retrieves rows from the table using provided parameters.
 
@@ -474,46 +435,36 @@ class Table:
         :type view_id: int, optional
         :param size: The number of rows per page in the response.
         :type size: int, optional
-        :param return_single: If True, returns a single Row object instead of an iterator.
+        :param return_single: If True, returns a single Row object instead of a generator.
         :type return_single: bool, optional
         :param kwargs: Additional parameters for the API request.
         :type kwargs: dict
 
-        :return: Depending on return_single, either a single Row object or a RowIterator.
-        :rtype: Union[Row, RowIterator]
+        :return: Depending on return_single, either a single Row object or a generator of Row objects.
+        :rtype: Union[Row, Generator[Row, None, None]]
 
         :raises Exception: If any error occurs during the process.
         :raises ValueError: If parameters are not valid.
         """
-
-        # Construct the request URL with all parameters
-        try:
-            request_url = self._build_request_url(
-                include=include,
-                exclude=exclude,
-                search=search,
-                order_by=order_by,
-                filter_type=filter_type,
-                filters=filters,
-                view_id=view_id,
-                size=size,
-                **kwargs,
-            )
-        except Exception as e:
-            self.logger.error(f"Error constructing request URL: {e}")
-            raise Exception(f"Invalid parameters: {e}")
+        generator = self.row_generator(
+            include=include,
+            exclude=exclude,
+            search=search,
+            order_by=order_by,
+            filter_type=filter_type,
+            filters=filters,
+            view_id=view_id,
+            size=size,
+            **kwargs,
+        )
 
         if return_single:
             try:
-                response_data = self.client.make_api_request(request_url)
-                rows = self._parse_row_data(response_data)
-                return rows[0] if rows else None
-            except Exception as e:
-                self.logger.error(f"Error fetching single row: {e}")
-                raise e
+                return next(generator)
+            except StopIteration:
+                return None
 
-        # Return a RowIterator for the constructed URL
-        return self.RowIterator(self, initial_url=request_url)
+        return generator
 
     def get_row(self, row_id: Union[int, str]) -> Row:
         """
@@ -526,21 +477,13 @@ class Table:
         :raises ValueError: If the provided row_id is not valid.
         :raises Exception: If there's any error during the API request or if the row is not found.
         """
-        # Validate the row_id
         if not row_id:
             raise ValueError("The provided row_id is not valid.")
 
-        # Ensure fields are fetched
-        # _ = self.fields
-
-        # Construct the API endpoint to retrieve the specific row
         endpoint = f"/api/database/rows/table/{self.id}/{row_id}/?user_field_names=true"
-
         try:
             response = self.client.make_api_request(endpoint)
-            # Return a Row object initialized with the fetched data
             return Row(row_data=response, table=self, client=self.client)
-
         except Exception as e:
             error_message = f"Failed to retrieve row with ID {row_id} from table {self.id}. Error: {e}"
             self.logger.error(error_message)
@@ -555,16 +498,16 @@ class Table:
         Add a new row (or multiple rows) to the table.
 
         :param rows_data: A dictionary representing the fields and values
-                        of the row to add, or a list of dictionaries for
-                        adding multiple rows.
+                          of the row to add, or a list of dictionaries for
+                          adding multiple rows.
         :type rows_data: dict or list[dict]
 
         :param batch_size: The number of rows to include in each batch request when adding multiple rows.
-                        Defaults to the client's batch_size.
+                           Defaults to the client's batch_size.
         :type batch_size: int
 
         :return: An instance of the Row model representing the added row or
-                a list of Row instances for multiple rows.
+                 a list of Row instances for multiple rows.
         :rtype: Row or list[Row]
 
         :raises ValueError: If parameters are not valid.
@@ -588,7 +531,6 @@ class Table:
             ]
 
         if isinstance(rows_data, dict):
-            # Single row addition
             api_endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
             data_payload = rows_data
             try:
@@ -601,7 +543,6 @@ class Table:
                 self.logger.error(error_message)
                 raise Exception(error_message)
         elif isinstance(rows_data, list):
-            # Multiple rows addition with batching
             if batch_size is None:
                 batch_size = self.client.batch_size
 
@@ -622,17 +563,17 @@ class Table:
 
     def update_rows(
         self,
-        rows_data: Union[List[Union[Dict[str, Any], Row]], RowIterator],
+        rows_data: Union[List[Union[Dict[str, Any], Row]], Generator[Row, None, None]],
         batch_size: Optional[int] = None,
     ) -> List[Row]:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
 
-        :param rows_data: A list of dictionaries or Row objects, or a RowIterator.
-                        Each dictionary should contain the field values for updating
-                        a specific row and include the ID of the row to be updated.
-                        Row objects represent the rows to be updated.
-        :type rows_data: list[Union[dict, Row]] or RowIterator
+        :param rows_data: A list of dictionaries or Row objects, or a generator of Row objects.
+                          Each dictionary should contain the field values for updating
+                          a specific row and include the ID of the row to be updated.
+                          Row objects represent the rows to be updated.
+        :type rows_data: list[Union[dict, Row]] or Generator[Row, None, None]
         :param batch_size: The number of rows to process in each batch.
         :type batch_size: int
 
@@ -650,11 +591,9 @@ class Table:
             self.logger.warning(warning_msg)
             raise ValueError(warning_msg)
 
-        # Handle RowIterator input by converting it to a list
-        if isinstance(rows_data, Table.RowIterator):
+        if isinstance(rows_data, Generator):
             rows_data = list(rows_data)
 
-        # Convert Row objects to dictionaries and validate dictionaries
         formatted_data = []
         for item in rows_data:
             if isinstance(item, dict):
@@ -707,7 +646,6 @@ class Table:
             endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
             updated_rows = []
 
-            # Process in batches
             if batch_size is None:
                 batch_size = self.client.batch_size
 
@@ -717,7 +655,6 @@ class Table:
                     endpoint, method="PATCH", data={"items": batch_data}
                 )
 
-                # Convert the response to a list of Row objects
                 updated_rows.extend(
                     [
                         Row(row_data=item, table=self, client=self.client)
@@ -731,19 +668,19 @@ class Table:
             raise
 
     def delete_rows(
-        self, rows_data: List[Union[Row, int]], batch_size: Optional[int] = None
+        self, rows_data: Union[List[Union[Row, int]], Generator[Union[Row, int], None, None]], batch_size: Optional[int] = None
     ) -> bool:
         """
         Deletes multiple rows from the table using the Baserow batch-delete endpoint.
 
-        This method accepts a list of Row objects or integers. For each item:
+        This method accepts a list or generator of Row objects or integers. For each item:
         - If it's a Row object, the method extracts its ID for deletion.
         - If it's an integer, it represents the ID of the row to be deleted.
 
-        :param rows_data: A list of Row objects or integers. Row objects represent
+        :param rows_data: A list or generator of Row objects or integers. Row objects represent
                         the rows to be deleted, while integers represent the row IDs
                         to be deleted.
-        :type rows_data: list[Union[Row, int]]
+        :type rows_data: list[Union[Row, int]] or Generator[Union[Row, int], None, None]
 
         :param batch_size: The number of rows to include in each batch request when deleting multiple rows.
                         Defaults to None, in which case the client's batch_size will be used.
@@ -756,6 +693,10 @@ class Table:
         :raises TypeError: If an item in rows_data is neither an integer nor a Row object.
         :raises Exception: If the API request results in any error responses.
         """
+
+        # Handle Generator input by converting it to a list
+        if isinstance(rows_data, Generator):
+            rows_data = list(rows_data)
 
         # Convert Row objects to their respective IDs and validate integer inputs
         row_ids = []
