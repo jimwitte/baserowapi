@@ -25,7 +25,7 @@ from baserowapi.models.field import (
     LookupField,
     MultipleCollaboratorsField,
     GenericField,
-    PasswordField
+    PasswordField,
 )
 from baserowapi.validators.filter_validator import FilterValidator
 import logging
@@ -35,6 +35,36 @@ import re
 
 if TYPE_CHECKING:
     from baserowapi import Baserow
+
+
+class BaserowAPIError(Exception):
+    """Base class for all Baserow API-related exceptions."""
+
+    pass
+
+
+class RowFetchError(BaserowAPIError):
+    """Raised when fetching rows fails."""
+
+    pass
+
+
+class RowAddError(BaserowAPIError):
+    """Raised when adding rows fails."""
+
+    pass
+
+
+class RowUpdateError(BaserowAPIError):
+    """Raised when updating rows fails."""
+
+    pass
+
+
+class RowDeleteError(BaserowAPIError):
+    """Raised when deleting rows fails."""
+
+    pass
 
 
 class Table:
@@ -63,7 +93,7 @@ class Table:
         LookupField.TYPE: LookupField,
         MultipleCollaboratorsField.TYPE: MultipleCollaboratorsField,
         GenericField.TYPE: GenericField,
-        PasswordField.TYPE: PasswordField
+        PasswordField.TYPE: PasswordField,
     }
 
     def __init__(self, table_id: int, client: "Baserow"):
@@ -131,7 +161,9 @@ class Table:
                     field_objects.append(FieldClass(fd["name"], fd, client=self.client))
                 self._fields = FieldList(field_objects)
             except Exception as e:
-                self.logger.error(f"Failed to fetch fields for table {self.id}. Error: {e}")
+                self.logger.error(
+                    f"Failed to fetch fields for table {self.id}. Error: {e}"
+                )
                 raise Exception("Unexpected error when fetching fields.") from e
         return self._fields
 
@@ -290,7 +322,8 @@ class Table:
         :rtype: dict[str, Any]
         """
         filter_dicts = [
-            {"field": f.field_name, "type": f.operator, "value": f.value} for f in filters
+            {"field": f.field_name, "type": f.operator, "value": f.value}
+            for f in filters
         ]
         return {"filter_type": filter_type, "filters": filter_dicts, "groups": []}
 
@@ -379,7 +412,7 @@ class Table:
                     self.logger.debug("No more pages to fetch.")
             except Exception as e:
                 self.logger.error(f"Error fetching rows: {e}")
-                raise e
+                raise RowFetchError(f"Error fetching rows: {e}")
 
     def get_rows(
         self,
@@ -465,7 +498,7 @@ class Table:
         except Exception as e:
             error_message = f"Failed to retrieve row with ID {row_id} from table {self.id}. Error: {e}"
             self.logger.error(error_message)
-            raise Exception(error_message)
+            raise RowFetchError(f"Failed to retrieve row: {e}")
 
     def add_rows(
         self,
@@ -519,7 +552,7 @@ class Table:
             except Exception as e:
                 error_message = f"Failed to add row to table {self.id}. Error: {e}"
                 self.logger.error(error_message)
-                raise Exception(error_message)
+                raise RowAddError(f"Failed to add row: {e}")
         elif isinstance(rows_data, list):
             if batch_size is None:
                 batch_size = self.client.batch_size
@@ -530,9 +563,11 @@ class Table:
                 try:
                     added_rows.extend(_add_rows_chunk(chunk))
                 except Exception as e:
-                    error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
+                    error_message = (
+                        f"Failed to add row(s) to table {self.id}. Error: {e}"
+                    )
                     self.logger.error(error_message)
-                    raise Exception(error_message)
+                    raise RowAddError(f"Failed to add rows: {e}")
             return added_rows
         else:
             raise ValueError(
@@ -606,7 +641,9 @@ class Table:
                     try:
                         field_object.validate_value(value)
                     except ValueError as ve:
-                        raise ValueError(f"Invalid value for field '{key}': {ve}") from ve
+                        raise ValueError(
+                            f"Invalid value for field '{key}': {ve}"
+                        ) from ve
 
                 formatted_data.append(item)
 
@@ -623,7 +660,9 @@ class Table:
                 )
 
         try:
-            endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+            endpoint = (
+                f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+            )
             updated_rows = []
 
             if batch_size is None:
@@ -645,10 +684,12 @@ class Table:
             return updated_rows
         except Exception as e:
             self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
-            raise
+            raise RowUpdateError(f"Failed to update rows: {e}")
 
     def delete_rows(
-        self, rows_data: Union[List[Union[Row, int]], Generator[Union[Row, int], None, None]], batch_size: Optional[int] = None
+        self,
+        rows_data: Union[List[Union[Row, int]], Generator[Union[Row, int], None, None]],
+        batch_size: Optional[int] = None,
     ) -> bool:
         """
         Deletes multiple rows from the table using the Baserow batch-delete endpoint.
@@ -715,4 +756,4 @@ class Table:
             return True
         except Exception as e:
             self.logger.error(f"Failed to delete rows from table {self.id}. Error: {e}")
-            raise
+            raise RowDeleteError(f"Failed to delete rows: {e}")
