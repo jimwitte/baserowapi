@@ -86,12 +86,11 @@ class RowValue:
 
     def format_for_api(self) -> Any:
         """
-        Format the value for API submission.
-        By default, returns the value as-is, but child classes can override for type-specific formatting.
+        Format the value for API submission by delegating to the associated Field's format_for_api method.
 
         :return: Formatted value for API submission.
         """
-        return self._raw_value
+        return self.field.format_for_api(self._raw_value)
 
     @property
     def is_read_only(self) -> bool:
@@ -1022,35 +1021,24 @@ class TableLinkRowValue(RowValue):
         return [entry.get("value", entry.get("id", "")) for entry in self._raw_value]
 
     @value.setter
-    def value(self, new_value: List[Union[int, str]]) -> None:
+    def value(self, new_value: Union[int, str, List[Union[int, str]]]) -> None:
         """
-        Set a new value for TableLinkRowValue. Accepts either primary field values or row IDs from the linked table.
+        Set a new value for TableLinkRowValue. Accepts a string, an integer, or a list of these.
 
-        :param new_value: The new values to be set.
-        :raises ValueError: If the provided values are not in the expected format or there are mixed types of IDs and values.
+        This method relies on the `validate_value` method from the associated `TableLinkField` to ensure the
+        new value is correctly formatted and valid before assignment.
+
+        :param new_value: The new value(s) to be set.
+        :type new_value: Union[int, str, List[Union[int, str]]]
+        :raises ValueError: If the provided value is not in the expected format.
         """
-        if not isinstance(new_value, list):
-            raise ValueError(
-                "The provided value for TableLinkRowValue should be a list."
-            )
+        # Use the field's validation method
+        self.field.validate_value(new_value)
 
-        if all(isinstance(val, int) for val in new_value):
-            self._raw_value = [{"id": val, "value": val} for val in new_value]
-        elif all(isinstance(val, str) for val in new_value):
-            self._raw_value = [{"value": val} for val in new_value]
-        else:
-            raise ValueError(
-                "Mixed types of IDs and values provided for TableLinkRowValue."
-            )
-
-    def format_for_api(self) -> List[Union[int, str]]:
-        """
-        Format the value suitable for API submission. This method returns a list of IDs if they exist or values otherwise.
-
-        :return: A list of IDs or values suitable for API submission.
-        :rtype: List[Union[int, str]]
-        """
-        return [entry.get("id", entry.get("value")) for entry in self._raw_value]
+        # Format the value using the field's format_for_api method before assigning
+        self._raw_value = [
+            {"value": val} for val in self.field.format_for_api(new_value)
+        ]
 
 
 class CountRowValue(RowValue):
