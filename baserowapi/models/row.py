@@ -248,7 +248,7 @@ class Row:
                 self, "table_id", None
             ) == getattr(other, "table_id", None)
         return False
-    
+
     def __contains__(self, key: str) -> bool:
         """
         Check if a field name exists in the row's values.
@@ -259,16 +259,18 @@ class Row:
         """
         return key in self.values
 
-
-    @property
-    def content(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """
-        Get the dictionary representation of the row's values derived from RowValue objects.
+        Converts the Row's values to a dictionary.
 
-        :return: Dictionary representation of the row's values.
-        :rtype: Dict[str, Any]
+        :return: A dictionary representation of the row's values.
+        :rtype: dict[str, Any]
         """
+        if self._values is None:
+            # Lazily load the row values if they haven't been loaded yet
+            self.values  # Accessing the property to trigger lazy loading
 
+        # Convert the RowValue objects to a dictionary
         return {row_value.name: row_value.value for row_value in self.values}
 
     def update(
