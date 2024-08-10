@@ -355,33 +355,37 @@ class Table:
         filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
-        **kwargs,
+        limit: Optional[int] = None,
+        **kwargs: Any,
     ) -> Generator[Row, None, None]:
         """
-        Generator function to retrieve rows from the table in a paginated manner.
+        Generator function to retrieve rows from the table in a paginated manner,
+        optionally limiting the number of rows returned.
 
         :param include: A list of field names to include in the results.
-        :type include: list, optional
+        :type include: list[str], optional
         :param exclude: A list of field names to exclude from the results.
-        :type exclude: list, optional
+        :type exclude: list[str], optional
         :param search: A search string to apply on the table data.
         :type search: str, optional
         :param order_by: Field by which the results should be ordered.
-        :type order_by: list, optional
+        :type order_by: list[str], optional
         :param filter_type: The type of filter to be applied.
         :type filter_type: str, optional
         :param filters: A list containing Filter objects to be applied.
-        :type filters: list, optional
+        :type filters: list[Filter], optional
         :param view_id: ID of the view to consider its filters and sorts.
         :type view_id: int, optional
         :param size: The number of rows per page in the response.
         :type size: int, optional
+        :param limit: The maximum number of rows to return.
+        :type limit: int, optional
         :param kwargs: Additional parameters for the API request.
         :type kwargs: dict
 
-        :yield: Yields Row objects as they are fetched.
+        :yield: Yields Row objects as they are fetched, up to the specified limit.
         :rtype: Generator[Row, None, None]
-        :raises Exception: If any error occurs during the process.
+        :raises RowFetchError: If any error occurs during the process.
         :raises ValueError: If parameters are not valid.
         """
         request_url = self._build_request_url(
@@ -396,6 +400,8 @@ class Table:
             **kwargs,
         )
 
+        yielded_rows = 0  # Tracks the number of rows yielded
+
         while request_url:
             self.logger.debug(f"Fetching data from URL: {request_url}")
             try:
@@ -404,6 +410,11 @@ class Table:
 
                 for row in rows:
                     yield row
+                    yielded_rows += 1
+
+                    if limit and yielded_rows >= limit:
+                        self.logger.debug(f"Reached the limit of {limit} rows.")
+                        return
 
                 request_url = response_data.get("next", None)
                 if request_url:
@@ -424,12 +435,12 @@ class Table:
         filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
-        return_single: bool = False,
-        iterator: bool = False,  # New parameter
+        limit: Optional[int] = None,
+        iterator: bool = False,
         **kwargs: Any,
-    ) -> Union[Row, List[Row], Generator[Row, None, None]]:
+    ) -> Union[List[Row], Generator[Row, None, None]]:
         """
-        Retrieves rows from the table using provided parameters.
+        Retrieves rows from the table using provided parameters, with an optional limit on the number of rows.
 
         :param include: A list of field names to include in the results.
         :type include: list[str], optional
@@ -447,15 +458,15 @@ class Table:
         :type view_id: int, optional
         :param size: The number of rows per page in the response.
         :type size: int, optional
-        :param return_single: If True, returns a single Row object instead of a list or generator.
-        :type return_single: bool, optional
+        :param limit: The maximum number of rows to return.
+        :type limit: int, optional
         :param iterator: If True, returns a generator of Row objects. If False, returns a list of Row objects.
         :type iterator: bool, optional
         :param kwargs: Additional parameters for the API request.
         :type kwargs: dict
 
-        :return: Depending on return_single and iterator, returns either a single Row object, a list of Row objects, or a generator of Row objects.
-        :rtype: Union[Row, List[Row], Generator[Row, None, None]]
+        :return: A list or generator of Row objects, depending on the iterator parameter.
+        :rtype: Union[List[Row], Generator[Row, None, None]]
 
         :raises Exception: If any error occurs during the process.
         :raises ValueError: If parameters are not valid.
@@ -469,19 +480,15 @@ class Table:
             filters=filters,
             view_id=view_id,
             size=size,
+            limit=limit,
             **kwargs,
         )
-
-        if return_single:
-            try:
-                return next(generator)
-            except StopIteration:
-                return None
 
         if iterator:
             return generator
         else:
             return list(generator)
+
 
     def get_row(self, row_id: Union[int, str]) -> Row:
         """
