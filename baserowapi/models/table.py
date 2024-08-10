@@ -425,34 +425,37 @@ class Table:
         view_id: Optional[int] = None,
         size: Optional[int] = None,
         return_single: bool = False,
-        **kwargs,
-    ) -> Union[Row, Generator[Row, None, None]]:
+        iterator: bool = False,  # New parameter
+        **kwargs: Any,
+    ) -> Union[Row, List[Row], Generator[Row, None, None]]:
         """
         Retrieves rows from the table using provided parameters.
 
         :param include: A list of field names to include in the results.
-        :type include: list, optional
+        :type include: list[str], optional
         :param exclude: A list of field names to exclude from the results.
-        :type exclude: list, optional
+        :type exclude: list[str], optional
         :param search: A search string to apply on the table data.
         :type search: str, optional
         :param order_by: Field by which the results should be ordered.
-        :type order_by: list, optional
+        :type order_by: list[str], optional
         :param filter_type: The type of filter to be applied.
         :type filter_type: str, optional
         :param filters: A list containing Filter objects to be applied.
-        :type filters: list, optional
+        :type filters: list[Filter], optional
         :param view_id: ID of the view to consider its filters and sorts.
         :type view_id: int, optional
         :param size: The number of rows per page in the response.
         :type size: int, optional
-        :param return_single: If True, returns a single Row object instead of a generator.
+        :param return_single: If True, returns a single Row object instead of a list or generator.
         :type return_single: bool, optional
+        :param iterator: If True, returns a generator of Row objects. If False, returns a list of Row objects.
+        :type iterator: bool, optional
         :param kwargs: Additional parameters for the API request.
         :type kwargs: dict
 
-        :return: Depending on return_single, either a single Row object or a generator of Row objects.
-        :rtype: Union[Row, Generator[Row, None, None]]
+        :return: Depending on return_single and iterator, returns either a single Row object, a list of Row objects, or a generator of Row objects.
+        :rtype: Union[Row, List[Row], Generator[Row, None, None]]
 
         :raises Exception: If any error occurs during the process.
         :raises ValueError: If parameters are not valid.
@@ -475,7 +478,10 @@ class Table:
             except StopIteration:
                 return None
 
-        return generator
+        if iterator:
+            return generator
+        else:
+            return list(generator)
 
     def get_row(self, row_id: Union[int, str]) -> Row:
         """
