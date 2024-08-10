@@ -248,6 +248,17 @@ class Row:
                 self, "table_id", None
             ) == getattr(other, "table_id", None)
         return False
+    
+    def __contains__(self, key: str) -> bool:
+        """
+        Check if a field name exists in the row's values.
+
+        :param str key: The field name to check.
+        :return: True if the field name exists in the row's values, False otherwise.
+        :rtype: bool
+        """
+        return key in self.values
+
 
     @property
     def content(self) -> Dict[str, Any]:
