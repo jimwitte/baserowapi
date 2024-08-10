@@ -1239,27 +1239,6 @@ class SingleSelectField(Field):
                     f"The provided value '{value}' doesn't match any select option."
                 )
 
-    def format_for_api(self, value: Union[int, str]) -> Union[int, str, None]:
-        """
-        Formats the value for API submission.
-
-        :param value: The value to format.
-        :type value: Union[int, str]
-        :return: The id of the matching option for API submission, or None if value is None.
-        :rtype: Union[int, str, None]
-        :raises ValueError: If the provided value doesn't match any select option.
-        """
-        if value is None:
-            return value
-
-        option = self._get_option_by_id_or_value(value)
-        if not option:
-            raise ValueError(
-                f"The provided value '{value}' doesn't match any select option."
-            )
-
-        return option["id"]  # Return the id for API submission
-
 
 class MultipleSelectField(Field):
     """
@@ -1371,35 +1350,6 @@ class MultipleSelectField(Field):
                     f"The provided value '{value}' doesn't match any select option."
                 )
 
-    def format_for_api(self, values: List[Union[int, str]]) -> List[Union[int, str]]:
-        """
-        Formats the values for API submission.
-
-        :param values: The list of values to format.
-        :type values: List[Union[int, str]]
-        :return: A list of ids of the matching options for API submission.
-        :rtype: List[Union[int, str]]
-        :raises ValueError: If the provided values list contains a value that doesn't match any select option.
-        """
-        if values is None:
-            return values
-
-        if not isinstance(values, list):
-            raise ValueError(
-                "The provided value should be a list for a MultipleSelectField."
-            )
-
-        formatted_values = []
-        for value in values:
-            option = self._get_option_by_id_or_value(value)
-            if not option:
-                raise ValueError(
-                    f"The provided value '{value}' doesn't match any select option."
-                )
-            formatted_values.append(option["id"])
-
-        return formatted_values
-
 
 class FormulaField(Field):
     """
@@ -1510,7 +1460,9 @@ class TableLinkField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None):
+    def __init__(
+        self, name: str, field_data: Dict[str, Any], client: Optional[Any] = None
+    ):
         """
         Initializes a TableLinkField object.
 
@@ -1541,20 +1493,40 @@ class TableLinkField(Field):
         """
         return self._COMPATIBLE_FILTERS
 
-    def format_for_api(self, value: List[Union[int, str]]) -> List[Union[int, str]]:
+    def format_for_api(
+        self, value: Union[int, str, List[Union[int, str]]]
+    ) -> List[Union[int, str]]:
         """
-        Format the value for API submission. This method accepts a list of either integers
-        (identifying rows in the linked table) or strings (values of the primary field in the
-        linked table).
+        Format the value for API submission. This method normalizes and validates the input value,
+        returning a list of IDs or values suitable for API submission.
 
-        :param value: A list containing either integers (row identifiers in the linked table)
-                    or strings (values of the primary field in the linked table).
-        :type value: List[Union[int, str]]
-        :return: A list containing row identifiers or primary field values formatted for API submission.
+        :param value: A single ID, a comma-separated string of names, or a list of IDs/values.
+        :type value: Union[int, str, List[Union[int, str]]]
+        :return: A list of IDs or values suitable for API submission.
         :rtype: List[Union[int, str]]
-        :raises ValueError: If the provided value is not a list or if its entries are not integers or strings.
+        :raises ValueError: If the provided value is not in an expected format.
         """
+        # Normalize input into a list
+        if isinstance(value, int) or (
+            isinstance(value, str) and not value.strip().startswith("[")
+        ):
+            # Handle single ID or comma-separated string
+            if isinstance(value, str) and "," in value:
+                value = [v.strip() for v in value.split(",")]
+            else:
+                value = [value]
+        elif isinstance(value, list):
+            # No change needed if it's already a list
+            pass
+        else:
+            raise ValueError(
+                "The provided value should be an integer, string, or list of integers/strings."
+            )
+
+        # Validate the normalized value
         self.validate_value(value)
+
+        # Return the value as-is after validation, as it's now guaranteed to be in the correct format
         return value
 
     @property
@@ -1596,6 +1568,7 @@ class TableLinkField(Field):
         field values from each row.
 
         :return: A list of primary field values from the related table.
+        :rtype: List[str]
         :raises ValueError: If there's an error fetching the primary values from the related table.
         """
         if self.client is None:
@@ -1620,26 +1593,29 @@ class TableLinkField(Field):
                 f"Failed to retrieve options from the related table. Error: {e}"
             )
 
-    def validate_value(self, value: Any) -> None:
+    def validate_value(self, value: Union[int, str, List[Union[int, str]]]) -> None:
         """
-        Validate the value for the TableLinkField. Ensure it's a list of integers or strings.
+        Validate the value for the TableLinkField. Ensure it's a list of integers or strings,
+        or a single integer or string that can be converted to a list.
 
-        :param value: The value to be validated.
-        :type value: Any
-        :raises ValueError: If the value is not a list or if its entries are not integers or strings.
+        This method checks whether the provided value is valid according to the rules defined
+        for the TableLinkField. If the value is not valid, it raises a ValueError.
+
+        :param value: The value to be validated. It can be an integer, a string, or a list of these.
+        :type value: Union[int, str, List[Union[int, str]]]
+        :raises ValueError: If the value is not in the expected format.
         """
-        if not isinstance(value, list):
-            self.logger.error("Value provided for TableLinkField should be a list.")
-            raise ValueError("Value provided for TableLinkField should be a list.")
-
-        for entry in value:
-            if not isinstance(entry, (int, str)):
-                self.logger.error(
-                    "Each entry in the list should be an integer or string."
-                )
-                raise ValueError(
-                    "Each entry in the list should be an integer or string."
-                )
+        if isinstance(value, (int, str)):
+            # A single integer or string is valid, but will be converted to a list.
+            value = [value]
+        elif not isinstance(value, list):
+            # If the value is not a list, integer, or string, it's invalid.
+            self.logger.error(
+                "Value provided for TableLinkField should be a list, integer, or string."
+            )
+            raise ValueError(
+                "Value provided for TableLinkField should be a list, integer, or string."
+            )
 
 
 class CountField(Field):
