@@ -30,7 +30,7 @@ from baserowapi.models.row_value import (
     MultipleCollaboratorsRowValue,
     FileRowValue,
     GenericRowValue,
-    PasswordRowValue
+    PasswordRowValue,
 )
 
 ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
@@ -54,7 +54,7 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
     "lookup": LookupRowValue,
     "multiple_collaborators": MultipleCollaboratorsRowValue,
     "generic": GenericRowValue,
-    "password": PasswordRowValue
+    "password": PasswordRowValue,
 }
 
 
@@ -90,7 +90,7 @@ class Row:
     def values(self) -> RowValueList:
         """
         Retrieves the RowValueList for this row. If not yet created, it lazily loads
-        the list using the stored row data.
+        the list using the stored row data and synchronizes the internal state.
 
         :return: RowValueList representing the values for this row.
         :rtype: RowValueList
@@ -99,13 +99,8 @@ class Row:
 
         if self._values is None:
             try:
-                row_data = self._row_data
-
-                # remove metadata values before constructing RowValueList
-                row_data.pop("id", None)
-                row_data.pop("order", None)
-                # construct RowValueList
-                self._values = self._create_row_value_list(row_data)
+                # Synchronize row data to create RowValueList
+                self._values = self._create_row_value_list(self._row_data)
                 self.logger.debug(
                     f"RowValueList for Row id {self.id} successfully created."
                 )
@@ -122,6 +117,8 @@ class Row:
         """
         Create a RowValueList based on the given row data and table fields.
 
+        Metadata fields such as "id" and "order" are excluded from processing.
+
         :param Dict[str, Any] row_data: Data representing the row.
         :return: RowValueList containing RowValue objects derived from the row data.
         :rtype: RowValueList
@@ -130,8 +127,11 @@ class Row:
 
         row_value_objects = []
         for field_name, value in row_data.items():
-            field_object = self._get_field_object(field_name)
+            # Skip metadata fields
+            if field_name in ["id", "order"]:
+                continue
 
+            field_object = self._get_field_object(field_name)
             row_value_class = self._get_row_value_class(field_object.type)
 
             try:
@@ -176,8 +176,12 @@ class Row:
 
         row_value_class = ROW_VALUE_TYPE_MAPPING.get(field_type)
         if not row_value_class:
-            self.logger.warning(f"Field type '{field_type}' not supported, using GenericRowValue.")
-            row_value_class = GenericRowValue  # Use GenericRowValue for unsupported types
+            self.logger.warning(
+                f"Field type '{field_type}' not supported, using GenericRowValue."
+            )
+            row_value_class = (
+                GenericRowValue  # Use GenericRowValue for unsupported types
+            )
         return row_value_class
 
     def __repr__(self) -> str:
@@ -220,6 +224,9 @@ class Row:
         try:
             row_value = self.values[key]
             row_value.value = new_value  # Using the value setter of the RowValue object
+
+            # Synchronize _row_data with the updated value
+            self._row_data[key] = new_value
         except KeyError:
             # Field not found in the Row's values
             self.logger.error(
@@ -257,7 +264,7 @@ class Row:
         self, values: Optional[Dict[str, Any]] = None, memory_only: bool = False
     ) -> "Row":
         """
-        Updates the row in the table.
+        Updates the row in the table and synchronizes the internal state.
 
         :param Optional[Dict[str, Any]] values: A dictionary containing field values for updating the row. Defaults to values from the self.values property.
         :param bool memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.
@@ -271,21 +278,11 @@ class Row:
             # Update the RowValue objects based on the provided dictionary, if any
             if values:
                 for field_name, value in values.items():
-                    valid_field_names = {row_value.name for row_value in self.values}
-                    if field_name not in valid_field_names:
-                        self.logger.error(f"Field '{field_name}' not found in row.")
-                        raise KeyError(f"Field '{field_name}' not found in row.")
                     self[field_name] = value  # Using __setitem__ to update values
 
-            self.logger.debug(f"Constructing payload for row with ID {self.id}.")
+            # Synchronize _row_data with the current state of _values
+            self._row_data.update(self.content)
 
-            # Construct the API payload
-            payload = {}
-            for row_value in self.values:
-                if not row_value.is_read_only:  # Exclude read-only values
-                    payload[row_value.name] = row_value.format_for_api()
-
-            # If memory_only is True, skip the API request
             if memory_only:
                 self.logger.debug(
                     f"Memory-only update for row with ID {self.id}. Skipping API request."
@@ -293,22 +290,18 @@ class Row:
                 return self
 
             # Make the API request to update the row in the Baserow table
+            payload = self._row_data.copy()
             endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
-            self.logger.debug(f"Sending update request to endpoint: {endpoint}.")
             response = self.client.make_api_request(
                 endpoint, method="PATCH", data=payload
             )
 
-            # The updated row data from the response
-            updated_row_data = response
-
-            # Creating a new Row object with the updated data
-            updated_row = Row(
-                table=self.table, client=self.client, row_data=updated_row_data
-            )
+            # Update _row_data and _values with the new data from the API
+            self._row_data = response
+            self._values = self._create_row_value_list(self._row_data)
             self.logger.debug(f"Successfully updated row with ID {self.id}.")
 
-            return updated_row
+            return self
 
         except Exception as e:
             self.logger.error(
