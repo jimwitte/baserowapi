@@ -58,6 +58,36 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
 }
 
 
+class RowError(Exception):
+    """Base class for all Row-related exceptions."""
+
+    pass
+
+
+class RowFetchError(RowError):
+    """Raised when fetching row values fails."""
+
+    pass
+
+
+class RowUpdateError(RowError):
+    """Raised when updating a row fails."""
+
+    pass
+
+
+class RowDeleteError(RowError):
+    """Raised when deleting a row fails."""
+
+    pass
+
+
+class RowMoveError(RowError):
+    """Raised when moving a row fails."""
+
+    pass
+
+
 class Row:
     """
     Represents a row in a Baserow table. Provides methods to update, delete, and manipulate the row.
@@ -75,7 +105,6 @@ class Row:
         :param Table table: The table associated with the row.
         :param Client client: The client used for making requests.
         """
-
         self.id = row_data.get("id")
         self.order = row_data.get("order")
         self.table: "Table" = table
@@ -94,12 +123,10 @@ class Row:
 
         :return: RowValueList representing the values for this row.
         :rtype: RowValueList
-        :raises Exception: If there's an error creating the RowValueList.
+        :raises RowFetchError: If there's an error creating the RowValueList.
         """
-
         if self._values is None:
             try:
-                # Synchronize row data to create RowValueList
                 self._values = self._create_row_value_list(self._row_data)
                 self.logger.debug(
                     f"RowValueList for Row id {self.id} successfully created."
@@ -108,8 +135,8 @@ class Row:
                 self.logger.error(
                     f"Failed to create RowValueList for Row id {self.id}. Error: {e}"
                 )
-                raise Exception(
-                    f"Unexpected error when creating RowValueList for Row id {self.id}."
+                raise RowFetchError(
+                    f"Failed to create RowValueList for Row id {self.id}."
                 ) from e
         return self._values
 
@@ -122,9 +149,8 @@ class Row:
         :param Dict[str, Any] row_data: Data representing the row.
         :return: RowValueList containing RowValue objects derived from the row data.
         :rtype: RowValueList
-        :raises Exception: If there's an error creating a RowValue object.
+        :raises RowFetchError: If there's an error creating a RowValue object.
         """
-
         row_value_objects = []
         for field_name, value in row_data.items():
             # Skip metadata fields
@@ -144,7 +170,9 @@ class Row:
                 self.logger.error(
                     f"Failed to create RowValue object for field '{field_name}'. Error: {e}"
                 )
-                raise
+                raise RowFetchError(
+                    f"Failed to create RowValue object for field '{field_name}'."
+                ) from e
 
         return RowValueList(row_value_objects)
 
@@ -157,7 +185,6 @@ class Row:
         :rtype: Field
         :raises KeyError: If the specified field name is not found in the table fields.
         """
-
         try:
             return self.table.fields[field_name]
         except KeyError:
@@ -173,7 +200,6 @@ class Row:
         :rtype: Type[RowValue]
         :raises ValueError: If the specified field type is not supported.
         """
-
         row_value_class = ROW_VALUE_TYPE_MAPPING.get(field_type)
         if not row_value_class:
             self.logger.warning(
@@ -191,7 +217,6 @@ class Row:
         :return: A string indicating the Row's ID and associated table ID.
         :rtype: str
         """
-
         return f"Row id {self.id} of table {self.table_id}"
 
     def __getitem__(self, key: str) -> Any:
@@ -203,7 +228,6 @@ class Row:
         :rtype: Any
         :raises KeyError: If the specified field name is not found in the row values.
         """
-
         try:
             row_value = self.values[key]
             return row_value.value
@@ -220,7 +244,6 @@ class Row:
         :note: This modifies the in-memory representation of the row.
         :raises KeyError: If the specified field name is not found in the row values or is unrecognized.
         """
-
         try:
             row_value = self.values[key]
             row_value.value = new_value  # Using the value setter of the RowValue object
@@ -242,7 +265,6 @@ class Row:
         :return: True if both objects are Rows and have the same id and table_id, otherwise False.
         :rtype: bool
         """
-
         if isinstance(other, Row):
             return getattr(self, "id", None) == getattr(other, "id", None) and getattr(
                 self, "table_id", None
@@ -283,10 +305,8 @@ class Row:
         :param bool memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.
         :return: A Row object representing the updated row.
         :rtype: Row
-        :raises KeyError: If the specified field name is not found in the row.
-        :raises Exception: If the API request results in any error responses.
+        :raises RowUpdateError: If the API request results in any error responses.
         """
-
         try:
             # Update the RowValue objects based on the provided dictionary, if any
             if values:
@@ -294,7 +314,7 @@ class Row:
                     self[field_name] = value  # Using __setitem__ to update values
 
             # Synchronize _row_data with the current state of _values
-            self._row_data.update(self.content)
+            self._row_data.update(self.to_dict())
 
             if memory_only:
                 self.logger.debug(
@@ -320,7 +340,7 @@ class Row:
             self.logger.error(
                 f"Failed to update row with ID {self.id} in table {self.table_id}. Error: {e}"
             )
-            raise
+            raise RowUpdateError(f"Failed to update row with ID {self.id}.") from e
 
     def delete(self) -> bool:
         """
@@ -328,10 +348,8 @@ class Row:
 
         :return: True if deletion was successful.
         :rtype: bool
-        :raises ValueError: If an unexpected status code is received.
-        :raises Exception: For other errors during the delete operation.
+        :raises RowDeleteError: For errors during the delete operation.
         """
-
         self.logger.debug(
             f"Attempting to delete row with ID {self.id} from table {self.table_id}."
         )
@@ -348,14 +366,17 @@ class Row:
                 self.logger.warning(
                     f"Unexpected status code {response_code} received when trying to delete row with ID {self.id}."
                 )
-                raise ValueError(f"Unexpected status code received: {response_code}")
-        except ValueError:
-            raise  # Re-raise the ValueError
+                raise RowDeleteError(
+                    f"Unexpected status code received: {response_code}"
+                )
+
+        except ValueError as e:
+            raise RowDeleteError(f"Failed to delete row with ID {self.id}.") from e
         except Exception as e:
             self.logger.error(
                 f"Failed to delete row with ID {self.id} from table {self.table_id}. Error: {e}"
             )
-            raise
+            raise RowDeleteError(f"Failed to delete row with ID {self.id}.") from e
 
     def move(self, before_id: Optional[int] = None) -> "Row":
         """
@@ -364,26 +385,19 @@ class Row:
         :param Optional[int] before_id: The ID of the row before which the current row should be moved. If not specified, the row will be moved to the last position. Defaults to None.
         :return: A Row object representing the updated row.
         :rtype: Row
-        :raises Exception: If there's an error during the move operation.
+        :raises RowMoveError: If there's an error during the move operation.
         """
-
         self.logger.debug(
             f"Attempting to move row with ID {self.id} in table {self.table_id}."
         )
-
         try:
-            # Construct the endpoint for the move operation
             endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/move/?user_field_names=true"
             if before_id is not None:
                 endpoint += f"&before_id={before_id}"
 
-            # Send the API request to move the row in the Baserow table
             response = self.client.make_api_request(endpoint, method="PATCH")
 
-            # The updated row data from the response
             moved_row_data = response
-
-            # Creating a new Row object with the updated data
             moved_row = Row(
                 table=self.table, client=self.client, row_data=moved_row_data
             )
@@ -397,4 +411,4 @@ class Row:
             self.logger.error(
                 f"Failed to move row with ID {self.id} in table {self.table_id}. Error: {e}"
             )
-            raise
+            raise RowMoveError(f"Failed to move row with ID {self.id}.") from e
