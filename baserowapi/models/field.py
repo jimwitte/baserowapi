@@ -925,6 +925,21 @@ class DateField(BaseDateField):
         :rtype: List[str]
         """
         return self._COMPATIBLE_FILTERS
+    
+    def format_for_api(self, value: str) -> str:
+        """
+        Format the value for API submission by validating it and returning it as-is.
+
+        :param value: The date value to be formatted for the API.
+        :type value: str
+        :return: The formatted date value.
+        :rtype: str
+        :raises ValueError: If the value is invalid.
+        """
+        # Validate the value using the validate_value method
+        self.validate_value(value)
+        # Return the value as-is if it passes validation
+        return value
 
 
 class LastModifiedField(BaseDateField):
