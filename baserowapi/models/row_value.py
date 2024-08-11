@@ -821,24 +821,6 @@ class SingleSelectRowValue(RowValue):
             "value": matching_option["value"],
         }
 
-    def format_for_api(self) -> Optional[int]:
-        """
-        Format the value for API submission.
-        This method will extract the 'id' of the option from the raw_value for API submission.
-
-        :return: The option's id suitable for API submission or None if raw_value is None.
-        :raises ValueError: If there's an error in formatting the value for API submission.
-        """
-        try:
-            if self._raw_value is None:
-                return None
-            else:
-                return self._raw_value["id"]
-        except Exception as e:
-            msg = f"Failed to format value for API submission for field {self.field.name}. Error: {e}"
-            self.logger.error(msg)
-            raise ValueError(msg)
-
 
 class MultipleSelectRowValue(RowValue):
     """
@@ -920,21 +902,6 @@ class MultipleSelectRowValue(RowValue):
 
         self._raw_value = option_dicts
 
-    def format_for_api(self) -> List[int]:
-        """
-        Format the values suitable for API submission.
-
-        :return: The formatted values suitable for API submission.
-        :rtype: List[int]
-        :raises ValueError: If there's an error in formatting the values.
-        """
-        try:
-            return [option["id"] for option in self._raw_value]
-        except Exception as e:
-            raise ValueError(
-                f"Failed to format values for API submission for field {self.field.name}. Error: {e}"
-            )
-
 
 class FormulaRowValue(RowValue):
     """
@@ -977,15 +944,6 @@ class FormulaRowValue(RowValue):
         :raises ValueError: As the FormulaRowValue is read-only, setting a value will always raise this error.
         """
         raise ValueError("Cannot set value for a read-only FormulaRowValue.")
-
-    def format_for_api(self) -> Any:
-        """
-        Format the value suitable for API submission. This method returns the raw value.
-
-        :return: The raw value suitable for API submission.
-        :rtype: Any
-        """
-        return self._raw_value
 
 
 class TableLinkRowValue(RowValue):
@@ -1083,15 +1041,6 @@ class CountRowValue(RowValue):
         """
         raise ValueError("Cannot set value for a read-only CountRowValue.")
 
-    def format_for_api(self) -> Any:
-        """
-        Format the value suitable for API submission. This method directly returns the raw value.
-
-        :return: The value formatted for API submission.
-        :rtype: Any
-        """
-        return self._raw_value
-
 
 class LookupRowValue(RowValue):
     """
@@ -1134,15 +1083,6 @@ class LookupRowValue(RowValue):
         :raises ValueError: As the LookupRowValue is read-only, setting a value will always raise an error.
         """
         raise ValueError("Cannot set value for a read-only LookupRowValue.")
-
-    def format_for_api(self) -> Any:
-        """
-        Format the value suitable for API submission. This method directly returns the raw value.
-
-        :return: The value formatted for API submission.
-        :rtype: Any
-        """
-        return self._raw_value
 
 
 class MultipleCollaboratorsRowValue(RowValue):
@@ -1187,15 +1127,6 @@ class MultipleCollaboratorsRowValue(RowValue):
         """
         self.field.validate_value(new_value)
         self._raw_value = new_value
-
-    def format_for_api(self) -> Any:
-        """
-        Format the value suitable for API submission. This method formats it in a way that only returns the IDs of the collaborators.
-
-        :return: The value formatted for API submission.
-        :rtype: Any
-        """
-        return self.field.format_for_api(self._raw_value)
 
 
 class FileRowValue(RowValue):
@@ -1384,14 +1315,6 @@ class GenericRowValue(RowValue):
         self.field.validate_value(new_value)
         self._raw_value = new_value
 
-    def format_for_api(self) -> Any:
-        """
-        Format the value for API submission.
-
-        :return: The raw value formatted for API submission.
-        """
-        return self._raw_value
-
 
 class PasswordRowValue(RowValue):
     """
@@ -1438,14 +1361,6 @@ class PasswordRowValue(RowValue):
         else:
             self._raw_value = new_value
             self._password_set = True
-
-    def format_for_api(self) -> Any:
-        """
-        Format the password value for API submission.
-
-        :return: The formatted value for API submission.
-        """
-        return self._raw_value
 
 
 class RowValueList:
