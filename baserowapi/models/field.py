@@ -76,15 +76,17 @@ class Field:
 
     def format_for_api(self, value: Any) -> Any:
         """
-        Format the value for API submission.
+        Format the value for API submission by validating it and returning it as-is.
 
-        Child classes can override for custom formatting.
-
-        :param value: The value to be formatted.
+        :param value: The value to be formatted for the API.
         :type value: Any
         :return: The formatted value.
         :rtype: Any
+        :raises ValueError: If the value is invalid.
         """
+        # Validate the value using the subclass's validate_value method
+        self.validate_value(value)
+        # Return the value as-is if it passes validation
         return value
 
     @property
@@ -493,21 +495,6 @@ class PhoneNumberField(Field):
             raise ValueError(
                 f"The provided phone number '{value}' doesn't match the expected format."
             )
-
-    def format_for_api(self, value: str) -> str:
-        """
-        Format the value for API submission.
-
-        For PhoneNumberField, it would return the phone number as-is after validation.
-
-        :param value: The phone number string to be formatted.
-        :type value: str
-        :return: The formatted phone number.
-        :rtype: str
-        :raises ValueError: If the phone number doesn't match the expected format.
-        """
-        self.validate_value(value)  # Validate before formatting
-        return value
 
 
 class BooleanField(Field):
@@ -925,21 +912,6 @@ class DateField(BaseDateField):
         :rtype: List[str]
         """
         return self._COMPATIBLE_FILTERS
-    
-    def format_for_api(self, value: str) -> str:
-        """
-        Format the value for API submission by validating it and returning it as-is.
-
-        :param value: The date value to be formatted for the API.
-        :type value: str
-        :return: The formatted date value.
-        :rtype: str
-        :raises ValueError: If the value is invalid.
-        """
-        # Validate the value using the validate_value method
-        self.validate_value(value)
-        # Return the value as-is if it passes validation
-        return value
 
 
 class LastModifiedField(BaseDateField):
@@ -1137,19 +1109,6 @@ class FileField(Field):
             if not file_obj.get("name"):
                 self.logger.error("File object is missing the 'name' attribute.")
                 raise ValueError("File object is missing the 'name' attribute.")
-
-    def format_for_api(self, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Formats the value for API submission. For FileField, it returns the list of file
-        objects as-is.
-
-        :param value: A list of file objects.
-        :type value: List[Dict[str, Any]]
-
-        :return: The same list of file objects.
-        :rtype: List[Dict[str, Any]]
-        """
-        return value
 
 
 class SingleSelectField(Field):
@@ -1863,21 +1822,6 @@ class MultipleCollaboratorsField(Field):
         """
         return self.field_data.get("notify_user_when_added", False)
 
-    def format_for_api(self, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Format the value for API submission. Accepts an array of objects where each object contains a user's id.
-
-        :param value: A list of dictionaries representing collaborator data.
-        :type value: List[Dict[str, Any]]
-        :return: The list of collaborator data formatted for API submission.
-        :rtype: List[Dict[str, Any]]
-        :raises ValueError: If the provided value is not a list or if the format is incorrect.
-        """
-        if not isinstance(value, list):
-            raise ValueError(
-                f"Expected a list of collaborator data for MultipleCollaboratorsField but got {type(value)}"
-            )
-        return value  # Return value as-is since it's already in the expected format
 
     def validate_value(self, value: List[Dict[str, Any]]) -> None:
         """
@@ -1918,9 +1862,6 @@ class GenericField(Field):
     def validate_value(self, value: Any) -> None:
         self.logger.warning(f"No validation available for generic field '{self.name}'.")
 
-    def format_for_api(self, value: Any) -> Any:
-        return value
-
 
 class PasswordField(Field):
     """
@@ -1946,16 +1887,6 @@ class PasswordField(Field):
             raise ValueError(
                 f"Expected a string or None for PasswordField but got {type(value)}"
             )
-
-    def format_for_api(self, value: Any) -> Any:
-        """
-        Format the value for API submission. Returns the value as-is.
-        :param value: The value to be formatted.
-        :type value: Any
-        :return: The formatted value.
-        :rtype: Any
-        """
-        return value
 
 
 class FieldList:
