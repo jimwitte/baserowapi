@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
 
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
-from baserowapi.models.field import (
-    Field,
+from baserowapi.models.fields import (
     FieldList,
     TextField,
     LongTextField,
@@ -27,11 +26,9 @@ from baserowapi.models.field import (
     GenericField,
     PasswordField,
 )
-from baserowapi.validators.filter_validator import FilterValidator
 import logging
 import urllib.parse
 import json
-import re
 
 if TYPE_CHECKING:
     from baserowapi import Baserow
@@ -488,7 +485,6 @@ class Table:
             return generator
         else:
             return list(generator)
-
 
     def get_row(self, row_id: Union[int, str]) -> Row:
         """

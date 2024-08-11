@@ -1,14 +1,14 @@
 import logging
-from typing import TYPE_CHECKING, Dict, Any, Union, List, Type, Optional
+from typing import TYPE_CHECKING, Dict, Any, List, Type, Optional
 
 if TYPE_CHECKING:
     from baserowapi.models.table import Table
     from baserowapi.baserow import Baserow as Client
-    from baserowapi.models.field import Field
+    from baserowapi.models.fields.field import Field
 
-from baserowapi.models.row_value import (
+from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.models.row_values import (
     RowValueList,
-    RowValue,
     TextRowValue,
     LongTextRowValue,
     UrlRowValue,
@@ -17,7 +17,6 @@ from baserowapi.models.row_value import (
     BooleanRowValue,
     RatingRowValue,
     NumberRowValue,
-    BaseDateRowValue,
     DateRowValue,
     LastModifiedRowValue,
     CreatedOnRowValue,
@@ -32,6 +31,7 @@ from baserowapi.models.row_value import (
     GenericRowValue,
     PasswordRowValue,
 )
+
 
 ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
     "text": TextRowValue,
