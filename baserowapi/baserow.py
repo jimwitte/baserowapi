@@ -3,34 +3,7 @@ import logging
 from typing import IO, Union, Dict, Optional, Any
 from baserowapi.models.table import Table
 import urllib.parse
-
-
-class BaserowAPIError(Exception):
-    """Base class for exceptions in this module."""
-
-    pass
-
-
-class BaserowHTTPError(BaserowAPIError):
-    """Exception raised for HTTP errors."""
-
-    def __init__(self, status_code: int, message: str):
-        """
-        :param status_code: The HTTP status code.
-        :type status_code: int
-        :param message: The error message.
-        :type message: str
-        """
-        self.status_code = status_code
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self) -> str:
-        """
-        :return: The string representation of the error.
-        :rtype: str
-        """
-        return f"HTTP {self.status_code}: {self.message}"
+from baserowapi.exceptions import BaserowHTTPError
 
 
 class Baserow:

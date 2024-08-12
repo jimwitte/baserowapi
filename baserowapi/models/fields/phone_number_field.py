@@ -59,7 +59,7 @@ class PhoneNumberField(Field):
         :type value: str
         :raises ValueError: If the phone number doesn't match the expected format.
         """
-        if value is None:
+        if value is None or value == "":
             return
         if not self.valid_characters.match(value):
             self.logger.error(
