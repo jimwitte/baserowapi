@@ -119,6 +119,15 @@ class Row:
                 ) from e
         return self._values
 
+    def fields(self) -> List[str]:
+        """
+        Retrieve a list of all field names from the Row's values.
+
+        :return: A list of field names.
+        :rtype: List[str]
+        """
+        return self.values.fields()
+
     def _create_row_value_list(self, row_data: Dict[str, Any]) -> RowValueList:
         """
         Create a RowValueList based on the given row data and table fields.

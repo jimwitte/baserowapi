@@ -68,6 +68,17 @@ class RowValueList:
         """
         return len(self.row_values)
 
+    def __contains__(self, field_name: str) -> bool:
+        """
+        Check if a RowValue with the given field name exists in the list.
+
+        :param field_name: The name of the field to check for.
+        :type field_name: str
+        :return: True if a RowValue with the field name exists, False otherwise.
+        :rtype: bool
+        """
+        return any(value.field.name == field_name for value in self.row_values)
+
     def add(self, row_value: "RowValue") -> None:
         """
         Add a RowValue object to the list.
@@ -82,3 +93,12 @@ class RowValueList:
             )
 
         self.row_values.append(row_value)
+
+    def fields(self) -> List[str]:
+        """
+        Returns a list of all field names for the RowValues in the list.
+
+        :return: A list of field names.
+        :rtype: List[str]
+        """
+        return [value.field.name for value in self.row_values]
