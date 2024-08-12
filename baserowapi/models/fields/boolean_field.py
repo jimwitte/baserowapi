@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class BooleanField(Field):
@@ -44,12 +45,12 @@ class BooleanField(Field):
 
         :param value: The boolean value to be validated.
         :type value: bool
-        :raises ValueError: If the value is not of boolean type.
+        :raises FieldValidationError: If the value is not of boolean type.
         """
         if not isinstance(value, bool):
             self.logger.error(
                 f"Expected a boolean value for BooleanField but got {type(value)}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected a boolean value for BooleanField but got {type(value)}"
             )

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Union, Optional
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class SingleSelectField(Field):
@@ -42,7 +43,9 @@ class SingleSelectField(Field):
             self.logger.error(
                 "Invalid or missing select_options provided for SingleSelectField initialization."
             )
-            raise ValueError("select_options should be a non-empty list in field_data.")
+            raise FieldValidationError(
+                "select_options should be a non-empty list in field_data."
+            )
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -96,11 +99,11 @@ class SingleSelectField(Field):
 
         :param value: The value to validate.
         :type value: Union[int, str]
-        :raises ValueError: If the provided value doesn't match any select option.
+        :raises FieldValidationError: If the provided value doesn't match any select option.
         """
         if value is not None:
             option = self._get_option_by_id_or_value(value)
             if not option:
-                raise ValueError(
+                raise FieldValidationError(
                     f"The provided value '{value}' doesn't match any select option."
                 )

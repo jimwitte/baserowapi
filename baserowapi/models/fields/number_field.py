@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Union
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class NumberField(Field):
@@ -82,7 +83,7 @@ class NumberField(Field):
 
         :param value: The number value to be validated.
         :type value: Union[int, float, str]
-        :raises ValueError: If the value doesn't match the expected type or constraints.
+        :raises FieldValidationError: If the value doesn't match the expected type or constraints.
         """
         if value is None:
             return
@@ -94,7 +95,7 @@ class NumberField(Field):
                 self.logger.error(
                     f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
                 )
-                raise ValueError(
+                raise FieldValidationError(
                     f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
                 )
 
@@ -102,7 +103,7 @@ class NumberField(Field):
             self.logger.error(
                 f"Expected a number value for NumberField but got {type(value)}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected a number value for NumberField but got {type(value)}"
             )
 
@@ -114,11 +115,13 @@ class NumberField(Field):
             self.logger.error(
                 f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
             )
 
         # If negative numbers are not allowed and value is negative, raise an error
         if not self.number_negative and value < 0:
             self.logger.error("Negative values are not allowed for this NumberField")
-            raise ValueError("Negative values are not allowed for this NumberField")
+            raise FieldValidationError(
+                "Negative values are not allowed for this NumberField"
+            )

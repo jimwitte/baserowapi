@@ -1,6 +1,7 @@
-from typing import Any, Dict, List, Union, Iterator, Union, Optional
+from typing import Any, Dict, List, Union, Optional
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class MultipleSelectField(Field):
@@ -42,7 +43,9 @@ class MultipleSelectField(Field):
             self.logger.error(
                 "Invalid or missing select_options provided for MultipleSelectField initialization."
             )
-            raise ValueError("select_options should be a non-empty list in field_data.")
+            raise FieldValidationError(
+                "select_options should be a non-empty list in field_data."
+            )
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -96,19 +99,19 @@ class MultipleSelectField(Field):
 
         :param values: The list of values to validate.
         :type values: List[Union[int, str]]
-        :raises ValueError: If the provided values list contains a value that doesn't match any select option.
+        :raises FieldValidationError: If the provided values list contains a value that doesn't match any select option.
         """
         if values is None:
             return
 
         if not isinstance(values, list):
-            raise ValueError(
+            raise FieldValidationError(
                 "The provided value should be a list for a MultipleSelectField."
             )
 
         for value in values:
             option = self._get_option_by_id_or_value(value)
             if not option:
-                raise ValueError(
+                raise FieldValidationError(
                     f"The provided value '{value}' doesn't match any select option."
                 )

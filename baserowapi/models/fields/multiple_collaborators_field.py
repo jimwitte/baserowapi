@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class MultipleCollaboratorsField(Field):
@@ -57,14 +58,14 @@ class MultipleCollaboratorsField(Field):
 
         :param value: A list of dictionaries representing collaborator data.
         :type value: List[Dict[str, Any]]
-        :raises ValueError: If the provided value is not a list or if the format is incorrect.
+        :raises FieldValidationError: If the provided value is not a list or if the format is incorrect.
         """
         if not isinstance(value, list):
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected a list for MultipleCollaboratorsField but got {type(value)}"
             )
         for collaborator in value:
             if not isinstance(collaborator, dict) or "id" not in collaborator:
-                raise ValueError(
+                raise FieldValidationError(
                     "Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key"
                 )

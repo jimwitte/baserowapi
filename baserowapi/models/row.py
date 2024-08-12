@@ -6,6 +6,12 @@ if TYPE_CHECKING:
     from baserowapi.baserow import Baserow as Client
     from baserowapi.models.fields.field import Field
 
+from baserowapi.exceptions import (
+    RowFetchError,
+    RowUpdateError,
+    RowDeleteError,
+    RowMoveError,
+)
 from baserowapi.models.row_values.row_value import RowValue
 from baserowapi.models.row_values import (
     RowValueList,
@@ -56,36 +62,6 @@ ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
     "generic": GenericRowValue,
     "password": PasswordRowValue,
 }
-
-
-class RowError(Exception):
-    """Base class for all Row-related exceptions."""
-
-    pass
-
-
-class RowFetchError(RowError):
-    """Raised when fetching row values fails."""
-
-    pass
-
-
-class RowUpdateError(RowError):
-    """Raised when updating a row fails."""
-
-    pass
-
-
-class RowDeleteError(RowError):
-    """Raised when deleting a row fails."""
-
-    pass
-
-
-class RowMoveError(RowError):
-    """Raised when moving a row fails."""
-
-    pass
 
 
 class Row:

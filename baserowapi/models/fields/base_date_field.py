@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 from datetime import datetime
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class BaseDateField(Field):
@@ -40,7 +41,7 @@ class BaseDateField(Field):
             self.logger.error(
                 f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
             )
 
@@ -48,7 +49,7 @@ class BaseDateField(Field):
             self.logger.error(
                 f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
             )
 
@@ -58,7 +59,7 @@ class BaseDateField(Field):
 
         :param value: The date or datetime value to be validated.
         :type value: str
-        :raises ValueError: If the value doesn't match the expected format.
+        :raises FieldValidationError: If the value doesn't match the expected format.
         """
         # If the value is None, it is considered valid
         if value is None:
@@ -85,14 +86,16 @@ class BaseDateField(Field):
                 return
             except ValueError:
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-                raise ValueError(f"Invalid date format for {self.TYPE}: {value}")
+                raise FieldValidationError(
+                    f"Invalid date format for {self.TYPE}: {value}"
+                )
         else:
             # If only date is expected but value contains time, raise an error
             if "T" in value:
                 self.logger.error(
                     f"Time information not allowed for {self.TYPE}: {value}"
                 )
-                raise ValueError(
+                raise FieldValidationError(
                     f"Time information not allowed for {self.TYPE}: {value}"
                 )
 
@@ -100,4 +103,6 @@ class BaseDateField(Field):
                 datetime.strptime(value, "%Y-%m-%d")
             except ValueError:
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-                raise ValueError(f"Invalid date format for {self.TYPE}: {value}")
+                raise FieldValidationError(
+                    f"Invalid date format for {self.TYPE}: {value}"
+                )

@@ -34,18 +34,12 @@ class TextField(BaseTextClass):
         :type field_data: Dict[str, Any]
         :param client: The Baserow API client. Defaults to None.
         :type client: Optional[Any]
-        :raises ValueError: If the 'text_default' value in field_data is not a string.
+        :raises FieldValidationError: If the 'text_default' value in field_data is not a valid string.
         """
         super().__init__(name, field_data, client)
 
         text_default_value = field_data.get("text_default", "")
-        if not isinstance(text_default_value, str):
-            self.logger.error(
-                f"Expected a string for text_default but got {type(text_default_value)}"
-            )
-            raise ValueError(
-                f"Expected a string for text_default but got {type(text_default_value)}"
-            )
+        self.validate_value(text_default_value)
 
         self._text_default = text_default_value
 

@@ -1,6 +1,7 @@
 from typing import Optional, Union, List, Any
 from baserowapi.models.fields import TableLinkField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, FieldValidationError
 
 
 class TableLinkRowValue(RowValue):
@@ -10,7 +11,7 @@ class TableLinkRowValue(RowValue):
     :param field: The associated TableLinkField object.
     :param raw_value: The raw value as fetched/returned from the API. Defaults to None.
     :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the TableLinkField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the TableLinkField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class TableLinkRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, TableLinkField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the TableLinkField class. Received: {type(field).__name__}"
             )
 
@@ -45,12 +46,20 @@ class TableLinkRowValue(RowValue):
 
         :param new_value: The new value(s) to be set.
         :type new_value: Union[int, str, List[Union[int, str]]]
-        :raises ValueError: If the provided value is not in the expected format.
+        :raises InvalidRowValueError: If the provided value is not in the expected format.
         """
         # Use the field's validation method
-        self.field.validate_value(new_value)
+        try:
+            self.field.validate_value(new_value)
+        except FieldValidationError as e:
+            self.logger.error(f"Validation error for value '{new_value}': {e}")
+            raise InvalidRowValueError(f"Invalid value provided: {e}")
 
         # Format the value using the field's format_for_api method before assigning
-        self._raw_value = [
-            {"value": val} for val in self.field.format_for_api(new_value)
-        ]
+        try:
+            self._raw_value = [
+                {"value": val} for val in self.field.format_for_api(new_value)
+            ]
+        except Exception as e:
+            self.logger.error(f"Error formatting value '{new_value}' for API: {e}")
+            raise InvalidRowValueError(f"Error formatting value '{new_value}': {e}")

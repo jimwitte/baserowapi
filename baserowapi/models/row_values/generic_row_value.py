@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import GenericField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, RowValueOperationError
 
 
 class GenericRowValue(RowValue):
@@ -10,7 +11,7 @@ class GenericRowValue(RowValue):
     :param field: The associated GenericField object.
     :param raw_value: The raw value as fetched/returned from the API. Defaults to None.
     :param client: The Baserow class API client. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the GenericField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the GenericField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class GenericRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, GenericField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the GenericField class. Received: {type(field).__name__}"
             )
 
@@ -44,6 +45,15 @@ class GenericRowValue(RowValue):
         Set a new value for the GenericRowValue.
 
         :param new_value: The new value to set.
+        :raises RowValueOperationError: If there is an issue setting the new value.
         """
-        self.field.validate_value(new_value)
-        self._raw_value = new_value
+        try:
+            self.field.validate_value(new_value)
+            self._raw_value = new_value
+        except Exception as e:
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
+            raise RowValueOperationError(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )

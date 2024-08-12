@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Union, Iterator, Union, Optional
+from typing import Any, Dict
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class PasswordField(Field):
@@ -20,9 +21,9 @@ class PasswordField(Field):
         Validate the value for a PasswordField. Ensure it's a string or None.
         :param value: The value to be validated.
         :type value: Any
-        :raises ValueError: If the value is not a string or None.
+        :raises FieldValidationError: If the value is not a string or None.
         """
         if value is not None and not isinstance(value, str):
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected a string or None for PasswordField but got {type(value)}"
             )

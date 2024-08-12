@@ -1,6 +1,7 @@
 from typing import Optional, Union, List, Any
 from baserowapi.models.fields import SingleSelectField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class SingleSelectRowValue(RowValue):
@@ -28,7 +29,7 @@ class SingleSelectRowValue(RowValue):
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, SingleSelectField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the SingleSelectField class. Received: {type(field).__name__}"
             )
 
@@ -65,34 +66,15 @@ class SingleSelectRowValue(RowValue):
     def value(self, new_value: Union[int, str]) -> None:
         """
         Set a new value.
-        This should handle validation specific to SingleSelectRowValue using the associated SingleSelectField's validate_value method.
+        This uses the field's validate_value method to ensure the value is valid.
 
         :param new_value: The new value to be set, which can be either an ID or a string corresponding to an option value.
-        :raises ValueError: If the provided value doesn't match any select option by ID or value.
+        :raises FieldValidationError: If the provided value doesn't match any select option by ID or value.
         """
-        option_details = self.field.options_details
-
-        criteria = (
-            "id"
-            if isinstance(new_value, int)
-            else "value" if isinstance(new_value, str) else None
-        )
-
-        if not criteria:
-            msg = f"Invalid input type for value. Expected int or str, got {type(new_value).__name__}."
-            self.logger.error(msg)
-            raise ValueError(msg)
-
-        matching_option = next(
-            (option for option in option_details if option[criteria] == new_value), None
-        )
-
-        if not matching_option:
-            msg = f"The provided {criteria} '{new_value}' doesn't match any select option."
-            self.logger.error(msg)
-            raise ValueError(msg)
+        self.field.validate_value(new_value)
+        option = self.field._get_option_by_id_or_value(new_value)
 
         self._raw_value = {
-            "id": matching_option["id"],
-            "value": matching_option["value"],
+            "id": option["id"],
+            "value": option["value"],
         }

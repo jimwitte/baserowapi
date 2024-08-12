@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import TextField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class TextRowValue(RowValue):
@@ -25,10 +26,11 @@ class TextRowValue(RowValue):
         :param field: The associated TextField object.
         :param raw_value: The raw value as returned/fetched from the API. Default is None.
         :param client: The Baserow class API client. Some RowValue subclasses may need access to the API. Default is None.
+        :raises InvalidRowValueError: If the provided field is not an instance of the TextField class.
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, TextField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the TextField class. Received: {type(field).__name__}"
             )
         self.logger.debug(

@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.row_values.base_date_row_value import BaseDateRowValue
 from baserowapi.models.fields import LastModifiedField
+from baserowapi.exceptions import InvalidRowValueError, ReadOnlyValueError
 
 
 class LastModifiedRowValue(BaseDateRowValue):
@@ -25,10 +26,11 @@ class LastModifiedRowValue(BaseDateRowValue):
         :param field: The associated LastModifiedField object.
         :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.
         :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.
+        :raises InvalidRowValueError: If the provided field is not an instance of the LastModifiedField class.
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, LastModifiedField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the LastModifiedField class. Received: {type(field).__name__}"
             )
 
@@ -39,8 +41,8 @@ class LastModifiedRowValue(BaseDateRowValue):
         As LastModifiedRowValue is read-only, it will raise an error if there's an attempt to set a value.
 
         :param new_value: The new value to be set.
-        :raises ValueError: If there's an attempt to set a value for a read-only field.
+        :raises ReadOnlyValueError: If there's an attempt to set a value for a read-only field.
         """
         msg = "Cannot set value for a read-only LastModifiedRowValue."
         self.logger.error(msg)
-        raise ValueError(msg)
+        raise ReadOnlyValueError(msg)

@@ -1,6 +1,7 @@
-from typing import Optional, Union, List, Any
+from typing import Optional, Union, Any
 from baserowapi.models.fields import RatingField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class RatingRowValue(RowValue):
@@ -25,10 +26,11 @@ class RatingRowValue(RowValue):
         :param field: The associated RatingField object.
         :param raw_value: The raw numerical value as fetched/returned from the API. Default is None.
         :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.
+        :raises InvalidRowValueError: If the provided field is not an instance of the RatingField class.
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, RatingField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the RatingField class. Received: {type(field).__name__}"
             )
         self.logger.debug(
@@ -52,7 +54,7 @@ class RatingRowValue(RowValue):
         This should handle validation specific to RatingRowValue using the associated RatingField's validate_value method.
 
         :param new_value: The new numerical value to set.
-        :raises Exception: If the value is not valid as per the associated RatingField's validation.
+        :raises InvalidRowValueError: If the value is not valid as per the associated RatingField's validation.
         """
         try:
             self.field.validate_value(new_value)
@@ -62,4 +64,6 @@ class RatingRowValue(RowValue):
             self.logger.error(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
             )
-            raise
+            raise InvalidRowValueError(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )

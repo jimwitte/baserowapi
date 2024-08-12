@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class RatingField(Field):
@@ -34,7 +35,7 @@ class RatingField(Field):
             self.logger.error(
                 f"Expected an integer for max_value but got {type(self.max_value)}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected an integer for max_value but got {type(self.max_value)}"
             )
 
@@ -43,14 +44,18 @@ class RatingField(Field):
         )  # Defaulting to 'dark-orange' if not provided
         if not isinstance(self.color, str):
             self.logger.error(f"Expected a string for color but got {type(self.color)}")
-            raise ValueError(f"Expected a string for color but got {type(self.color)}")
+            raise FieldValidationError(
+                f"Expected a string for color but got {type(self.color)}"
+            )
 
         self.style = field_data.get(
             "style", "star"
         )  # Defaulting to 'star' if not provided
         if not isinstance(self.style, str):
             self.logger.error(f"Expected a string for style but got {type(self.style)}")
-            raise ValueError(f"Expected a string for style but got {type(self.style)}")
+            raise FieldValidationError(
+                f"Expected a string for style but got {type(self.style)}"
+            )
 
     @property
     def compatible_filters(self) -> List[str]:
@@ -68,19 +73,19 @@ class RatingField(Field):
 
         :param value: The rating value to be validated.
         :type value: int
-        :raises ValueError: If the value doesn't match the expected type or constraints.
+        :raises FieldValidationError: If the value doesn't match the expected type or constraints.
         """
         if not isinstance(value, int):
             self.logger.error(
                 f"Expected an integer value for RatingField but got {type(value)}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Expected an integer value for RatingField but got {type(value)}"
             )
         if value < 0 or value > self.max_value:
             self.logger.error(
                 f"Rating value should be between 0 and {self.max_value}, but got {value}"
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Rating value should be between 0 and {self.max_value}, but got {value}"
             )

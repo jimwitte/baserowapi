@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
-
+from baserowapi.exceptions import RowFetchError, RowAddError, RowUpdateError, RowDeleteError
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
 from baserowapi.models.fields import (
@@ -32,36 +32,6 @@ import json
 
 if TYPE_CHECKING:
     from baserowapi import Baserow
-
-
-class BaserowAPIError(Exception):
-    """Base class for all Baserow API-related exceptions."""
-
-    pass
-
-
-class RowFetchError(BaserowAPIError):
-    """Raised when fetching rows fails."""
-
-    pass
-
-
-class RowAddError(BaserowAPIError):
-    """Raised when adding rows fails."""
-
-    pass
-
-
-class RowUpdateError(BaserowAPIError):
-    """Raised when updating rows fails."""
-
-    pass
-
-
-class RowDeleteError(BaserowAPIError):
-    """Raised when deleting rows fails."""
-
-    pass
 
 
 class Table:

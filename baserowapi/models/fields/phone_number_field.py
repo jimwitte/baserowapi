@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 import logging
 import re
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class PhoneNumberField(Field):
@@ -57,7 +58,7 @@ class PhoneNumberField(Field):
 
         :param value: The phone number string to be validated.
         :type value: str
-        :raises ValueError: If the phone number doesn't match the expected format.
+        :raises FieldValidationError: If the phone number doesn't match the expected format.
         """
         if value is None or value == "":
             return
@@ -65,6 +66,6 @@ class PhoneNumberField(Field):
             self.logger.error(
                 f"The provided phone number '{value}' doesn't match the expected format."
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"The provided phone number '{value}' doesn't match the expected format."
             )

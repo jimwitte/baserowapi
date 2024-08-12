@@ -1,6 +1,7 @@
 from typing import Optional, Union, List, Any
 from baserowapi.models.fields import MultipleSelectField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, RowValueOperationError
 
 
 class MultipleSelectRowValue(RowValue):
@@ -10,7 +11,7 @@ class MultipleSelectRowValue(RowValue):
     :param field: The associated MultipleSelectField object.
     :param raw_value: The raw values as fetched/returned from the API. Defaults to None.
     :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the MultipleSelectField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the MultipleSelectField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class MultipleSelectRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, MultipleSelectField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the MultipleSelectField class. Received: {type(field).__name__}"
             )
         self._raw_value = raw_value if raw_value is not None else []
@@ -33,14 +34,14 @@ class MultipleSelectRowValue(RowValue):
 
         :return: A list of available option values.
         :rtype: List[str]
-        :raises AttributeError: If the associated field does not have the "options" attribute.
+        :raises RowValueOperationError: If the associated field does not have the "options" attribute.
         """
         try:
             return self.field.options
         except AttributeError:
             msg = f"The associated field {self.field.name} does not have the 'options' attribute."
             self.logger.error(msg)
-            raise AttributeError(msg)
+            raise RowValueOperationError(msg)
 
     @property
     def value(self) -> List[str]:
@@ -60,24 +61,24 @@ class MultipleSelectRowValue(RowValue):
 
         :param new_values: The new values to be set.
         :type new_values: Union[List[int], List[str]]
-        :raises ValueError: If one of the values doesn't match any select option or other errors occur.
+        :raises RowValueOperationError: If one of the values doesn't match any select option or other errors occur.
         """
         if not isinstance(new_values, list):
-            raise ValueError("The provided values should be a list.")
+            raise RowValueOperationError("The provided values should be a list.")
 
         option_dicts = []
 
         for new_value in new_values:
-            if isinstance(new_value, int) or isinstance(new_value, str):
+            if isinstance(new_value, (int, str)):
                 option = self.field._get_option_by_id_or_value(new_value)
                 if option:
                     option_dicts.append(option)
                 else:
-                    raise ValueError(
+                    raise RowValueOperationError(
                         f"The value '{new_value}' doesn't match any select option."
                     )
             else:
-                raise ValueError(
+                raise RowValueOperationError(
                     f"Invalid type '{type(new_value).__name__}' for value. Expected int or str."
                 )
 

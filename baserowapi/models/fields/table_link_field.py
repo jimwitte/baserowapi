@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Union, Optional
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError, FieldDataRetrievalError
 
 
 class TableLinkField(Field):
@@ -32,14 +33,14 @@ class TableLinkField(Field):
         :type field_data: Dict[str, Any]
         :param client: The Baserow API client. Defaults to None.
         :type client: Optional[Any]
-        :raises ValueError: If the field type doesn't match the expected type.
+        :raises FieldValidationError: If the field type doesn't match the expected type.
         """
         super().__init__(name, field_data, client)
         if self.type != self.TYPE:
             self.logger.error(
                 f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
             )
-            raise ValueError(
+            raise FieldValidationError(
                 f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
             )
 
@@ -64,7 +65,7 @@ class TableLinkField(Field):
         :type value: Union[int, str, List[Union[int, str]]]
         :return: A list of IDs or values suitable for API submission.
         :rtype: List[Union[int, str]]
-        :raises ValueError: If the provided value is not in an expected format.
+        :raises FieldValidationError: If the provided value is not in an expected format.
         """
         # Normalize input into a list
         if isinstance(value, int) or (
@@ -79,7 +80,7 @@ class TableLinkField(Field):
             # No change needed if it's already a list
             pass
         else:
-            raise ValueError(
+            raise FieldValidationError(
                 "The provided value should be an integer, string, or list of integers/strings."
             )
 
@@ -129,11 +130,11 @@ class TableLinkField(Field):
 
         :return: A list of primary field values from the related table.
         :rtype: List[str]
-        :raises ValueError: If there's an error fetching the primary values from the related table.
+        :raises FieldDataRetrievalError: If there's an error fetching the primary values from the related table.
         """
         if self.client is None:
             self.logger.error("Baserow client not provided.")
-            raise ValueError("Baserow client not provided.")
+            raise FieldDataRetrievalError("Baserow client not provided.")
 
         try:
             related_table = self.client.get_table(self.link_row_table_id)
@@ -149,7 +150,7 @@ class TableLinkField(Field):
             self.logger.error(
                 f"Failed to retrieve options for TableLinkField '{self.name}'. Error: {e}"
             )
-            raise ValueError(
+            raise FieldDataRetrievalError(
                 f"Failed to retrieve options from the related table. Error: {e}"
             )
 
@@ -159,11 +160,11 @@ class TableLinkField(Field):
         or a single integer or string that can be converted to a list.
 
         This method checks whether the provided value is valid according to the rules defined
-        for the TableLinkField. If the value is not valid, it raises a ValueError.
+        for the TableLinkField. If the value is not valid, it raises a FieldValidationError.
 
         :param value: The value to be validated. It can be an integer, a string, or a list of these.
         :type value: Union[int, str, List[Union[int, str]]]
-        :raises ValueError: If the value is not in the expected format.
+        :raises FieldValidationError: If the value is not in the expected format.
         """
         if isinstance(value, (int, str)):
             # A single integer or string is valid, but will be converted to a list.
@@ -173,6 +174,6 @@ class TableLinkField(Field):
             self.logger.error(
                 "Value provided for TableLinkField should be a list, integer, or string."
             )
-            raise ValueError(
+            raise FieldValidationError(
                 "Value provided for TableLinkField should be a list, integer, or string."
             )

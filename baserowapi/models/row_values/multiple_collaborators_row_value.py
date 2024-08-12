@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import MultipleCollaboratorsField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, RowValueOperationError
 
 
 class MultipleCollaboratorsRowValue(RowValue):
@@ -10,7 +11,7 @@ class MultipleCollaboratorsRowValue(RowValue):
     :param field: The associated MultipleCollaboratorsField object.
     :param raw_value: The raw value as fetched/returned from the API. Defaults to None.
     :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the MultipleCollaboratorsField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the MultipleCollaboratorsField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class MultipleCollaboratorsRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, MultipleCollaboratorsField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the MultipleCollaboratorsField class. Received: {type(field).__name__}"
             )
 
@@ -41,7 +42,15 @@ class MultipleCollaboratorsRowValue(RowValue):
         Validate and set the new value for MultipleCollaboratorsRowValue.
 
         :param new_value: The new value to be set.
-        :raises ValueError: If the new value is not valid.
+        :raises RowValueOperationError: If the new value is not valid.
         """
-        self.field.validate_value(new_value)
-        self._raw_value = new_value
+        try:
+            self.field.validate_value(new_value)
+            self._raw_value = new_value
+        except Exception as e:
+            self.logger.error(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
+            raise RowValueOperationError(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )

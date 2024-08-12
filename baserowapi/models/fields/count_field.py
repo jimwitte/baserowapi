@@ -56,21 +56,6 @@ class CountField(Field):
         """
         return True
 
-    def validate_value(self, value: int) -> None:
-        """
-        Validate the value for a CountField.
-
-        :param value: The value to validate.
-        :type value: int
-        :raises ValueError: If the value is not an integer or if it's negative.
-        """
-        if not isinstance(value, int):
-            raise ValueError(
-                f"Expected an integer value for CountField but got {type(value)}"
-            )
-        if value < 0:
-            raise ValueError("CountField value cannot be negative.")
-
     @property
     def through_field_id(self) -> Optional[str]:
         """

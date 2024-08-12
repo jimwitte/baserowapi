@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import DateField
 from baserowapi.models.row_values.base_date_row_value import BaseDateRowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class DateRowValue(BaseDateRowValue):
@@ -25,9 +26,10 @@ class DateRowValue(BaseDateRowValue):
         :param field: The associated DateField object.
         :param raw_value: The raw date value as fetched/returned from the API, typically in ISO format. Default is None.
         :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.
+        :raises InvalidRowValueError: If the provided field is not an instance of DateField.
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, DateField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the DateField class. Received: {type(field).__name__}"
             )

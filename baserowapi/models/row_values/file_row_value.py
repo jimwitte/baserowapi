@@ -4,6 +4,7 @@ import os
 import requests
 from baserowapi.models.fields import FileField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, RowValueOperationError
 
 
 class FileRowValue(RowValue):
@@ -13,7 +14,7 @@ class FileRowValue(RowValue):
     :param field: The associated FileField object.
     :param client: The Baserow class API client to make API requests.
     :param raw_value: The raw value as fetched/returned from the API. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the FileField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the FileField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class FileRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, FileField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the FileField class. Received: {type(field).__name__}"
             )
 
@@ -46,11 +47,11 @@ class FileRowValue(RowValue):
         :param replace: If True, replaces the current value with the uploaded file's data.
                         Otherwise, appends. Defaults to False.
         :return: A list of file object representations returned by Baserow.
-        :raises ValueError: If neither file_path nor url is provided.
-        :raises Exception: If there's an error during the upload process.
+        :raises InvalidRowValueError: If neither file_path nor url is provided.
+        :raises RowValueOperationError: If there's an error during the upload process.
         """
         if not file_path and not url:
-            raise ValueError("Either file_path or url must be provided.")
+            raise InvalidRowValueError("Either file_path or url must be provided.")
 
         endpoint_file = "/api/user-files/upload-file/"
         endpoint_url = "/api/user-files/upload-via-url/"
@@ -75,7 +76,7 @@ class FileRowValue(RowValue):
                 except Exception as e:
                     error_message = f"Failed to upload file {file}. Error: {e}"
                     self.logger.error(error_message)
-                    raise Exception(error_message)
+                    raise RowValueOperationError(error_message)
 
         # Upload file from URL
         if url:
@@ -87,7 +88,9 @@ class FileRowValue(RowValue):
                 uploaded_files.append(response)
             except Exception as e:
                 self.logger.error(f"Failed to upload file from URL {url}. Error: {e}")
-                raise
+                raise RowValueOperationError(
+                    f"Failed to upload file from URL {url}. Error: {e}"
+                )
 
         # Update in-memory value based on the 'replace' flag
         if replace:
@@ -103,7 +106,7 @@ class FileRowValue(RowValue):
 
         :param directory_path: The path to the directory where the files should be downloaded.
         :return: List of filenames that were successfully downloaded.
-        :raises Exception: If there's an error during the download process.
+        :raises RowValueOperationError: If there's an error during the download process.
         """
         logger = logging.getLogger(__name__)
         downloaded_files = []
@@ -142,6 +145,8 @@ class FileRowValue(RowValue):
                 logger.error(
                     f"Failed to download file {file_name} from {file_url}. Error: {e}"
                 )
-                raise Exception(f"Failed to download file {file_name}. Error: {e}")
+                raise RowValueOperationError(
+                    f"Failed to download file {file_name}. Error: {e}"
+                )
 
         return downloaded_files

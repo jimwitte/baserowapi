@@ -1,6 +1,7 @@
 from typing import Optional, Any
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class RowValue:
@@ -25,10 +26,10 @@ class RowValue:
         :param field: The associated Field object.
         :param raw_value: The raw value as returned/fetched from the API.
         :param client: The Baserow class API client. Some child classes of RowValue need access to the API.
-        :raises ValueError: If the provided field is not an instance of the Field class.
+        :raises InvalidRowValueError: If the provided field is not an instance of the Field class.
         """
         if not isinstance(field, Field):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the Field class. Received: {type(field).__name__}"
             )
 
@@ -67,7 +68,7 @@ class RowValue:
         This should handle validation and potentially conversion to a format suitable for the API.
 
         :param new_value: New value to set.
-        :raises Exception: If the validation of the new value fails.
+        :raises InvalidRowValueError: If the validation of the new value fails.
         """
         try:
             self.field.validate_value(new_value)
@@ -79,7 +80,9 @@ class RowValue:
             self.logger.error(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
             )
-            raise
+            raise InvalidRowValueError(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )
 
     def format_for_api(self) -> Any:
         """

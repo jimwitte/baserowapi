@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import BooleanField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class BooleanRowValue(RowValue):
@@ -25,10 +26,11 @@ class BooleanRowValue(RowValue):
         :param field: The associated BooleanField object.
         :param raw_value: The raw boolean value as fetched/returned from the API. Default is None.
         :param client: The Baserow class API client. Some RowValue subclasses may require access to the API. Default is None.
+        :raises InvalidRowValueError: If the provided field is not an instance of BooleanField.
         """
         super().__init__(field, raw_value, client)
         if not isinstance(field, BooleanField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the BooleanField class. Received: {type(field).__name__}"
             )
         self.logger.debug(
@@ -36,23 +38,23 @@ class BooleanRowValue(RowValue):
         )
 
     @property
-    def value(self) -> bool:
+    def value(self) -> Optional[bool]:
         """
         Get the value in a user-friendly format.
-        For BooleanRowValue, this returns the raw value as a boolean.
+        For BooleanRowValue, this returns the raw value as a boolean or None.
 
-        :return: The boolean value of the raw_value.
+        :return: The boolean value of the raw_value or None.
         """
-        return bool(self._raw_value)
+        return self._raw_value
 
     @value.setter
-    def value(self, new_value: bool) -> None:
+    def value(self, new_value: Optional[bool]) -> None:
         """
         Set a new value.
         This should handle validation specific to BooleanRowValue using the associated BooleanField's validate_value method.
 
         :param new_value: The new boolean value to set.
-        :raises Exception: If the value is not valid as per the associated BooleanField's validation.
+        :raises InvalidRowValueError: If the value is not valid as per the associated BooleanField's validation.
         """
         try:
             self.field.validate_value(new_value)
@@ -62,4 +64,6 @@ class BooleanRowValue(RowValue):
             self.logger.error(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
             )
-            raise
+            raise InvalidRowValueError(
+                f"Failed to set value for field {self.field.name}. Error: {e}"
+            )

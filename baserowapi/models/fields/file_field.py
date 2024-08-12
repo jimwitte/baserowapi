@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 import logging
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class FileField(Field):
@@ -45,14 +46,18 @@ class FileField(Field):
         :param value: A list of file objects to validate.
         :type value: List[Dict[str, Any]]
 
-        :raises ValueError: If the value is not a list or if a file object is missing
+        :raises FieldValidationError: If the value is not a list or if a file object is missing
                             the 'name' attribute.
         """
         if not isinstance(value, list):
             self.logger.error(f"Expected a list for FileField but got {type(value)}")
-            raise ValueError(f"Expected a list for FileField but got {type(value)}")
+            raise FieldValidationError(
+                f"Expected a list for FileField but got {type(value)}"
+            )
 
         for file_obj in value:
             if not file_obj.get("name"):
                 self.logger.error("File object is missing the 'name' attribute.")
-                raise ValueError("File object is missing the 'name' attribute.")
+                raise FieldValidationError(
+                    "File object is missing the 'name' attribute."
+                )

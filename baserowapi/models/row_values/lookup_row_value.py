@@ -1,6 +1,7 @@
 from typing import Optional, Any
 from baserowapi.models.fields import LookupField
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError, ReadOnlyValueError
 
 
 class LookupRowValue(RowValue):
@@ -10,7 +11,7 @@ class LookupRowValue(RowValue):
     :param field: The associated LookupField object.
     :param raw_value: The raw value as fetched/returned from the API, representing an array of values and row IDs. Defaults to None.
     :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.
-    :raises ValueError: If the provided field is not an instance of the LookupField class.
+    :raises InvalidRowValueError: If the provided field is not an instance of the LookupField class.
     """
 
     def __init__(
@@ -21,7 +22,7 @@ class LookupRowValue(RowValue):
     ) -> None:
         super().__init__(field, raw_value, client)
         if not isinstance(field, LookupField):
-            raise ValueError(
+            raise InvalidRowValueError(
                 f"The provided field is not an instance of the LookupField class. Received: {type(field).__name__}"
             )
 
@@ -41,6 +42,6 @@ class LookupRowValue(RowValue):
         Set a new value for LookupRowValue. Since LookupRowValue is read-only, setting a value will raise an error.
 
         :param new_value: The new value to be set.
-        :raises ValueError: As the LookupRowValue is read-only, setting a value will always raise an error.
+        :raises ReadOnlyValueError: As the LookupRowValue is read-only, setting a value will always raise an error.
         """
-        raise ValueError("Cannot set value for a read-only LookupRowValue.")
+        raise ReadOnlyValueError("Cannot set value for a read-only LookupRowValue.")

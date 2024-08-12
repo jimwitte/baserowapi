@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from baserowapi.models.fields.field import Field
+from baserowapi.exceptions import FieldValidationError
 
 
 class BaseTextClass(Field):
@@ -20,14 +21,16 @@ class BaseTextClass(Field):
 
     def validate_value(self, value: Any) -> None:
         """
-        Validate the value for a text-based Field.
+        Validate the value for a TextField.
 
         :param value: The value to be validated.
-        :raises ValueError: If the value is not of type `str`.
+        :type value: Any
+        :raises FieldValidationError: If the value is not a valid string.
         """
-        if value is None:
-            return
-        elif not isinstance(value, str):
-            raise ValueError(
-                f"Expected a string value for {type(self).__name__} but got {type(value)}"
+        if not isinstance(value, str):
+            self.logger.error(
+                f"Expected a string for text_default but got {type(value)}"
+            )
+            raise FieldValidationError(
+                f"Expected a string for text_default but got {type(value)}"
             )

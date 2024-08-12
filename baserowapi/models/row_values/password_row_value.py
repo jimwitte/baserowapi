@@ -1,6 +1,7 @@
-from typing import Optional, Union, List, Any
+from typing import Optional, Any
 from baserowapi.models.fields.field import Field
 from baserowapi.models.row_values.row_value import RowValue
+from baserowapi.exceptions import InvalidRowValueError
 
 
 class PasswordRowValue(RowValue):
@@ -10,6 +11,7 @@ class PasswordRowValue(RowValue):
     :param field: The associated Field object.
     :param raw_value: The raw value as fetched/returned from the API. Defaults to None.
     :param client: The Baserow class API client. Defaults to None.
+    :raises InvalidRowValueError: If the new value is not valid as per the associated Field's validation.
     """
 
     def __init__(
@@ -28,7 +30,7 @@ class PasswordRowValue(RowValue):
 
         :return: True if the password is set, otherwise False.
         """
-        return self._password_set
+        return self._raw_value is not None
 
     @value.setter
     def value(self, new_value: Any) -> None:
@@ -36,15 +38,17 @@ class PasswordRowValue(RowValue):
         Set a new password value or unset the password.
 
         :param new_value: The new password value or None to unset.
-        :raises ValueError: If the new value is not a string or None.
+        :raises InvalidRowValueError: If the new value is not valid as per the associated Field's validation.
         """
-        if new_value is None:
-            self._raw_value = None
-            self._password_set = False
-        elif not isinstance(new_value, str):
-            raise ValueError(
-                f"Expected a string or None for PasswordRowValue but got {type(new_value).__name__}"
-            )
-        else:
+        try:
+            self.field.validate_value(new_value)
             self._raw_value = new_value
-            self._password_set = True
+            self._password_set = new_value is not None
+            self.logger.debug(f"Set new password value for field {self.field.name}")
+        except Exception as e:
+            self.logger.error(
+                f"Failed to set password value for field {self.field.name}. Error: {e}"
+            )
+            raise InvalidRowValueError(
+                f"Failed to set password value for field {self.field.name}. Error: {e}"
+            )
