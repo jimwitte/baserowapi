@@ -504,16 +504,16 @@ class Table:
         Add a new row (or multiple rows) to the table.
 
         :param rows_data: A dictionary representing the fields and values
-                          of the row to add, or a list of dictionaries for
-                          adding multiple rows.
+                        of the row to add, or a list of dictionaries for
+                        adding multiple rows.
         :type rows_data: dict or list[dict]
 
         :param batch_size: The number of rows to include in each batch request when adding multiple rows.
-                           Defaults to the client's batch_size.
+                        Defaults to the client's batch_size.
         :type batch_size: int
 
         :return: An instance of the Row model representing the added row or
-                 a list of Row instances for multiple rows.
+                a list of Row instances for multiple rows.
         :rtype: Row or list[Row]
 
         :raises ValueError: If parameters are not valid.
@@ -536,38 +536,31 @@ class Table:
                 for row_data_item in response["items"]
             ]
 
+        # Normalize rows_data to always be a list of dictionaries
         if isinstance(rows_data, dict):
-            api_endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
-            data_payload = rows_data
-            try:
-                response = self.client.make_api_request(
-                    api_endpoint, method="POST", data=data_payload
-                )
-                return Row(row_data=response, table=self, client=self.client)
-            except Exception as e:
-                error_message = f"Failed to add row to table {self.id}. Error: {e}"
-                self.logger.error(error_message)
-                raise RowAddError(f"Failed to add row: {e}")
-        elif isinstance(rows_data, list):
-            if batch_size is None:
-                batch_size = self.client.batch_size
+            rows_data = [rows_data]
 
-            added_rows = []
-            for i in range(0, len(rows_data), batch_size):
-                chunk = rows_data[i : i + batch_size]
-                try:
-                    added_rows.extend(_add_rows_chunk(chunk))
-                except Exception as e:
-                    error_message = (
-                        f"Failed to add row(s) to table {self.id}. Error: {e}"
-                    )
+        # Validate each row
+        for row in rows_data:
+            for field_name in row.keys():
+                if field_name not in self.writable_fields:
+                    error_message = f"Field '{field_name}' is not writable or does not exist in the table."
                     self.logger.error(error_message)
-                    raise RowAddError(f"Failed to add rows: {e}")
-            return added_rows
-        else:
-            raise ValueError(
-                "Invalid input: rows_data must be a dictionary or a list of dictionaries."
-            )
+                    raise RowAddError(error_message)
+
+        if batch_size is None:
+            batch_size = self.client.batch_size
+
+        added_rows = []
+        for i in range(0, len(rows_data), batch_size):
+            chunk = rows_data[i : i + batch_size]
+            try:
+                added_rows.extend(_add_rows_chunk(chunk))
+            except Exception as e:
+                error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
+                self.logger.error(error_message)
+                raise RowAddError(f"Failed to add rows: {e}")
+        return added_rows
 
     def update_rows(
         self,
@@ -589,7 +582,7 @@ class Table:
         :rtype: list[Row]
 
         :raises ValueError: If parameters are not valid.
-        :raises KeyError: If a dictionary contains a key that doesn't correspond to any field in the table or is missing the 'id' key.
+        :raises KeyError: If a dictionary contains a key that doesn't correspond to any writable field in the table or is missing the 'id' key.
         :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.
         :raises Exception: If the API request results in any error responses.
         """
@@ -623,22 +616,17 @@ class Table:
                             )
                         continue
 
-                    if key not in self.fields:
-                        raise KeyError(f"Field '{key}' not found in table fields.")
+                    if key not in self.writable_fields:
+                        raise KeyError(
+                            f"Field '{key}' is either read-only or does not exist in the table."
+                        )
 
                     field_object = self.fields[key]
-
-                    if field_object.is_read_only:
-                        raise ValueError(
-                            f"Field '{key}' is read-only and cannot be updated."
-                        )
 
                     try:
                         field_object.validate_value(value)
                     except ValueError as ve:
-                        raise ValueError(
-                            f"Invalid value for field '{key}': {ve}"
-                        ) from ve
+                        raise ValueError(f"Invalid value for field '{key}': {ve}") from ve
 
                 formatted_data.append(item)
 
@@ -655,9 +643,7 @@ class Table:
                 )
 
         try:
-            endpoint = (
-                f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
-            )
+            endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
             updated_rows = []
 
             if batch_size is None:
