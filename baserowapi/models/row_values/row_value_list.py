@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import Union, List, Any, Optional
 from baserowapi.models.row_values.row_value import RowValue
 
 
@@ -18,6 +18,7 @@ class RowValueList:
         :type row_values: Union[List[RowValue], None], optional
         """
         self.row_values = row_values if row_values else []
+        self._fields: Optional[List[str]] = None 
 
     def __repr__(self) -> str:
         """
@@ -93,12 +94,16 @@ class RowValueList:
             )
 
         self.row_values.append(row_value)
+        self._fields = None  # Invalidate the cached fields when a new value is added
 
+    @property
     def fields(self) -> List[str]:
         """
-        Returns a list of all field names for the RowValues in the list.
+        Lazy-loaded property that returns a list of all field names for the RowValues in the list.
 
         :return: A list of field names.
         :rtype: List[str]
         """
-        return [value.field.name for value in self.row_values]
+        if self._fields is None:
+            self._fields = [value.field.name for value in self.row_values]
+        return self._fields
