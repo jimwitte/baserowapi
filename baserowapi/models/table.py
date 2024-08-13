@@ -135,6 +135,22 @@ class Table:
         return self._fields
 
     @property
+    def writable_fields(self) -> FieldList:
+        """
+        Retrieve the list of writable fields for the table.
+
+        This property lazily loads the fields using the `fields` property and then
+        filters them to include only those fields where `is_read_only` is False.
+
+        :return: A FieldList containing only writable Field objects.
+        :rtype: FieldList
+        """
+        if not hasattr(self, "_writable_fields") or self._writable_fields is None:
+            writable_fields = [field for field in self.fields if not field.is_read_only]
+            self._writable_fields = FieldList(writable_fields)
+        return self._writable_fields
+
+    @property
     def primary_field(self) -> str:
         """
         Retrieve the primary field of the table.
