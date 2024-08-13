@@ -63,3 +63,14 @@ class TableLinkRowValue(RowValue):
         except Exception as e:
             self.logger.error(f"Error formatting value '{new_value}' for API: {e}")
             raise InvalidRowValueError(f"Error formatting value '{new_value}': {e}")
+
+    def format_for_api(self) -> Any:
+        """
+        Format the value for API submission by delegating to the associated Field's format_for_api method.
+
+        :return: Formatted value for API submission.
+        """
+
+        # Need to use self.value because there is a mismatch between what the baserow API sends
+        # and what the baserow API expects for a TableLinkField
+        return self.field.format_for_api(self.value)
