@@ -53,22 +53,28 @@ class BaseDateField(Field):
                 f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
             )
 
-    def validate_value(self, value: str) -> None:
+    def validate_value(self, value: Optional[str]) -> None:
         """
         Validate the date or datetime value based on the field's attributes.
 
+        This function allows various date formats, including:
+        - Full ISO date strings (with or without 'Z'): '2024-08-15T18:00:00Z' or '2024-08-15T18:00:00'
+        - Bare date: '2024-08-15'
+        - Slash separators instead of dashes: '2024/08/15'
+        - Two-digit years: '24-08-15'
+        - Single-digit day or month: '2024-8-9'
+
         :param value: The date or datetime value to be validated.
-        :type value: str
+        :type value: str, optional
         :raises FieldValidationError: If the value doesn't match the expected format.
         """
-        # If the value is None, it is considered valid
         if value is None:
             return
 
         # Normalize the separators to hyphens
         normalized_value = value.replace("/", "-")
 
-        # Split the date part
+        # Split the date part and ensure correct format
         date_parts = normalized_value.split("T")[0].split("-")
 
         # Handle two-digit years (assume 21st century)
@@ -82,51 +88,42 @@ class BaseDateField(Field):
         # Reconstruct the normalized date
         normalized_date = "-".join(date_parts)
 
-        # If time is required, validate with or without time
-        if self.date_include_time:
-            # Allow date-only values by appending default time if not provided
-            if "T" not in normalized_value:
-                normalized_value = f"{normalized_date}T00:00:00Z"
-
-            # Try validating with fractional seconds format
-            try:
-                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S.%fZ")
-                return
-            except ValueError:
-                pass
-
-            # Try without fractional seconds but with UTC offset
-            try:
-                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S%z")
-                return
-            except ValueError:
-                pass
-
-            # Finally, try without fractional seconds and with 'Z' as the UTC offset
-            try:
-                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%SZ")
-                return
-            except ValueError:
-                pass
-
-            self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-            raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
-
-        # If only the date is expected (no time part)
+        # Reconstruct the normalized value
+        if "T" in normalized_value:
+            # Include time part if present
+            normalized_value = (
+                normalized_date
+                + normalized_value[
+                    len(date_parts[0]) + len(date_parts[1]) + len(date_parts[2]) + 2 :
+                ]
+            )
         else:
-            # If time is included in the value, raise an error
-            if "T" in normalized_value:
-                self.logger.error(f"Time information not allowed for {self.TYPE}: {value}")
-                raise FieldValidationError(
-                    f"Time information not allowed for {self.TYPE}: {value}"
-                )
+            # Use date-only format
+            normalized_value = normalized_date
 
-            # Validate the date-only format
-            try:
-                datetime.strptime(normalized_date, "%Y-%m-%d")
-            except ValueError:
-                self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-                raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
+        # Try validating full ISO format with or without 'Z'
+        try:
+            datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S.%fZ")
+            return
+        except ValueError:
+            pass
+
+        try:
+            datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S")
+            return
+        except ValueError:
+            pass
+
+        # Validate date-only format
+        try:
+            datetime.strptime(normalized_date, "%Y-%m-%d")
+            return
+        except ValueError:
+            pass
+
+        # Raise error if no valid format matches
+        self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
+        raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
 
     def format_for_api(self, value: str) -> str:
         """
@@ -155,17 +152,19 @@ class BaseDateField(Field):
         # Reconstruct the normalized date
         normalized_date = "-".join(date_parts)
 
-        # If time is required but not provided, add T00:00:00Z
-        if self.date_include_time and "T" not in normalized_value:
-            normalized_value = f"{normalized_date}T00:00:00Z"
+        if self.date_include_time:
+            # If time is required but not provided, add T00:00:00Z
+            if "T" not in normalized_value:
+                normalized_value = f"{normalized_date}T00:00:00Z"
+            else:
+                # If the time is already included, ensure it ends with 'Z'
+                time_part = normalized_value.split("T")[1]
+                if not time_part.endswith("Z"):
+                    time_part += "Z"
+                normalized_value = f"{normalized_date}T{time_part}"
         else:
-            # If the time is already included, append it back to the date
-            normalized_value = (
-                normalized_date
-                + normalized_value[
-                    len(date_parts[0]) + len(date_parts[1]) + len(date_parts[2]) + 2 :
-                ]
-            )
+            # If time is not required, strip the time part if present
+            normalized_value = normalized_date
 
         # Validate the final normalized value
         self.validate_value(normalized_value)
