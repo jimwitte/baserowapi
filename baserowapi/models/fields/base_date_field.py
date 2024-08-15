@@ -65,44 +65,109 @@ class BaseDateField(Field):
         if value is None:
             return
 
+        # Normalize the separators to hyphens
+        normalized_value = value.replace("/", "-")
+
+        # Split the date part
+        date_parts = normalized_value.split("T")[0].split("-")
+
+        # Handle two-digit years (assume 21st century)
+        if len(date_parts[0]) == 2:
+            date_parts[0] = f"20{date_parts[0]}"
+
+        # Add leading zeros to single-digit months and days
+        date_parts[1] = date_parts[1].zfill(2)  # Month
+        date_parts[2] = date_parts[2].zfill(2)  # Day
+
+        # Reconstruct the normalized date
+        normalized_date = "-".join(date_parts)
+
+        # If time is required, validate with or without time
         if self.date_include_time:
-            # First, try validating with fractional seconds format
+            # Allow date-only values by appending default time if not provided
+            if "T" not in normalized_value:
+                normalized_value = f"{normalized_date}T00:00:00Z"
+
+            # Try validating with fractional seconds format
             try:
-                datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S.%fZ")
                 return
             except ValueError:
                 pass
 
-            # Next, try without fractional seconds but with UTC offset
+            # Try without fractional seconds but with UTC offset
             try:
-                datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z")
+                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S%z")
                 return
             except ValueError:
                 pass
 
             # Finally, try without fractional seconds and with 'Z' as the UTC offset
             try:
-                datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+                datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%SZ")
                 return
             except ValueError:
-                self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-                raise FieldValidationError(
-                    f"Invalid date format for {self.TYPE}: {value}"
-                )
+                pass
+
+            self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
+            raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
+
+        # If only the date is expected (no time part)
         else:
-            # If only date is expected but value contains time, raise an error
-            if "T" in value:
-                self.logger.error(
-                    f"Time information not allowed for {self.TYPE}: {value}"
-                )
+            # If time is included in the value, raise an error
+            if "T" in normalized_value:
+                self.logger.error(f"Time information not allowed for {self.TYPE}: {value}")
                 raise FieldValidationError(
                     f"Time information not allowed for {self.TYPE}: {value}"
                 )
 
+            # Validate the date-only format
             try:
-                datetime.strptime(value, "%Y-%m-%d")
+                datetime.strptime(normalized_date, "%Y-%m-%d")
             except ValueError:
                 self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-                raise FieldValidationError(
-                    f"Invalid date format for {self.TYPE}: {value}"
-                )
+                raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
+
+    def format_for_api(self, value: str) -> str:
+        """
+        Formats the date or datetime value for API submission based on the field's attributes.
+
+        :param value: The date or datetime value to be formatted.
+        :type value: str
+        :return: A string formatted according to the API's requirements.
+        :rtype: str
+        :raises FieldValidationError: If the value is not valid or cannot be formatted correctly.
+        """
+        # Normalize the separators to hyphens
+        normalized_value = value.replace("/", "-")
+
+        # Split the date part and ensure correct format
+        date_parts = normalized_value.split("T")[0].split("-")
+
+        # Handle two-digit years (assume 21st century)
+        if len(date_parts[0]) == 2:
+            date_parts[0] = f"20{date_parts[0]}"
+
+        # Add leading zeros to single-digit months and days
+        date_parts[1] = date_parts[1].zfill(2)  # Month
+        date_parts[2] = date_parts[2].zfill(2)  # Day
+
+        # Reconstruct the normalized date
+        normalized_date = "-".join(date_parts)
+
+        # If time is required but not provided, add T00:00:00Z
+        if self.date_include_time and "T" not in normalized_value:
+            normalized_value = f"{normalized_date}T00:00:00Z"
+        else:
+            # If the time is already included, append it back to the date
+            normalized_value = (
+                normalized_date
+                + normalized_value[
+                    len(date_parts[0]) + len(date_parts[1]) + len(date_parts[2]) + 2 :
+                ]
+            )
+
+        # Validate the final normalized value
+        self.validate_value(normalized_value)
+
+        return normalized_value
