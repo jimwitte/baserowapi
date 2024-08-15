@@ -306,10 +306,31 @@ class Row:
         :raises RowUpdateError: If the API request results in any error responses.
         """
         try:
-            # Update the RowValue objects based on the provided dictionary, if any
+            # Prepare the payload for the API
+            payload = {}
+
             if values:
                 for field_name, value in values.items():
-                    self[field_name] = value  # Using __setitem__ to update values
+                    if field_name not in self.table.writable_fields:
+                        raise KeyError(
+                            f"Field '{field_name}' is either read-only or does not exist in the table."
+                        )
+
+                    # Validate the value using the field's validate_value method
+                    field_object = self.table.fields[field_name]
+                    try:
+                        field_object.validate_value(value)
+                    except ValueError as ve:
+                        raise ValueError(
+                            f"Invalid value for field '{field_name}': {ve}"
+                        ) from ve
+
+                    # Use format_for_api for API submission, but do not change the actual row value
+                    formatted_value = field_object.format_for_api(value)
+                    payload[field_name] = formatted_value
+
+                    # Optionally update the in-memory value (this does not change the original value)
+                    self[field_name] = value
 
             # Synchronize _row_data with the current state of _values
             self._row_data.update(self.to_dict())
@@ -321,11 +342,10 @@ class Row:
                 return self
 
             # Make the API request to update the row in the Baserow table
-            payload = self._row_data.copy()
-            endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
-            response = self.client.make_api_request(
-                endpoint, method="PATCH", data=payload
+            endpoint = (
+                f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
             )
+            response = self.client.make_api_request(endpoint, method="PATCH", data=payload)
 
             # Update _row_data and _values with the new data from the API
             self._row_data = response
