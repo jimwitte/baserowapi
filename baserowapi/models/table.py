@@ -476,15 +476,21 @@ class Table:
         """
         Retrieve a specific row by its ID from the table.
 
-        :param row_id: The unique identifier of the row to retrieve.
+        :param row_id: The unique identifier of the row to retrieve. This can be either an integer
+                    or a string that can be converted to an integer.
         :type row_id: int or str
         :return: An instance of the Row model representing the fetched row.
         :rtype: Row
-        :raises ValueError: If the provided row_id is not valid.
-        :raises Exception: If there's any error during the API request or if the row is not found.
+        :raises ValueError: If the provided row_id is not valid or cannot be converted to an integer.
+        :raises RowFetchError: If there's any error during the API request or if the row is not found.
         """
         if not row_id:
             raise ValueError("The provided row_id is not valid.")
+
+        try:
+            row_id = int(row_id)
+        except ValueError:
+            raise ValueError(f"The provided row_id '{row_id}' cannot be converted to an integer.")
 
         endpoint = f"/api/database/rows/table/{self.id}/{row_id}/?user_field_names=true"
         try:
