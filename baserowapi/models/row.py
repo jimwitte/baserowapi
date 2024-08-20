@@ -297,7 +297,8 @@ class Row:
         """
         Updates the row in the table and synchronizes the internal state.
 
-        :param values: A dictionary containing field values for updating the row. Defaults to values from the self.values property.
+        :param values: A dictionary containing field values for updating the row.
+                    Defaults to values from the self.values property.
         :type values: dict[str, Any], optional
         :param memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.
         :type memory_only: bool, optional
@@ -309,15 +310,23 @@ class Row:
             # Prepare the payload for the API
             payload = {}
 
-            if values:
+            # If no values dict is provided, use the in-memory row values
+            if values is None:
+                for rv in self.values:
+                    if not rv.is_read_only:
+                        payload[rv.name] = rv.format_for_api()  # Call without passing value
+
+            else:
                 for field_name, value in values.items():
                     if field_name not in self.table.writable_fields:
                         raise KeyError(
                             f"Field '{field_name}' is either read-only or does not exist in the table."
                         )
 
-                    # Validate the value using the field's validate_value method
+                    # Get the field object
                     field_object = self.table.fields[field_name]
+
+                    # Validate the value
                     try:
                         field_object.validate_value(value)
                     except ValueError as ve:
@@ -325,12 +334,15 @@ class Row:
                             f"Invalid value for field '{field_name}': {ve}"
                         ) from ve
 
-                    # Use format_for_api for API submission, but do not change the actual row value
+                    # Format the value for API submission
                     formatted_value = field_object.format_for_api(value)
                     payload[field_name] = formatted_value
 
-                    # Optionally update the in-memory value (this does not change the original value)
+                    # Update the in-memory value (this does not change the original value)
                     self[field_name] = value
+
+            # Debugging: Print the payload
+            self.logger.debug(f"Payload for API request: {payload}")
 
             # Synchronize _row_data with the current state of _values
             self._row_data.update(self.to_dict())
@@ -340,6 +352,9 @@ class Row:
                     f"Memory-only update for row with ID {self.id}. Skipping API request."
                 )
                 return self
+
+            if not payload:
+                self.logger.warning("Update called, but no fields were updated.")
 
             # Make the API request to update the row in the Baserow table
             endpoint = (
