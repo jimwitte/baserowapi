@@ -135,6 +135,9 @@ class BaseDateField(Field):
         :rtype: str
         :raises FieldValidationError: If the value is not valid or cannot be formatted correctly.
         """
+        if value is None:
+            return value
+        
         # Normalize the separators to hyphens
         normalized_value = value.replace("/", "-")
 
