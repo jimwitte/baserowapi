@@ -205,9 +205,12 @@ class Baserow:
             logger.debug(f"Request payload: {data}")
 
             if files:
+                upload_session = requests.Session()
                 logger.debug(f"API file upload request: {files}")
                 headers.pop("Content-Type", None)
-                response = self.session.request(
+                logger.debug(f"Files being uploaded: {files}")
+                logger.debug(f"Headers being sent: {headers}")
+                response = upload_session.request(
                     method="POST",
                     url=url,
                     headers=headers,
