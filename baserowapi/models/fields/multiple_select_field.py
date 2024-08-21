@@ -115,3 +115,32 @@ class MultipleSelectField(Field):
                 raise FieldValidationError(
                     f"The provided value '{value}' doesn't match any select option."
                 )
+
+    def format_for_api(self, values: List[Union[Dict[str, Any], int, str]]) -> List[Union[int, str]]:
+        """
+        Formats the multiple select values for API submission.
+
+        :param values: The list of values to format. Can include dictionaries (from raw_value), IDs, or strings.
+        :type values: List[Union[Dict[str, Any], int, str]]
+        :return: A list of IDs or value strings to be submitted to the API.
+        :rtype: List[Union[int, str]]
+        :raises FieldValidationError: If any value in the list is not valid.
+        """
+        if values is None:
+            return []
+
+        formatted_values = []
+        for value in values:
+            # If the value is a dictionary (as returned by the API), extract the 'id' or 'value'
+            if isinstance(value, dict):
+                formatted_values.append(value["id"])  # or value["value"], depending on your preference
+            else:
+                # Validate and format the value if it's already in the correct form (int or str)
+                self.validate_value([value])
+                option = self._get_option_by_id_or_value(value)
+                if option:
+                    formatted_values.append(option["id"])  # or option["value"], depending on your preference
+                else:
+                    raise FieldValidationError(f"Cannot format value '{value}' for API submission.")
+
+        return formatted_values

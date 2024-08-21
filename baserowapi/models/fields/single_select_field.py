@@ -107,3 +107,21 @@ class SingleSelectField(Field):
                 raise FieldValidationError(
                     f"The provided value '{value}' doesn't match any select option."
                 )
+
+    def format_for_api(self, value: Union[dict, int, str]) -> Union[int, str]:
+        """
+        Formats the single select value for API submission.
+
+        :param value: The value to format (can be an option dictionary, ID, or string).
+        :type value: Union[dict, int, str]
+        :return: The ID or value string to be submitted to the API.
+        :rtype: Union[int, str]
+        :raises FieldValidationError: If the value is not valid.
+        """
+        # If the value is a dict (as returned by the API), extract the 'value' or 'id'
+        if isinstance(value, dict):
+            return value["id"]  # or value["value"], depending on your preference
+
+        # Validate and return the value if it's already in the correct form
+        self.validate_value(value)
+        return value
