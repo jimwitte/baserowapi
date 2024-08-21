@@ -314,7 +314,7 @@ class Row:
             if values is None:
                 for rv in self.values:
                     if not rv.is_read_only:
-                        payload[rv.name] = rv.format_for_api()  # Call without passing value
+                        payload[rv.name] = rv.format_for_api()
 
             else:
                 for field_name, value in values.items():
