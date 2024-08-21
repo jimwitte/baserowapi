@@ -18,12 +18,13 @@ class PasswordField(Field):
 
     def validate_value(self, value: Any) -> None:
         """
-        Validate the value for a PasswordField. Ensure it's a string or None.
+        Validate the value for a PasswordField. Ensure it's a string, None, or True.
+
         :param value: The value to be validated.
         :type value: Any
-        :raises FieldValidationError: If the value is not a string or None.
+        :raises FieldValidationError: If the value is not a string, None, or True.
         """
-        if value is not None and not isinstance(value, str):
+        if not (value is None or isinstance(value, str) or value is True):
             raise FieldValidationError(
-                f"Expected a string or None for PasswordField but got {type(value)}"
+                f"Expected a string, None, or True for PasswordField but got {type(value)}"
             )
