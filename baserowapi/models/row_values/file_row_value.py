@@ -116,12 +116,12 @@ class FileRowValue(RowValue):
 
         for file_obj in self._raw_value:
             file_url = file_obj["url"]
-            file_name = file_obj["original_name"]
+            file_name = file_obj["visible_name"]  # use file_obj["name"] for uniqueness?
             target_file_path = os.path.join(directory_path, file_name)
 
             # Check if the file already exists in the target directory
             if os.path.exists(target_file_path):
-                logger.info(
+                logger.warning(
                     f"File {file_name} already exists in {directory_path}. Skipping download."
                 )
                 continue
@@ -136,6 +136,12 @@ class FileRowValue(RowValue):
                     for chunk in response.iter_content(chunk_size=8192):
                         out_file.write(chunk)
 
+                # Optional: Verify file size or integrity after download
+                if os.path.getsize(target_file_path) != file_obj["size"]:
+                    raise RowValueOperationError(
+                        f"Downloaded file {file_name} is incomplete or corrupted."
+                    )
+
                 logger.debug(
                     f"File {file_name} downloaded successfully to {directory_path}."
                 )
@@ -145,6 +151,8 @@ class FileRowValue(RowValue):
                 logger.error(
                     f"Failed to download file {file_name} from {file_url}. Error: {e}"
                 )
+                if os.path.exists(target_file_path):
+                    os.remove(target_file_path)  # Remove partial file if error occurs
                 raise RowValueOperationError(
                     f"Failed to download file {file_name}. Error: {e}"
                 )
