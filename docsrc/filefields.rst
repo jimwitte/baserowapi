@@ -26,7 +26,7 @@ Files associated with a row can be downloaded to a specified local directory:
 Uploading Files
 ---------------
 
-You can upload files to Baserow either from a local source or directly from a URL. After uploading, remember to use the `.update()` method to save the changed row to the server:
+You can upload files to Baserow either from a local source or directly from a URL. After uploading, use the `.update()` method to save the changed row to the server:
 
 .. code-block:: python
 
