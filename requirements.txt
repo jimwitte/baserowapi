@@ -1,3 +1,10 @@
 pytz>=2023.3.post1
 Requests~=2.31
+python-dotenv
 
+# testing
+pytest
+
+# documentation
+sphinx
+sphinx_rtd_theme
