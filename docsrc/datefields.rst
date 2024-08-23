@@ -13,13 +13,13 @@ Start by initializing the Baserow client and getting a table instance:
     from baserowapi import Baserow
 
     # Initialize the Baserow client
-    baserow = Baserow(url='https://api.baserow.io', token='mytoken')
+    baserow = Baserow(url='https://baserow.example.com', token='mytoken')
     table = baserow.get_table(1234567)
 
 Accessing Date Field Settings
 -----------------------------
 
-Every date field in Baserow has associated settings, which can be accessed from the field object:
+Every date field in Baserow has associated properties, which can be accessed from the field object:
 
 .. code-block:: python
 
