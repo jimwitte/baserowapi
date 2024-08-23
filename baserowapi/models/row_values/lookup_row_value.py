@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List, Union
 from baserowapi.models.fields import LookupField
 from baserowapi.models.row_values.row_value import RowValue
 from baserowapi.exceptions import InvalidRowValueError, ReadOnlyValueError
@@ -27,14 +27,14 @@ class LookupRowValue(RowValue):
             )
 
     @property
-    def value(self) -> Any:
+    def value(self) -> List[Union[int, str]]:
         """
-        Get the value in a user-friendly format. This method returns the raw value (an array of values and row IDs).
+        Get the value in a user-friendly format. This method returns a list of primary field values or IDs.
 
-        :return: The raw value, which is an array of values and row IDs.
-        :rtype: Any
+        :return: A list of primary field values or IDs.
+        :rtype: List[Union[int, str]]
         """
-        return self._raw_value
+        return [entry.get("value", entry.get("id", "")) for entry in self._raw_value]
 
     @value.setter
     def value(self, new_value: Any) -> None:
