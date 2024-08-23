@@ -25,12 +25,12 @@ class BaseTextClass(Field):
 
         :param value: The value to be validated.
         :type value: Any
-        :raises FieldValidationError: If the value is not a valid string.
+        :raises FieldValidationError: If the value is not a valid string or None.
         """
-        if not isinstance(value, str):
+        if value is not None and not isinstance(value, str):
             self.logger.error(
-                f"Expected a string for text_default but got {type(value)}"
+                f"Expected a string or None for text_default but got {type(value)}"
             )
             raise FieldValidationError(
-                f"Expected a string for text_default but got {type(value)}"
+                f"Expected a string or None for text_default but got {type(value)}"
             )
