@@ -6,6 +6,7 @@ sample_app.py
 build
 pytest.ini
 .devcontainer
+docsrc/_build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
