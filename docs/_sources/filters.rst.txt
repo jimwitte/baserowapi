@@ -45,11 +45,11 @@ Here are some Python code examples to help you get started with filters:
     # Fetch rows that match the filter
     rows_with_name_grace = table.get_rows(filters=[name_equal_grace])
     for row in rows_with_name_grace:
-        print(row.content)
+        print(row.to_dict())
 
     # Create and use a filter where the 'Name' field does not contain the letter 'A'
     name_contains_not_A = Filter("Name", "A", 'contains_not')
     rows_not_containing_A = table.get_rows(filters=[name_contains_not_A])
     for row in rows_not_containing_A:
-        print(row.content)
+        print(row.to_dict())
 

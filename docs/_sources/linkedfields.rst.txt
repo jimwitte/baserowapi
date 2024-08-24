@@ -6,12 +6,13 @@ Linked fields in Baserow allow you to associate rows from one table with rows in
 Basics of Linked Fields
 -----------------------
 
-A linked field has several properties that provide information about the relationship it establishes:
+A linked field has several properties and functions that provide information about the relationship it establishes:
 
 - `link_row_table_id`: The ID of the table that the linked field points to.
 - `link_row_related_field_id`: The ID of the related field in the linked table.
-- `link_row_table`: The table object that the linked field points to.
-- `link_row_related_field`: The related field object in the linked table.
+- `link_row_limit_selection_view_id`: The ID of a view limiting options in the linked table.
+- `get_options()`: Returns list of valid values from primary field of linked table.
+
 
 Working with Linked Fields: Examples
 ------------------------------------

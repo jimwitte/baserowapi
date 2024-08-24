@@ -19,14 +19,14 @@ Methods and Usage
     # Initializing a table instance
     table = baserow.get_table(1234567)
 
-    # Retrieving a single row
+    # Retrieving a single row by id
     single_row = table.get_row(1)
 
     # Modifying an in-memory Row value
     single_row['Notes'] = "Changed note in memory"
 
     # Displaying row content of all fields as a dictionary
-    print(single_row.content)
+    print(single_row.to_dict())
 
     # Accessing a specific row value
     print(single_row['Notes'])

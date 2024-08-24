@@ -33,15 +33,15 @@ After installation, you can perform basic operations such as fetching tables, re
     # Fetch a row using its ID
     my_row = table.get_row(1)
     # Display a dictionary of field names and their values for this row
-    print(my_row.content)
+    print(my_row.to_dict())
 
     # Access a specific field's value in the row
     print(my_row['Name'])
 
-    # Retrieve all rows in the table. Note: The RowIterator object automatically handles pagination.
+    # Retrieve all rows in the table. Returns a list of Row objects
     all_my_rows = table.get_rows()
     for row in all_my_rows:
-        print(row)
+        print(row.to_dict())
 
     # Modify an in-memory value of the Row object
     my_row['Notes'] = "Changed note in memory"
@@ -49,7 +49,7 @@ After installation, you can perform basic operations such as fetching tables, re
 
     # Synchronize changes made in memory to the server
     updated_row = my_row.update()
-    print(updated_row.content)
+    print(updated_row.to_dict())
 
     # Update a Row's content using a dictionary and save to the server
     updated_row = my_row.update({'Notes': 'Updated row via dictionary'})

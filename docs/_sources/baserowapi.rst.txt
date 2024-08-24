@@ -20,7 +20,7 @@ Table
 Fields
 ------------------------------
 
-.. automodule:: baserowapi.models.field
+.. automodule:: baserowapi.models.fields
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ Row
 RowValue
 -----------------------------------
 
-.. automodule:: baserowapi.models.row_value
+.. automodule:: baserowapi.models.row_values
    :members:
    :undoc-members:
    :show-inheritance:

@@ -13,13 +13,13 @@ Start by initializing the Baserow client and getting a table instance:
     from baserowapi import Baserow
 
     # Initialize the Baserow client
-    baserow = Baserow(url='https://api.baserow.io', token='mytoken')
+    baserow = Baserow(url='https://baserow.example.com', token='mytoken')
     table = baserow.get_table(1234567)
 
 Accessing Date Field Settings
 -----------------------------
 
-Every date field in Baserow has associated settings, which can be accessed from the field object:
+Every date field in Baserow has associated properties, which can be accessed from the field object:
 
 .. code-block:: python
 
@@ -32,9 +32,13 @@ Baserow stores date values as UTC strings. You can retrieve these values directl
 
 .. code-block:: python
 
-    # Retrieve the date as a UTC string
+    # Retrieve the date as a string
     myRow = table.get_row(1)
     print(myRow['myDate'])
+
+    # Note that the value returned by the API is not formatted according to the field settings.
+    '2024-08-15' # if table.fields['myDate'].date_include_time == false
+    '2024-08-15T18:00:00Z' # if table.fields['myDate'].date_include_time == true
 
     # Convert the date into a Python datetime object
     print(myRow.values['myDate'].as_datetime())
@@ -45,12 +49,17 @@ Baserow stores date values as UTC strings. You can retrieve these values directl
 Updating Date Values
 --------------------
 
-Dates can be updated using both UTC strings and Python datetime objects:
+Dates can be updated using strings. 
 
 .. code-block:: python
 
     # Update the date value using a UTC string
     myRow['myDate'] = '2023-10-02T18:38:45Z'
+
+    # Update the date value using a bare date string
+    myRow['myDate'] = '2023-10-02'
+
+    # Update the date value 
 
     # Manipulate the date using Python's datetime library
     import datetime

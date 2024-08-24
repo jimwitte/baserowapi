@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baserowapi.models.row &mdash; Baserow API Package 0.1.0b3 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>baserowapi.models.row &mdash; Baserow API Package 0.1.0b4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=77659907"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/documentation_options.js?v=bcec09ca"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -81,16 +83,22 @@
              
   <h1>Source code for baserowapi.models.row</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">baserowapi.models.table</span> <span class="kn">import</span> <span class="n">Table</span>
     <span class="kn">from</span> <span class="nn">baserowapi.baserow</span> <span class="kn">import</span> <span class="n">Baserow</span> <span class="k">as</span> <span class="n">Client</span>
-    <span class="kn">from</span> <span class="nn">baserowapi.models.field</span> <span class="kn">import</span> <span class="n">Field</span>
+    <span class="kn">from</span> <span class="nn">baserowapi.models.fields.field</span> <span class="kn">import</span> <span class="n">Field</span>
 
-<span class="kn">from</span> <span class="nn">baserowapi.models.row_value</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">baserowapi.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RowFetchError</span><span class="p">,</span>
+    <span class="n">RowUpdateError</span><span class="p">,</span>
+    <span class="n">RowDeleteError</span><span class="p">,</span>
+    <span class="n">RowMoveError</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">baserowapi.models.row_values.row_value</span> <span class="kn">import</span> <span class="n">RowValue</span>
+<span class="kn">from</span> <span class="nn">baserowapi.models.row_values</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">RowValueList</span><span class="p">,</span>
-    <span class="n">RowValue</span><span class="p">,</span>
     <span class="n">TextRowValue</span><span class="p">,</span>
     <span class="n">LongTextRowValue</span><span class="p">,</span>
     <span class="n">UrlRowValue</span><span class="p">,</span>
@@ -99,7 +107,6 @@
     <span class="n">BooleanRowValue</span><span class="p">,</span>
     <span class="n">RatingRowValue</span><span class="p">,</span>
     <span class="n">NumberRowValue</span><span class="p">,</span>
-    <span class="n">BaseDateRowValue</span><span class="p">,</span>
     <span class="n">DateRowValue</span><span class="p">,</span>
     <span class="n">LastModifiedRowValue</span><span class="p">,</span>
     <span class="n">CreatedOnRowValue</span><span class="p">,</span>
@@ -112,8 +119,9 @@
     <span class="n">MultipleCollaboratorsRowValue</span><span class="p">,</span>
     <span class="n">FileRowValue</span><span class="p">,</span>
     <span class="n">GenericRowValue</span><span class="p">,</span>
-    <span class="n">PasswordRowValue</span>
+    <span class="n">PasswordRowValue</span><span class="p">,</span>
 <span class="p">)</span>
+
 
 <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">RowValue</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">TextRowValue</span><span class="p">,</span>
@@ -136,7 +144,7 @@
     <span class="s2">&quot;lookup&quot;</span><span class="p">:</span> <span class="n">LookupRowValue</span><span class="p">,</span>
     <span class="s2">&quot;multiple_collaborators&quot;</span><span class="p">:</span> <span class="n">MultipleCollaboratorsRowValue</span><span class="p">,</span>
     <span class="s2">&quot;generic&quot;</span><span class="p">:</span> <span class="n">GenericRowValue</span><span class="p">,</span>
-    <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">PasswordRowValue</span>
+    <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">PasswordRowValue</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -155,18 +163,20 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes a Row instance.</span>
 
-<span class="sd">        :param Dict[str, Any] row_data: Dictionary containing the row data.</span>
-<span class="sd">        :param Table table: The table associated with the row.</span>
-<span class="sd">        :param Client client: The client used for making requests.</span>
+<span class="sd">        :param row_data: Dictionary containing the row data.</span>
+<span class="sd">        :type row_data: dict[str, Any]</span>
+<span class="sd">        :param table: The table associated with the row.</span>
+<span class="sd">        :type table: Table</span>
+<span class="sd">        :param client: The client used for making requests.</span>
+<span class="sd">        :type client: Client</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">row_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">:</span> <span class="s2">&quot;Table&quot;</span> <span class="o">=</span> <span class="n">table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">:</span> <span class="s2">&quot;Client&quot;</span> <span class="o">=</span> <span class="n">client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span> <span class="o">=</span> <span class="n">row_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RowValueList</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialized Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -174,22 +184,15 @@
     <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RowValueList</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the RowValueList for this row. If not yet created, it lazily loads</span>
-<span class="sd">        the list using the stored row data.</span>
+<span class="sd">        the list using the stored row data and synchronizes the internal state.</span>
 
 <span class="sd">        :return: RowValueList representing the values for this row.</span>
 <span class="sd">        :rtype: RowValueList</span>
-<span class="sd">        :raises Exception: If there&#39;s an error creating the RowValueList.</span>
+<span class="sd">        :raises RowFetchError: If there&#39;s an error creating the RowValueList.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">row_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span>
-
-                <span class="c1"># remove metadata values before constructing RowValueList</span>
-                <span class="n">row_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">row_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="c1"># construct RowValueList</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_row_value_list</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_row_value_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;RowValueList for Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> successfully created.&quot;</span>
                 <span class="p">)</span>
@@ -197,29 +200,45 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Failed to create RowValueList for Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Unexpected error when creating RowValueList for Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="k">raise</span> <span class="n">RowFetchError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to create RowValueList for Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lazily retrieves a list of all field names from the Row&#39;s values.</span>
+
+<span class="sd">        :return: A list of field names.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_fields&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">fields</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
 
     <span class="k">def</span> <span class="nf">_create_row_value_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RowValueList</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a RowValueList based on the given row data and table fields.</span>
 
-<span class="sd">        :param Dict[str, Any] row_data: Data representing the row.</span>
+<span class="sd">        Metadata fields such as &quot;id&quot; and &quot;order&quot; are excluded from processing.</span>
+
+<span class="sd">        :param row_data: Data representing the row.</span>
+<span class="sd">        :type row_data: dict[str, Any]</span>
 <span class="sd">        :return: RowValueList containing RowValue objects derived from the row data.</span>
 <span class="sd">        :rtype: RowValueList</span>
-<span class="sd">        :raises Exception: If there&#39;s an error creating a RowValue object.</span>
+<span class="sd">        :raises RowFetchError: If there&#39;s an error creating a RowValue object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">row_value_objects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">row_value_objects</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RowValue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">field_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_field_object</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+            <span class="c1"># Skip metadata fields</span>
+            <span class="k">if</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;order&quot;</span><span class="p">]:</span>
+                <span class="k">continue</span>
 
+            <span class="n">field_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_field_object</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
             <span class="n">row_value_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_row_value_class</span><span class="p">(</span><span class="n">field_object</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="c1"># Instantiate the RowValue object</span>
                 <span class="n">row_value_obj</span> <span class="o">=</span> <span class="n">row_value_class</span><span class="p">(</span>
                     <span class="n">field</span><span class="o">=</span><span class="n">field_object</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">raw_value</span><span class="o">=</span><span class="n">value</span>
                 <span class="p">)</span>
@@ -228,7 +247,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Failed to create RowValue object for field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39;. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
-                <span class="k">raise</span>
+                <span class="k">raise</span> <span class="n">RowFetchError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to create RowValue object for field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
         <span class="k">return</span> <span class="n">RowValueList</span><span class="p">(</span><span class="n">row_value_objects</span><span class="p">)</span>
 
@@ -236,12 +257,12 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve the corresponding Field object from the table.</span>
 
-<span class="sd">        :param str field_name: The name of the field to retrieve.</span>
+<span class="sd">        :param field_name: The name of the field to retrieve.</span>
+<span class="sd">        :type field_name: str</span>
 <span class="sd">        :return: The Field object corresponding to the given field name.</span>
 <span class="sd">        :rtype: Field</span>
 <span class="sd">        :raises KeyError: If the specified field name is not found in the table fields.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -252,16 +273,19 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the appropriate RowValue class based on the field&#39;s type.</span>
 
-<span class="sd">        :param str field_type: The type of the field.</span>
+<span class="sd">        :param field_type: The type of the field.</span>
+<span class="sd">        :type field_type: str</span>
 <span class="sd">        :return: The RowValue class corresponding to the given field type.</span>
 <span class="sd">        :rtype: Type[RowValue]</span>
-<span class="sd">        :raises ValueError: If the specified field type is not supported.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">row_value_class</span> <span class="o">=</span> <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">row_value_class</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field type &#39;</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">&#39; not supported, using GenericRowValue.&quot;</span><span class="p">)</span>
-            <span class="n">row_value_class</span> <span class="o">=</span> <span class="n">GenericRowValue</span>  <span class="c1"># Use GenericRowValue for unsupported types</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Field type &#39;</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">&#39; not supported, using GenericRowValue.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">row_value_class</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">GenericRowValue</span>  <span class="c1"># Use GenericRowValue for unsupported types</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">row_value_class</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -271,19 +295,18 @@
 <span class="sd">        :return: A string indicating the Row&#39;s ID and associated table ID.</span>
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Row id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> of table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a value from the row&#39;s values using dictionary-style access.</span>
 
-<span class="sd">        :param str key: The field name to retrieve.</span>
+<span class="sd">        :param key: The field name to retrieve.</span>
+<span class="sd">        :type key: str</span>
 <span class="sd">        :return: The value of the specified field.</span>
 <span class="sd">        :rtype: Any</span>
 <span class="sd">        :raises KeyError: If the specified field name is not found in the row values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="n">row_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">row_value</span><span class="o">.</span><span class="n">value</span>
@@ -295,15 +318,19 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set a value for a specific field in the row using dictionary-style access.</span>
 
-<span class="sd">        :param str key: The field name to set.</span>
-<span class="sd">        :param Any new_value: The value to set for the specified field.</span>
+<span class="sd">        :param key: The field name to set.</span>
+<span class="sd">        :type key: str</span>
+<span class="sd">        :param new_value: The value to set for the specified field.</span>
+<span class="sd">        :type new_value: Any</span>
 <span class="sd">        :note: This modifies the in-memory representation of the row.</span>
 <span class="sd">        :raises KeyError: If the specified field name is not found in the row values or is unrecognized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="n">row_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="n">row_value</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">new_value</span>  <span class="c1"># Using the value setter of the RowValue object</span>
+
+            <span class="c1"># Synchronize _row_data with the updated value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="c1"># Field not found in the Row&#39;s values</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
@@ -315,27 +342,43 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overridden equality method to compare two Row objects based on their id and table_id.</span>
 
-<span class="sd">        :param object other: Another object to compare with this Row instance.</span>
+<span class="sd">        :param other: Another object to compare with this Row instance.</span>
+<span class="sd">        :type other: object</span>
 <span class="sd">        :return: True if both objects are Rows and have the same id and table_id, otherwise False.</span>
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Row</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;table_id&quot;</span><span class="p">,</span> <span class="kc">None</span>
             <span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;table_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">content</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the dictionary representation of the row&#39;s values derived from RowValue objects.</span>
+<span class="sd">        Check if a field name exists in the row&#39;s values.</span>
 
-<span class="sd">        :return: Dictionary representation of the row&#39;s values.</span>
-<span class="sd">        :rtype: Dict[str, Any]</span>
+<span class="sd">        :param key: The field name to check.</span>
+<span class="sd">        :type key: str</span>
+<span class="sd">        :return: True if the field name exists in the row&#39;s values, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
 
-        <span class="k">return</span> <span class="p">{</span><span class="n">row_value</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">row_value</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">row_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">}</span>
+<div class="viewcode-block" id="Row.to_dict">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row.Row.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts the Row&#39;s values to a dictionary.</span>
+
+<span class="sd">        :return: A dictionary representation of the row&#39;s values.</span>
+<span class="sd">        :rtype: dict[str, Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Lazily load the row values if they haven&#39;t been loaded yet</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># Accessing the property to trigger lazy loading</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">row_value</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">row_value</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">row_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">}</span></div>
+
 
 <div class="viewcode-block" id="Row.update">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.row.Row.update">[docs]</a>
@@ -343,64 +386,85 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">memory_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Row&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Updates the row in the table.</span>
+<span class="sd">        Updates the row in the table and synchronizes the internal state.</span>
 
-<span class="sd">        :param Optional[Dict[str, Any]] values: A dictionary containing field values for updating the row. Defaults to values from the self.values property.</span>
-<span class="sd">        :param bool memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.</span>
+<span class="sd">        :param values: A dictionary containing field values for updating the row.</span>
+<span class="sd">                    Defaults to values from the self.values property.</span>
+<span class="sd">        :type values: dict[str, Any], optional</span>
+<span class="sd">        :param memory_only: If True, only updates the in-memory row and skips the API request. Defaults to False.</span>
+<span class="sd">        :type memory_only: bool, optional</span>
 <span class="sd">        :return: A Row object representing the updated row.</span>
 <span class="sd">        :rtype: Row</span>
-<span class="sd">        :raises KeyError: If the specified field name is not found in the row.</span>
-<span class="sd">        :raises Exception: If the API request results in any error responses.</span>
+<span class="sd">        :raises RowUpdateError: If the API request results in any error responses.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Update the RowValue objects based on the provided dictionary, if any</span>
-            <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">valid_field_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">row_value</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">row_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">}</span>
-                    <span class="k">if</span> <span class="n">field_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_field_names</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; not found in row.&quot;</span><span class="p">)</span>
-                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; not found in row.&quot;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Using __setitem__ to update values</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Constructing payload for row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Construct the API payload</span>
+            <span class="c1"># Prepare the payload for the API</span>
             <span class="n">payload</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">row_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">row_value</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">:</span>  <span class="c1"># Exclude read-only values</span>
-                    <span class="n">payload</span><span class="p">[</span><span class="n">row_value</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_value</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">()</span>
 
-            <span class="c1"># If memory_only is True, skip the API request</span>
+            <span class="c1"># If no values dict is provided, use the in-memory row values</span>
+            <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">rv</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">:</span>
+                        <span class="n">payload</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">field_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">writable_fields</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; is either read-only or does not exist in the table.&quot;</span>
+                        <span class="p">)</span>
+
+                    <span class="c1"># Get the field object</span>
+                    <span class="n">field_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span>
+
+                    <span class="c1"># Validate the value</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">field_object</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ve</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Invalid value for field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">ve</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span> <span class="kn">from</span> <span class="nn">ve</span>
+
+                    <span class="c1"># Format the value for API submission</span>
+                    <span class="n">formatted_value</span> <span class="o">=</span> <span class="n">field_object</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="n">payload</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatted_value</span>
+
+                    <span class="c1"># Update the in-memory value (this does not change the original value)</span>
+                    <span class="bp">self</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="c1"># Debugging: Print the payload</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Payload for API request: </span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Synchronize _row_data with the current state of _values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
             <span class="k">if</span> <span class="n">memory_only</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Memory-only update for row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Skipping API request.&quot;</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="bp">self</span>
 
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">payload</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Update called, but no fields were updated.&quot;</span><span class="p">)</span>
+
             <span class="c1"># Make the API request to update the row in the Baserow table</span>
-            <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/?user_field_names=true&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sending update request to endpoint: </span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
-                <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;PATCH&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">payload</span>
+            <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/?user_field_names=true&quot;</span>
             <span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;PATCH&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
 
-            <span class="c1"># The updated row data from the response</span>
-            <span class="n">updated_row_data</span> <span class="o">=</span> <span class="n">response</span>
-
-            <span class="c1"># Creating a new Row object with the updated data</span>
-            <span class="n">updated_row</span> <span class="o">=</span> <span class="n">Row</span><span class="p">(</span>
-                <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">row_data</span><span class="o">=</span><span class="n">updated_row_data</span>
-            <span class="p">)</span>
+            <span class="c1"># Update _row_data and _values with the new data from the API</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span> <span class="o">=</span> <span class="n">response</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_row_value_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_row_data</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully updated row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">updated_row</span>
+            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Failed to update row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span></div>
+            <span class="k">raise</span> <span class="n">RowUpdateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to update row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
 
 <div class="viewcode-block" id="Row.delete">
@@ -411,10 +475,8 @@
 
 <span class="sd">        :return: True if deletion was successful.</span>
 <span class="sd">        :rtype: bool</span>
-<span class="sd">        :raises ValueError: If an unexpected status code is received.</span>
-<span class="sd">        :raises Exception: For other errors during the delete operation.</span>
+<span class="sd">        :raises RowDeleteError: For errors during the delete operation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Attempting to delete row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">)</span>
@@ -431,14 +493,17 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Unexpected status code </span><span class="si">{</span><span class="n">response_code</span><span class="si">}</span><span class="s2"> received when trying to delete row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected status code received: </span><span class="si">{</span><span class="n">response_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span>  <span class="c1"># Re-raise the ValueError</span>
+                <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unexpected status code received: </span><span class="si">{</span><span class="n">response_code</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to delete row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Failed to delete row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span></div>
+            <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to delete row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
 
 <div class="viewcode-block" id="Row.move">
@@ -447,29 +512,23 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Moves the current row to a position before the row specified by before_id.</span>
 
-<span class="sd">        :param Optional[int] before_id: The ID of the row before which the current row should be moved. If not specified, the row will be moved to the last position. Defaults to None.</span>
+<span class="sd">        :param before_id: The ID of the row before which the current row should be moved. If not specified, the row will be moved to the last position.</span>
+<span class="sd">        :type before_id: int, optional</span>
 <span class="sd">        :return: A Row object representing the updated row.</span>
 <span class="sd">        :rtype: Row</span>
-<span class="sd">        :raises Exception: If there&#39;s an error during the move operation.</span>
+<span class="sd">        :raises RowMoveError: If there&#39;s an error during the move operation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Attempting to move row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">)</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Construct the endpoint for the move operation</span>
             <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/move/?user_field_names=true&quot;</span>
             <span class="k">if</span> <span class="n">before_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">endpoint</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&amp;before_id=</span><span class="si">{</span><span class="n">before_id</span><span class="si">}</span><span class="s2">&quot;</span>
 
-            <span class="c1"># Send the API request to move the row in the Baserow table</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;PATCH&quot;</span><span class="p">)</span>
 
-            <span class="c1"># The updated row data from the response</span>
             <span class="n">moved_row_data</span> <span class="o">=</span> <span class="n">response</span>
-
-            <span class="c1"># Creating a new Row object with the updated data</span>
             <span class="n">moved_row</span> <span class="o">=</span> <span class="n">Row</span><span class="p">(</span>
                 <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">row_data</span><span class="o">=</span><span class="n">moved_row_data</span>
             <span class="p">)</span>
@@ -483,7 +542,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Failed to move row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span></div>
+            <span class="k">raise</span> <span class="n">RowMoveError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to move row with ID </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 </div>
 
 </pre></div>

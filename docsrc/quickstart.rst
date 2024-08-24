@@ -38,10 +38,10 @@ After installation, you can perform basic operations such as fetching tables, re
     # Access a specific field's value in the row
     print(my_row['Name'])
 
-    # Retrieve all rows in the table. Note: The RowIterator object automatically handles pagination.
+    # Retrieve all rows in the table. Returns a list of Row objects
     all_my_rows = table.get_rows()
     for row in all_my_rows:
-        print(row)
+        print(row.to_dict())
 
     # Modify an in-memory value of the Row object
     my_row['Notes'] = "Changed note in memory"
