@@ -2,7 +2,6 @@
 app_testing_*
 .vscode
 source
-tests
 sample_app.py
 build
 pytest.ini
