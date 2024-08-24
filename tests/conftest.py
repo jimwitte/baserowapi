@@ -3,7 +3,6 @@ from baserowapi import Baserow
 from dotenv import load_dotenv
 import os
 
-
 @pytest.fixture(scope="session")
 def baserow_client():
     load_dotenv()
@@ -70,6 +69,11 @@ def single_row_data():
         "EU Date": {
             "input": "2023-12-08",
             "expected": "2023-12-08",
+            "read_only": False,
+        },
+        "ISO Date": {
+            "input": "2024-03-17",
+            "expected": "2024-03-17",
             "read_only": False,
         },
         "URL": {

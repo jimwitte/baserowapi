@@ -1,3 +1,5 @@
+from .helper_functions.generate_identical_rows import generate_identical_rows
+
 def test_create_row(all_fields_table, single_row_data):
     # Extract the input data, filtering out read-only fields
     input_data = {
@@ -24,10 +26,6 @@ def test_create_row(all_fields_table, single_row_data):
 
     # Cleanup: Delete the row after the test
     all_fields_table.delete_rows([new_row.id])
-
-
-def generate_identical_rows(single_row_data, num_rows=10):
-    return [single_row_data.copy() for _ in range(num_rows)]
 
 
 def test_create_multiple_identical_rows(all_fields_table, single_row_data):
