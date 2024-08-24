@@ -33,7 +33,7 @@ After installation, you can perform basic operations such as fetching tables, re
     # Fetch a row using its ID
     my_row = table.get_row(1)
     # Display a dictionary of field names and their values for this row
-    print(my_row.content)
+    print(my_row.to_dict())
 
     # Access a specific field's value in the row
     print(my_row['Name'])
@@ -49,7 +49,7 @@ After installation, you can perform basic operations such as fetching tables, re
 
     # Synchronize changes made in memory to the server
     updated_row = my_row.update()
-    print(updated_row.content)
+    print(updated_row.to_dict())
 
     # Update a Row's content using a dictionary and save to the server
     updated_row = my_row.update({'Notes': 'Updated row via dictionary'})
