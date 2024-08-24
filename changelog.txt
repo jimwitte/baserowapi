@@ -1,5 +1,48 @@
 ### Changelog
 
+
+#### 2024-08-06: 0.1.0b4
+
+- **Breaking Changes:**
+  - **Renaming:**
+    - `table.add_row()` renamed to `table.add_rows()` for consistency.
+    - `row.content` renamed to `row.to_dict()` for a more Pythonic approach.
+  - **Field Value Change:**
+    - `lookup_field`: Value is now a list of values from linked rows in the linked table.
+  - **Iterator Changes:**
+    - Replaced `RowIterator` class with a standard Python generator.
+    - `table.get_rows()` no longer supports the `return_single` option.
+
+
+- **Changes:**
+  - **Field Handling:**
+    - Moved all `format_for_api` functions to field classes for consistency.
+  - **Field Validation:**
+    - Fixed validation in `base_text_field`.
+    - Improved validation for `password_field`, `base_date_field`, and `row.update()`.
+    - `base_date_field`: Validation and `format_for_api` now allow Python datetime ISO format.
+    - `base_date_field`: Setting date field values allows slashes, single-digit months and days, and two-digit years.
+    - `base_date_field`: Setting date & time fields allows bare dates, assuming `T00:00:00Z`.
+    - Added `validate_value` support for `None` values in `BaseTextClass`.
+  - **Field Formatting:**
+    - Added `format_for_api` to `single_select_field` and `multiple_select_field`.
+    - `file_field`: File uploads now use a dedicated requests session to avoid `Content-Type` issues.
+  - **Field Enhancements:**
+    - `file_field`: Use `visible_name` when downloading fields.
+  - **New Properties:**
+    - `table`: Added `writable_fields` property.
+    - `row`: Added `row.fields` property.
+    - `table.get_rows()`: Added `limit` and `iterator` parameters. Returns a list of rows by default.
+  - **Validation Improvements:**
+    - Improved validation for data passed in `row.update()`.
+    - `table.update_rows()`: Uses `writable_fields` for validation.
+    - `table.get_row()`: Improved input validation.
+  - **Documentation:**
+    - Updated documentation for the recent changes.
+  - **Testing:**
+    - Added a basic set of functional tests.
+
+
 #### 2024--8-06: 0.1.0b3
 - **New Features:**
   - **Generic Field Type:** Added a generic field type to serve as a default if a specific field type is not available.
