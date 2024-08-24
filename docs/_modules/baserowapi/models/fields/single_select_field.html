@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>baserowapi.models.fields.single_select_field &mdash; Baserow API Package 0.1.0b4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=bcec09ca"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Baserow API Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../client.html">Baserow Client Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Baserow API Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">baserowapi.models.fields.single_select_field</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for baserowapi.models.fields.single_select_field</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">baserowapi.models.fields.field</span> <span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">baserowapi.exceptions</span> <span class="kn">import</span> <span class="n">FieldValidationError</span>
+
+
+<div class="viewcode-block" id="SingleSelectField">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField">[docs]</a>
+<span class="k">class</span> <span class="nc">SingleSelectField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a single select field in Baserow.</span>
+
+<span class="sd">    :ivar TYPE: The type of the field, which is &#39;single_select&#39;.</span>
+<span class="sd">    :vartype TYPE: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">&quot;single_select&quot;</span>
+    <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;contains&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;contains_not&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;contains_word&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;doesnt_contain_word&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;single_select_equal&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;single_select_not_equal&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;empty&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;not_empty&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a SingleSelectField object.</span>
+
+<span class="sd">        :param name: The name of the field.</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :param field_data: A dictionary containing the field&#39;s data and attributes.</span>
+<span class="sd">        :type field_data: Dict[str, Any]</span>
+<span class="sd">        :param client: The Baserow API client. Defaults to None.</span>
+<span class="sd">        :type client: Optional[Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;select_options&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;select_options&quot;</span><span class="p">],</span> <span class="nb">list</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid or missing select_options provided for SingleSelectField initialization.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;select_options should be a non-empty list in field_data.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the list of compatible filters for this SingleSelectField.</span>
+
+<span class="sd">        :return: The list of compatible filters.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a list of select option values from the field_data.</span>
+
+<span class="sd">        :return: List of select option values.</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">option</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;select_options&quot;</span><span class="p">]]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">options_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a list including details like id, value, color of each select_option.</span>
+
+<span class="sd">        :return: List of detailed select_options.</span>
+<span class="sd">        :rtype: List[Dict[str, Any]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;select_options&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_option_by_id_or_value</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility method to retrieve an option by its id or value.</span>
+
+<span class="sd">        :param value: The id or value of the option to retrieve.</span>
+<span class="sd">        :type value: Union[int, str]</span>
+<span class="sd">        :return: The option if found, otherwise None.</span>
+<span class="sd">        :rtype: Optional[Dict[str, Any]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_details</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">option</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">option</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SingleSelectField.validate_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.validate_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates the value for a SingleSelectField.</span>
+
+<span class="sd">        :param value: The value to validate.</span>
+<span class="sd">        :type value: Union[int, str]</span>
+<span class="sd">        :raises FieldValidationError: If the provided value doesn&#39;t match any select option.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_option_by_id_or_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">option</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The provided value &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39; doesn&#39;t match any select option.&quot;</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SingleSelectField.format_for_api">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.format_for_api">[docs]</a>
+    <span class="k">def</span> <span class="nf">format_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Formats the single select value for API submission.</span>
+
+<span class="sd">        :param value: The value to format (can be an option dictionary, ID, or string).</span>
+<span class="sd">        :type value: Union[dict, int, str]</span>
+<span class="sd">        :return: The ID or value string to be submitted to the API.</span>
+<span class="sd">        :rtype: Union[int, str]</span>
+<span class="sd">        :raises FieldValidationError: If the value is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If the value is a dict (as returned by the API), extract the &#39;value&#39; or &#39;id&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>  <span class="c1"># or value[&quot;value&quot;], depending on your preference</span>
+
+        <span class="c1"># Validate and return the value if it&#39;s already in the correct form</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

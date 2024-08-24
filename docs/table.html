@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Table Class &mdash; Baserow API Package 0.1.0b3 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Table Class &mdash; Baserow API Package 0.1.0b4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=77659907"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/documentation_options.js?v=bcec09ca"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -123,47 +125,51 @@
 <span class="c1"># Fetching a single row by its ID</span>
 <span class="n">my_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># Iterating through all rows</span>
+<span class="c1"># Fetching all rows, returns list</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">])</span>
 
-<span class="c1"># Converting rows to a list object (forces paging to fetch all rows)</span>
-<span class="n">all_rows_as_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">())</span>
+<span class="c1"># Fetching all rows as a generator (efficient for large datasets)</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">iterator</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">])</span>
 
 <span class="c1"># Fetching rows with filters</span>
 <span class="n">rows_with_name_grace</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Grace&quot;</span><span class="p">)])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_name_grace</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Fetching rows using multiple filters (OR logic)</span>
 <span class="n">rows_with_name_ada_or_grace</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Ada&quot;</span><span class="p">),</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Grace&quot;</span><span class="p">)],</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;OR&#39;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_name_ada_or_grace</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Sorting rows</span>
 <span class="n">rows_name_ascending</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">order_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_name_ascending</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Fetching rows with a search term</span>
 <span class="n">rows_with_test</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">search</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_test</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Fetching rows from a specific view</span>
 <span class="n">rows_from_view</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">view_id</span><span class="o">=</span><span class="mi">12345678</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_from_view</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Limiting fields in the fetched rows</span>
 <span class="n">rows_with_include</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">,</span><span class="s1">&#39;Last name&#39;</span><span class="p">,</span> <span class="s1">&#39;Notes&#39;</span><span class="p">,</span> <span class="s1">&#39;Active&#39;</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_include</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
 <span class="c1"># Excluding specific fields from the fetched rows</span>
 <span class="n">rows_with_exclude</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Notes&#39;</span><span class="p">,</span><span class="s1">&#39;Active&#39;</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_exclude</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
+<span class="c1"># Limit number of rows fetched</span>
+<span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># Adding a new row</span>
 <span class="n">new_row_data</span> <span class="o">=</span> <span class="p">{</span>
@@ -172,14 +178,35 @@
     <span class="s1">&#39;Notes&#39;</span><span class="p">:</span> <span class="s1">&#39;drums&#39;</span><span class="p">,</span>
     <span class="s1">&#39;Active&#39;</span><span class="p">:</span> <span class="kc">True</span>
 <span class="p">}</span>
-<span class="n">added_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">new_row_data</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">added_row</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<span class="n">added_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">new_row_data</span><span class="p">)</span>
 
-<span class="c1"># Batch operations: adding, updating, and deleting multiple rows</span>
-<span class="c1"># (Refer to the example provided)</span>
+<span class="c1"># Add multiple rows</span>
+<span class="n">rows_data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Last name&quot;</span><span class="p">:</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;Notes&quot;</span><span class="p">:</span> <span class="s2">&quot;VIP customer&quot;</span><span class="p">,</span> <span class="s2">&quot;Active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Last name&quot;</span><span class="p">:</span> <span class="s2">&quot;Johnson&quot;</span><span class="p">,</span> <span class="s2">&quot;Notes&quot;</span><span class="p">:</span> <span class="s2">&quot;Pending review&quot;</span><span class="p">,</span> <span class="s2">&quot;Active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+<span class="p">]</span>
 
-<span class="c1"># Retrieving the first row from results as a Row object</span>
-<span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">return_single</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Add the rows to the table</span>
+<span class="n">added_rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">rows_data</span><span class="p">)</span>
+
+<span class="c1"># Updating rows</span>
+<span class="n">rows_data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Notes&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice has a new order&quot;</span><span class="p">,</span> <span class="s2">&quot;Active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Notes&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&#39;s review completed&quot;</span><span class="p">,</span> <span class="s2">&quot;Active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="c1"># Update the rows</span>
+<span class="n">updated_rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">rows_data</span><span class="p">)</span>
+
+<span class="c1"># Deleting rows</span>
+<span class="n">row_ids</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># Delete the rows</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">delete_rows</span><span class="p">(</span><span class="n">row_ids</span><span class="p">)</span>
+
+<span class="c1"># Confirm the deletion</span>
+<span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleted rows with IDs: </span><span class="si">{</span><span class="n">row_ids</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

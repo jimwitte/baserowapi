@@ -1,0 +1,11 @@
+# used by baserowapi
+pytz>=2023.3.post1
+Requests~=2.31
+python-dotenv
+
+# to run tests
+pytest
+
+# to generate docs
+sphinx
+sphinx_rtd_theme

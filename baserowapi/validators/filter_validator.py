@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from baserowapi.models.table import Table
-    from baserowapi.models.field import Field
+    from baserowapi.models.fields.field import Field
 
 class FilterValidator:
     """

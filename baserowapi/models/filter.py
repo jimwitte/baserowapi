@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+from baserowapi.exceptions import InvalidFieldNameError, InvalidOperatorError
 
 
 class Filter:
@@ -28,11 +29,11 @@ class Filter:
 
         if not isinstance(field_name, str) or not field_name.strip():
             self.logger.error("field_name must be a non-empty string.")
-            raise ValueError("field_name must be a non-empty string.")
+            raise InvalidFieldNameError("field_name must be a non-empty string.")
 
         if not isinstance(operator, str) or not operator.strip():
             self.logger.error("operator must be a non-empty string.")
-            raise ValueError("operator must be a non-empty string.")
+            raise InvalidOperatorError("operator must be a non-empty string.")
 
         self.field_name = field_name
         self.value = value

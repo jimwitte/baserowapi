@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with Linked Fields in Baserow API &mdash; Baserow API Package 0.1.0b3 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Working with Linked Fields in Baserow API &mdash; Baserow API Package 0.1.0b4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=77659907"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/documentation_options.js?v=bcec09ca"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -91,12 +93,12 @@
 <p>Linked fields in Baserow allow you to associate rows from one table with rows in another table. Understanding how to work with these fields can greatly enhance your data relations and queries.</p>
 <section id="basics-of-linked-fields">
 <h2>Basics of Linked Fields<a class="headerlink" href="#basics-of-linked-fields" title="Link to this heading"></a></h2>
-<p>A linked field has several properties that provide information about the relationship it establishes:</p>
+<p>A linked field has several properties and functions that provide information about the relationship it establishes:</p>
 <ul class="simple">
 <li><p><cite>link_row_table_id</cite>: The ID of the table that the linked field points to.</p></li>
 <li><p><cite>link_row_related_field_id</cite>: The ID of the related field in the linked table.</p></li>
-<li><p><cite>link_row_table</cite>: The table object that the linked field points to.</p></li>
-<li><p><cite>link_row_related_field</cite>: The related field object in the linked table.</p></li>
+<li><p><cite>link_row_limit_selection_view_id</cite>: The ID of a view limiting options in the linked table.</p></li>
+<li><p><cite>get_options()</cite>: Returns list of valid values from primary field of linked table.</p></li>
 </ul>
 </section>
 <section id="working-with-linked-fields-examples">
