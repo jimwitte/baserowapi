@@ -1,8 +1,28 @@
+import time
+
 import pytest
 from baserowapi import Filter
 
 
 from .helper_functions.generate_identical_rows import generate_identical_rows
+
+pytestmark = pytest.mark.integration
+
+
+def _wait_for_search_results(
+    table, search_text, expected_row_ids, timeout=5, interval=0.25
+):
+    deadline = time.monotonic() + timeout
+    search_results = []
+
+    while time.monotonic() < deadline:
+        search_results = table.get_rows(search=search_text)
+        if {row.id for row in search_results} == expected_row_ids:
+            return search_results
+        time.sleep(interval)
+
+    return search_results
+
 
 def test_get_all_rows(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows
@@ -128,10 +148,21 @@ def test_get_rows_with_search(all_fields_table, single_row_data):
 
     # Step 3: Fetch rows with the 'search' parameter
     search_text = "Sample note for testing"
-    search_results = all_fields_table.get_rows(search=search_text)
+    expected_row_ids = {
+        created_rows[index].id
+        for index in (0, 1, 3)
+    }
+    search_results = _wait_for_search_results(
+        all_fields_table,
+        search_text,
+        expected_row_ids,
+    )
 
     # Step 4: Verify that only rows with the search text in the "Notes" column are returned
-    assert len(search_results) == 3, f"Expected 3 rows, but got {len(search_results)}"
+    returned_row_ids = {row.id for row in search_results}
+    assert returned_row_ids == expected_row_ids, (
+        f"Expected row IDs {expected_row_ids}, but got {returned_row_ids}"
+    )
 
     for row in search_results:
         assert search_text in row["Notes"], f"Search text '{search_text}' not found in Notes for row {row.id}"
@@ -281,4 +312,3 @@ def test_get_rows_with_date_filter(all_fields_table, single_row_data):
     created_row_ids = [row.id for row in created_rows]
     if created_row_ids:
         all_fields_table.delete_rows(created_row_ids)
-

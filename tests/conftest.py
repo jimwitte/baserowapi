@@ -1,11 +1,31 @@
-import pytest
-from baserowapi import Baserow
-from dotenv import load_dotenv
 import os
 
+import pytest
+from dotenv import load_dotenv
+
+from baserowapi import Baserow
+
+
 @pytest.fixture(scope="session")
-def baserow_client():
+def integration_environment():
     load_dotenv()
+    required_variables = (
+        "BASEROW_URL",
+        "BASEROW_TOKEN",
+        "BASEROW_TABLE_ID",
+    )
+    missing_variables = [
+        variable for variable in required_variables if not os.getenv(variable)
+    ]
+    if missing_variables:
+        missing_names = ", ".join(missing_variables)
+        raise pytest.UsageError(
+            f"Integration tests require these environment variables: {missing_names}"
+        )
+
+
+@pytest.fixture(scope="session")
+def baserow_client(integration_environment):
     token = os.getenv("BASEROW_TOKEN")
     url = os.getenv("BASEROW_URL")
     return Baserow(token=token, url=url)
@@ -15,6 +35,25 @@ def baserow_client():
 def all_fields_table(baserow_client):
     table_id = os.getenv("BASEROW_TABLE_ID")
     return baserow_client.get_table(table_id)
+
+
+@pytest.fixture(autouse=True)
+def cleanup_integration_rows(request):
+    if request.node.get_closest_marker("integration") is None:
+        yield
+        return
+
+    table = request.getfixturevalue("all_fields_table")
+    existing_row_ids = {row.id for row in table.get_rows()}
+
+    try:
+        yield
+    finally:
+        created_row_ids = [
+            row.id for row in table.get_rows() if row.id not in existing_row_ids
+        ]
+        if created_row_ids:
+            table.delete_rows(created_row_ids)
 
 
 @pytest.fixture(scope="session")

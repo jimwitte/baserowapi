@@ -1,6 +1,9 @@
 import pytest
 from baserowapi.exceptions import RowFetchError
 
+pytestmark = pytest.mark.integration
+
+
 def test_get_row_by_id(all_fields_table, single_row_data):
     
     # Step 1: Create a row

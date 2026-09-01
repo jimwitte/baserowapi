@@ -1,6 +1,9 @@
 import pytest
 from datetime import datetime
 
+pytestmark = pytest.mark.integration
+
+
 def test_rowvalue_as_datetime(all_fields_table, single_row_data):
     # Step 1: Create a single row with a specific ISO Date
     single_row_data["ISO Date"]["input"] = "2024-03-17"

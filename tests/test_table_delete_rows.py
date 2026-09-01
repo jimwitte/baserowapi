@@ -4,6 +4,8 @@ from baserowapi.exceptions import (
 )
 from .helper_functions.generate_identical_rows import generate_identical_rows
 
+pytestmark = pytest.mark.integration
+
 
 def test_delete_row(all_fields_table, single_row_data):
     # Create a row to delete

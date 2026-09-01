@@ -1,6 +1,9 @@
 import pytest
 import os
 
+pytestmark = pytest.mark.integration
+
+
 def test_upload_file_to_server(all_fields_table, single_row_data):
     # Step 1: Create a single row with an empty FileField
     single_row_data["FileField"]["input"] = []

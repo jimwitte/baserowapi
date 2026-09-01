@@ -1,5 +1,8 @@
 import pytest
 
+pytestmark = pytest.mark.integration
+
+
 def test_table_link_field_get_options(all_fields_table):
     # Step 1: Access the TableLink field
     table_link_field = all_fields_table.fields['TableLink']

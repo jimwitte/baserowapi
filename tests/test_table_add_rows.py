@@ -1,4 +1,9 @@
+import pytest
+
 from .helper_functions.generate_identical_rows import generate_identical_rows
+
+pytestmark = pytest.mark.integration
+
 
 def test_create_row(all_fields_table, single_row_data):
     # Extract the input data, filtering out read-only fields
