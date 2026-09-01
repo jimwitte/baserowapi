@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="baserowapi",
     version="0.1.0b5",
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "tests.*")),
     install_requires=[
         "pytz>=2023.3.post1",
         "Requests~=2.31"
@@ -14,11 +14,10 @@ setup(
     long_description=open("README.md").read(),  
     long_description_content_type="text/markdown",
     url="https://github.com/jimwitte/baserowapi",
-    license="GPLv3",
+    license="GPL-3.0-only",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.12",
     ],

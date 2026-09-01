@@ -504,7 +504,7 @@ a list of Row instances for multiple rows.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>ValueError</strong> – If parameters are not valid.</p></li>
-<li><p><strong>Exception</strong> – If there’s any error during the API request.</p></li>
+<li><p><a class="reference internal" href="#baserowapi.exceptions.RowAddError" title="baserowapi.exceptions.RowAddError"><strong>RowAddError</strong></a> – If rows cannot be added or parsed.</p></li>
 </ul>
 </dd>
 </dl>
@@ -537,7 +537,7 @@ Defaults to None, in which case the client’s batch_size will be used.</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>ValueError</strong> – If parameters are not valid.</p></li>
 <li><p><strong>TypeError</strong> – If an item in rows_data is neither an integer nor a Row object.</p></li>
-<li><p><strong>Exception</strong> – If the API request results in any error responses.</p></li>
+<li><p><a class="reference internal" href="#baserowapi.exceptions.RowDeleteError" title="baserowapi.exceptions.RowDeleteError"><strong>RowDeleteError</strong></a> – If rows cannot be deleted.</p></li>
 </ul>
 </dd>
 </dl>
@@ -555,7 +555,7 @@ Defaults to None, in which case the client’s batch_size will be used.</p></li>
 <dd class="field-even"><p>List[str]</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>Exception</strong> – If there’s an error while fetching the field names.</p>
+<dd class="field-odd"><p><a class="reference internal" href="#baserowapi.exceptions.FieldDataRetrievalError" title="baserowapi.exceptions.FieldDataRetrievalError"><strong>FieldDataRetrievalError</strong></a> – If the table fields cannot be retrieved or parsed.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -632,7 +632,7 @@ or a string that can be converted to an integer.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>Exception</strong> – If any error occurs during the process.</p></li>
+<li><p><a class="reference internal" href="#baserowapi.exceptions.RowFetchError" title="baserowapi.exceptions.RowFetchError"><strong>RowFetchError</strong></a> – If rows cannot be retrieved or parsed.</p></li>
 <li><p><strong>ValueError</strong> – If parameters are not valid.</p></li>
 </ul>
 </dd>
@@ -716,7 +716,7 @@ Row objects represent the rows to be updated.</p></li>
 <li><p><strong>ValueError</strong> – If parameters are not valid.</p></li>
 <li><p><strong>KeyError</strong> – If a dictionary contains a key that doesn’t correspond to any writable field in the table or is missing the ‘id’ key.</p></li>
 <li><p><strong>TypeError</strong> – If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.</p></li>
-<li><p><strong>Exception</strong> – If the API request results in any error responses.</p></li>
+<li><p><a class="reference internal" href="#baserowapi.exceptions.RowUpdateError" title="baserowapi.exceptions.RowUpdateError"><strong>RowUpdateError</strong></a> – If rows cannot be updated or parsed.</p></li>
 </ul>
 </dd>
 </dl>

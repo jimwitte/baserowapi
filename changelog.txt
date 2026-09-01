@@ -14,8 +14,14 @@
   - Validation failures are no longer indiscriminately converted into row update failures.
 - **Request Handling:**
   - Prevented file-upload header changes from mutating the client's default headers.
+- **Packaging:**
+  - Added a PEP 517 build declaration while retaining the existing setuptools metadata.
+  - Replaced direct `setup.py` build invocation with `python -m build`.
+  - Separated test-only `python-dotenv` from runtime dependencies.
+  - Excluded the test package from the installed wheel while retaining tests in the source distribution.
+  - Replaced the deprecated license classifier with the equivalent SPDX expression.
 - **Documentation and Testing:**
-  - Corrected the documented error-handling contract and added offline exception and request-path coverage.
+  - Corrected the documented error-handling contract, including Table method docstrings, and added offline exception and request-path coverage.
 
 
 #### 2024-08-06: 0.1.0b4

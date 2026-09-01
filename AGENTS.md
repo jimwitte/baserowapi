@@ -109,6 +109,13 @@ make -C docsrc html
 
 Keep the package version, Sphinx release, and changelog consistent for release
 work. Record breaking changes and meaningful public fixes in `changelog.txt`.
+Build wheel and source distributions through the PEP 517 backend with:
+
+```sh
+python -m build
+```
+
+Install the resulting wheel in a clean Python 3.12 environment before release.
 Do not publish packages, upload distributions, create tags, or push Git changes
 unless the user explicitly requests it.
 

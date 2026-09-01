@@ -198,7 +198,7 @@ class Table:
 
         :return: A list of field names.
         :rtype: List[str]
-        :raises Exception: If there's an error while fetching the field names.
+        :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.
         """
         try:
             # Sort fields based on 'order' property
@@ -459,7 +459,7 @@ class Table:
         :return: A list or generator of Row objects, depending on the iterator parameter.
         :rtype: Union[List[Row], Generator[Row, None, None]]
 
-        :raises Exception: If any error occurs during the process.
+        :raises RowFetchError: If rows cannot be retrieved or parsed.
         :raises ValueError: If parameters are not valid.
         """
         generator = self.row_generator(
@@ -531,7 +531,7 @@ class Table:
         :rtype: Row or list[Row]
 
         :raises ValueError: If parameters are not valid.
-        :raises Exception: If there's any error during the API request.
+        :raises RowAddError: If rows cannot be added or parsed.
         """
 
         def _add_rows_chunk(chunk):
@@ -598,7 +598,7 @@ class Table:
         :raises ValueError: If parameters are not valid.
         :raises KeyError: If a dictionary contains a key that doesn't correspond to any writable field in the table or is missing the 'id' key.
         :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.
-        :raises Exception: If the API request results in any error responses.
+        :raises RowUpdateError: If rows cannot be updated or parsed.
         """
 
         if not rows_data:
@@ -707,7 +707,7 @@ class Table:
 
         :raises ValueError: If parameters are not valid.
         :raises TypeError: If an item in rows_data is neither an integer nor a Row object.
-        :raises Exception: If the API request results in any error responses.
+        :raises RowDeleteError: If rows cannot be deleted.
         """
 
         # Handle Generator input by converting it to a list
