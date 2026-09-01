@@ -17,6 +17,7 @@
 - **Packaging:**
   - Added a PEP 517 build declaration while retaining the existing setuptools metadata.
   - Replaced direct `setup.py` build invocation with `python -m build`.
+  - Added Twine to the development dependencies for distribution validation and publishing.
   - Separated test-only `python-dotenv` from runtime dependencies.
   - Excluded the test package from the installed wheel while retaining tests in the source distribution.
   - Replaced the deprecated license classifier with the equivalent SPDX expression.

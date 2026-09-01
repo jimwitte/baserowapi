@@ -7,6 +7,7 @@ python-dotenv
 # run tests and build release artifacts
 pytest
 build
+twine
 
 # generate docs
 sphinx==9.1.0

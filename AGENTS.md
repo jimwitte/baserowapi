@@ -113,6 +113,7 @@ Build wheel and source distributions through the PEP 517 backend with:
 
 ```sh
 python -m build
+python -m twine check dist/*
 ```
 
 Install the resulting wheel in a clean Python 3.12 environment before release.
