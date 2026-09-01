@@ -3,7 +3,13 @@ import logging
 from typing import IO, Union, Dict, Optional, Any
 from baserowapi.models.table import Table
 import urllib.parse
-from baserowapi.exceptions import BaserowHTTPError
+from baserowapi.exceptions import (
+    BaserowConnectionError,
+    BaserowHTTPError,
+    BaserowRequestError,
+    BaserowResponseError,
+    BaserowTimeoutError,
+)
 
 
 class Baserow:
@@ -127,7 +133,11 @@ class Baserow:
         :type files: dict, optional
         :return: The parsed response data.
         :rtype: Any
-        :raises BaserowHTTPError: If the response status code is in the defined ERROR_MESSAGES.
+        :raises BaserowHTTPError: If Baserow returns a non-successful HTTP response.
+        :raises BaserowTimeoutError: If the request exceeds its timeout.
+        :raises BaserowConnectionError: If a connection to Baserow cannot be established.
+        :raises BaserowRequestError: If another request error prevents completion.
+        :raises BaserowResponseError: If a JSON response cannot be decoded.
         """
         logger = logging.getLogger(__name__)
 
@@ -144,10 +154,26 @@ class Baserow:
             method, url, combined_headers, data, timeout, files
         )
 
-        if response.status_code in self.ERROR_MESSAGES:
-            error_message = self.ERROR_MESSAGES[response.status_code].format(url=url)
-            logger.error(error_message)
-            raise BaserowHTTPError(response.status_code, error_message)
+        if not 200 <= response.status_code < 300:
+            error_code, description = self._get_error_details(response)
+            fallback_message = self.ERROR_MESSAGES.get(
+                response.status_code,
+                "Baserow returned an unsuccessful response from {url}.",
+            ).format(url=url)
+            error_message = description or error_code or fallback_message
+            logger.error(
+                "Baserow request failed with HTTP %s: %s",
+                response.status_code,
+                error_message,
+            )
+            raise BaserowHTTPError(
+                response.status_code,
+                error_message,
+                method=method,
+                url=url,
+                error_code=error_code,
+                description=description,
+            )
 
         return self.parse_response(response, method, url)
 
@@ -162,9 +188,27 @@ class Baserow:
         :return: Combined headers.
         :rtype: dict
         """
-        if additional_headers:
-            return {**self.headers, **additional_headers}
-        return self.headers
+        return {**self.headers, **(additional_headers or {})}
+
+    @staticmethod
+    def _get_error_details(
+        response: requests.Response,
+    ) -> tuple[Optional[str], Optional[str]]:
+        """Return Baserow's structured error code and description, when present."""
+        try:
+            error_data = response.json()
+        except ValueError:
+            return None, None
+
+        if not isinstance(error_data, dict):
+            return None, None
+
+        error_code = error_data.get("error")
+        description = error_data.get("description")
+        return (
+            str(error_code) if error_code is not None else None,
+            str(description) if description is not None else None,
+        )
 
     def perform_request(
         self,
@@ -193,10 +237,9 @@ class Baserow:
         :type files: dict, optional
         :return: The server's response to the request.
         :rtype: requests.Response
-        :raises requests.exceptions.HTTPError: If the response status code is in the defined ERROR_MESSAGES.
-        :raises requests.exceptions.Timeout: If the request times out.
-        :raises requests.exceptions.RequestException: For other request-related exceptions like connectivity issues.
-        :raises Exception: For any other unexpected exceptions.
+        :raises BaserowTimeoutError: If the request times out.
+        :raises BaserowConnectionError: If a connection cannot be established.
+        :raises BaserowRequestError: For other request execution failures.
         """
         logger = logging.getLogger(__name__)
         try:
@@ -205,36 +248,36 @@ class Baserow:
             logger.debug(f"Request payload: {data}")
 
             if files:
-                upload_session = requests.Session()
                 logger.debug(f"API file upload request: {files}")
                 headers.pop("Content-Type", None)
-                logger.debug(f"Files being uploaded: {files}")
-                logger.debug(f"Headers being sent: {headers}")
-                response = upload_session.request(
-                    method="POST",
-                    url=url,
-                    headers=headers,
-                    files=files,
-                    timeout=timeout,
-                )
+                with requests.Session() as upload_session:
+                    response = upload_session.request(
+                        method=method,
+                        url=url,
+                        headers=headers,
+                        files=files,
+                        timeout=timeout,
+                    )
             else:
                 response = self.session.request(
                     method=method, url=url, headers=headers, json=data, timeout=timeout
                 )
 
-            response.raise_for_status()
-
-        except requests.exceptions.Timeout:
+        except requests.exceptions.Timeout as e:
             logger.error(f"Request to {url} timed out.")
-            raise
+            raise BaserowTimeoutError(
+                f"Request to {url} timed out.", method=method, url=url
+            ) from e
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Could not connect to Baserow at {url}.")
+            raise BaserowConnectionError(
+                f"Could not connect to Baserow at {url}.", method=method, url=url
+            ) from e
         except requests.exceptions.RequestException as e:
-            logger.error(
-                f"Unexpected error occurred while making a request to {url}: {e}"
-            )
-            logger.debug(f"Request payload: {data}")
-            raise Exception(
-                f"Unexpected error occurred while making a request to {url}: {e}"
-            )
+            logger.error(f"Request to {url} could not be completed: {e}")
+            raise BaserowRequestError(
+                f"Request to {url} could not be completed.", method=method, url=url
+            ) from e
 
         return response
 
@@ -258,7 +301,7 @@ class Baserow:
         :type url: str
         :return: Either the status code, a dictionary parsed from the JSON response, or the raw response text.
         :rtype: Union[int, dict, str, None]
-        :raises ValueError: If the response cannot be parsed as JSON.
+        :raises BaserowResponseError: If a response advertised as JSON cannot be decoded.
         """
         logger = logging.getLogger(__name__)
         if response.status_code == 204:
@@ -271,6 +314,13 @@ class Baserow:
 
         try:
             return response.json()
-        except ValueError:
-            logger.error(f"Failed to parse response as JSON. Received: {response.text}")
+        except ValueError as e:
+            content_type = response.headers.get("Content-Type", "").lower()
+            if "json" in content_type:
+                logger.error("Baserow returned an invalid JSON response from %s", url)
+                raise BaserowResponseError(
+                    f"Baserow returned an invalid JSON response from {url}.",
+                    method=method,
+                    url=url,
+                ) from e
             return response.text

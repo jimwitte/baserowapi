@@ -64,4 +64,4 @@ class PhoneNumberRowValue(RowValue):
             )
             raise InvalidRowValueError(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
-            )
+            ) from e

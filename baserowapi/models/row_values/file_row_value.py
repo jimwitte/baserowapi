@@ -76,7 +76,7 @@ class FileRowValue(RowValue):
                 except Exception as e:
                     error_message = f"Failed to upload file {file}. Error: {e}"
                     self.logger.error(error_message)
-                    raise RowValueOperationError(error_message)
+                    raise RowValueOperationError(error_message) from e
 
         # Upload file from URL
         if url:
@@ -90,7 +90,7 @@ class FileRowValue(RowValue):
                 self.logger.error(f"Failed to upload file from URL {url}. Error: {e}")
                 raise RowValueOperationError(
                     f"Failed to upload file from URL {url}. Error: {e}"
-                )
+                ) from e
 
         # Update in-memory value based on the 'replace' flag
         if replace:
@@ -155,6 +155,6 @@ class FileRowValue(RowValue):
                     os.remove(target_file_path)  # Remove partial file if error occurs
                 raise RowValueOperationError(
                     f"Failed to download file {file_name}. Error: {e}"
-                )
+                ) from e
 
         return downloaded_files

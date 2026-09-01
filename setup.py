@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="baserowapi",
-    version="0.1.0b4",
+    version="0.1.0b5",
     packages=find_packages(),
     install_requires=[
         "pytz>=2023.3.post1",
@@ -20,7 +20,7 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.12",
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.12',
 )

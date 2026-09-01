@@ -1,140 +1,136 @@
-# baserow client exceptions
+"""Exceptions raised by :mod:`baserowapi`."""
+
+from typing import Optional
+
 
 class BaserowAPIError(Exception):
-    """Base class for exceptions."""
+    """Base class for all exceptions intentionally raised by this package."""
 
-    pass
+
+class BaserowRequestError(BaserowAPIError):
+    """Raised when an API request cannot be completed."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        method: Optional[str] = None,
+        url: Optional[str] = None,
+    ) -> None:
+        self.message = message
+        self.method = method
+        self.url = url
+        super().__init__(message)
+
+
+class BaserowTimeoutError(BaserowRequestError):
+    """Raised when an API request exceeds its timeout."""
+
+
+class BaserowConnectionError(BaserowRequestError):
+    """Raised when a connection to Baserow cannot be established."""
 
 
 class BaserowHTTPError(BaserowAPIError):
-    """Exception raised for HTTP errors."""
+    """Raised when Baserow returns a non-successful HTTP response."""
 
-    def __init__(self, status_code: int, message: str):
-        """
-        :param status_code: The HTTP status code.
-        :type status_code: int
-        :param message: The error message.
-        :type message: str
-        """
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        *,
+        method: Optional[str] = None,
+        url: Optional[str] = None,
+        error_code: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> None:
         self.status_code = status_code
         self.message = message
-        super().__init__(self.message)
+        self.method = method
+        self.url = url
+        self.error_code = error_code
+        self.description = description
+        super().__init__(message)
 
     def __str__(self) -> str:
-        """
-        :return: The string representation of the error.
-        :rtype: str
-        """
         return f"HTTP {self.status_code}: {self.message}"
 
 
-# row exceptions
+class BaserowResponseError(BaserowAPIError):
+    """Raised when a Baserow response cannot be interpreted as advertised."""
 
-class RowError(Exception):
-    """Base class for all Row-related exceptions."""
+    def __init__(
+        self,
+        message: str,
+        *,
+        method: Optional[str] = None,
+        url: Optional[str] = None,
+    ) -> None:
+        self.message = message
+        self.method = method
+        self.url = url
+        super().__init__(message)
 
-    pass
+
+class RowError(BaserowAPIError):
+    """Base class for row operation errors."""
 
 
 class RowFetchError(RowError):
-    """Raised when fetching row values fails."""
+    """Raised when fetching rows fails."""
 
-    pass
+
+class RowAddError(RowError):
+    """Raised when adding rows fails."""
 
 
 class RowUpdateError(RowError):
-    """Raised when updating a row fails."""
-
-    pass
+    """Raised when updating rows fails."""
 
 
 class RowDeleteError(RowError):
-    """Raised when deleting a row fails."""
-
-    pass
+    """Raised when deleting rows fails."""
 
 
 class RowMoveError(RowError):
     """Raised when moving a row fails."""
 
-    pass
-
-
-# table exceptions
-
-class RowFetchError(BaserowAPIError):
-    """Raised when fetching rows fails."""
-
-    pass
-
-
-class RowAddError(BaserowAPIError):
-    """Raised when adding rows fails."""
-
-    pass
-
-
-class RowUpdateError(BaserowAPIError):
-    """Raised when updating rows fails."""
-
-    pass
-
-
-class RowDeleteError(BaserowAPIError):
-    """Raised when deleting rows fails."""
-
-    pass
-
-
-# filter exceptions
 
 class FilterError(BaserowAPIError):
-    """Base exception class for filter-related errors."""
-
-    pass
+    """Base class for filter-related errors."""
 
 
 class InvalidFieldNameError(FilterError):
-    """Raised when the field name in a filter is invalid."""
-
-    pass
+    """Raised when a filter field name is invalid."""
 
 
 class InvalidOperatorError(FilterError):
-    """Raised when the operator in a filter is invalid."""
-
-    pass
+    """Raised when a filter operator is invalid."""
 
 
-# field exceptions
+class FieldError(BaserowAPIError):
+    """Base class for field-related errors."""
 
-class FieldValidationError(Exception):
+
+class FieldValidationError(FieldError):
     """Raised when a field value fails validation."""
 
-    pass
+
+class FieldDataRetrievalError(FieldError):
+    """Raised when data required by a field cannot be retrieved."""
 
 
-class FieldDataRetrievalError(Exception):
-    """Raised when there is an error retrieving data for a field."""
-
-    pass
+class RowValueError(BaserowAPIError):
+    """Base class for row-value errors."""
 
 
-# row_value exceptions
-
-class InvalidRowValueError(Exception):
-    """Raised when a row value is invalid or incompatible with its corresponding field."""
-
-    pass
+class InvalidRowValueError(RowValueError):
+    """Raised when a value is incompatible with its field."""
 
 
-class RowValueOperationError(Exception):
-    """Raised when a row value operation fails, such as formatting or data conversion."""
-
-    pass
+class RowValueOperationError(RowValueError):
+    """Raised when row-value formatting or conversion fails."""
 
 
-class ReadOnlyValueError(Exception):
-    """Raised when an attempt is made to set a value on a read-only row value."""
-
-    pass
+class ReadOnlyValueError(RowValueError):
+    """Raised when attempting to set a read-only row value."""

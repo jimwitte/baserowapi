@@ -53,7 +53,7 @@ class TableLinkRowValue(RowValue):
             self.field.validate_value(new_value)
         except FieldValidationError as e:
             self.logger.error(f"Validation error for value '{new_value}': {e}")
-            raise InvalidRowValueError(f"Invalid value provided: {e}")
+            raise InvalidRowValueError(f"Invalid value provided: {e}") from e
 
         # Format the value using the field's format_for_api method before assigning
         try:
@@ -62,7 +62,9 @@ class TableLinkRowValue(RowValue):
             ]
         except Exception as e:
             self.logger.error(f"Error formatting value '{new_value}' for API: {e}")
-            raise InvalidRowValueError(f"Error formatting value '{new_value}': {e}")
+            raise InvalidRowValueError(
+                f"Error formatting value '{new_value}': {e}"
+            ) from e
 
     def format_for_api(self) -> Any:
         """

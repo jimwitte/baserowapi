@@ -9,6 +9,14 @@ Baserow Client
    :undoc-members:
    :show-inheritance:
 
+Exceptions
+-------------------------
+
+.. automodule:: baserowapi.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Table
 ------------------------------
 

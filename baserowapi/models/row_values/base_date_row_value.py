@@ -68,7 +68,7 @@ class BaseDateRowValue(RowValue):
             )
             raise RowValueOperationError(
                 f"Failed to convert value to datetime for field {self.field.name}. Error: {e}"
-            )
+            ) from e
 
     @value.setter
     def value(self, new_value: Union[datetime, str, None]) -> None:
@@ -93,7 +93,7 @@ class BaseDateRowValue(RowValue):
             )
             raise InvalidRowValueError(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
-            )
+            ) from e
 
     @property
     def formatted_date(self) -> Optional[str]:
@@ -119,7 +119,7 @@ class BaseDateRowValue(RowValue):
             self.logger.error(f"Failed to determine the timezone. Error: {e}")
             raise RowValueOperationError(
                 f"Failed to determine the timezone. Error: {e}"
-            )
+            ) from e
 
         try:
             if self.field.date_include_time:
@@ -153,4 +153,4 @@ class BaseDateRowValue(RowValue):
             )
             raise RowValueOperationError(
                 f"Invalid date format for {self.type}: {self.value}. Error: {e}"
-            )
+            ) from e

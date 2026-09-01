@@ -1,5 +1,11 @@
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
-from baserowapi.exceptions import RowFetchError, RowAddError, RowUpdateError, RowDeleteError
+from baserowapi.exceptions import (
+    FieldDataRetrievalError,
+    RowFetchError,
+    RowAddError,
+    RowUpdateError,
+    RowDeleteError,
+)
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
 from baserowapi.models.fields import (
@@ -115,7 +121,7 @@ class Table:
 
         :return: A FieldList containing all the Field objects associated with this table.
         :rtype: FieldList
-        :raises Exception: If there's an unexpected error when fetching the fields.
+        :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.
         """
         if self._fields is None:
             endpoint = f"/api/database/fields/table/{self.id}/"
@@ -131,7 +137,9 @@ class Table:
                 self.logger.error(
                     f"Failed to fetch fields for table {self.id}. Error: {e}"
                 )
-                raise Exception("Unexpected error when fetching fields.") from e
+                raise FieldDataRetrievalError(
+                    f"Failed to retrieve fields for table {self.id}."
+                ) from e
         return self._fields
 
     @property
@@ -406,7 +414,7 @@ class Table:
                     self.logger.debug("No more pages to fetch.")
             except Exception as e:
                 self.logger.error(f"Error fetching rows: {e}")
-                raise RowFetchError(f"Error fetching rows: {e}")
+                raise RowFetchError(f"Error fetching rows: {e}") from e
 
     def get_rows(
         self,
@@ -499,7 +507,7 @@ class Table:
         except Exception as e:
             error_message = f"Failed to retrieve row with ID {row_id} from table {self.id}. Error: {e}"
             self.logger.error(error_message)
-            raise RowFetchError(f"Failed to retrieve row: {e}")
+            raise RowFetchError(f"Failed to retrieve row: {e}") from e
 
     def add_rows(
         self,
@@ -565,7 +573,7 @@ class Table:
             except Exception as e:
                 error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
                 self.logger.error(error_message)
-                raise RowAddError(f"Failed to add rows: {e}")
+                raise RowAddError(f"Failed to add rows: {e}") from e
         return added_rows
 
     def update_rows(
@@ -671,7 +679,7 @@ class Table:
             return updated_rows
         except Exception as e:
             self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
-            raise RowUpdateError(f"Failed to update rows: {e}")
+            raise RowUpdateError(f"Failed to update rows: {e}") from e
 
     def delete_rows(
         self,
@@ -743,4 +751,4 @@ class Table:
             return True
         except Exception as e:
             self.logger.error(f"Failed to delete rows from table {self.id}. Error: {e}")
-            raise RowDeleteError(f"Failed to delete rows: {e}")
+            raise RowDeleteError(f"Failed to delete rows: {e}") from e

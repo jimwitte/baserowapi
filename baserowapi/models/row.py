@@ -306,63 +306,46 @@ class Row:
         :rtype: Row
         :raises RowUpdateError: If the API request results in any error responses.
         """
-        try:
-            # Prepare the payload for the API
-            payload = {}
+        # Validate and format caller-provided values before entering the request
+        # boundary so caller errors retain their specific exception types.
+        payload = {}
 
-            # If no values dict is provided, use the in-memory row values
-            if values is None:
-                for rv in self.values:
-                    if not rv.is_read_only:
-                        payload[rv.name] = rv.format_for_api()
+        if values is None:
+            for rv in self.values:
+                if not rv.is_read_only:
+                    payload[rv.name] = rv.format_for_api()
 
-            else:
-                for field_name, value in values.items():
-                    if field_name not in self.table.writable_fields:
-                        raise KeyError(
-                            f"Field '{field_name}' is either read-only or does not exist in the table."
-                        )
+        else:
+            for field_name, value in values.items():
+                if field_name not in self.table.writable_fields:
+                    raise KeyError(
+                        f"Field '{field_name}' is either read-only or does not exist in the table."
+                    )
 
-                    # Get the field object
-                    field_object = self.table.fields[field_name]
+                field_object = self.table.fields[field_name]
+                field_object.validate_value(value)
+                payload[field_name] = field_object.format_for_api(value)
+                self[field_name] = value
 
-                    # Validate the value
-                    try:
-                        field_object.validate_value(value)
-                    except ValueError as ve:
-                        raise ValueError(
-                            f"Invalid value for field '{field_name}': {ve}"
-                        ) from ve
+        self.logger.debug(f"Payload for API request: {payload}")
 
-                    # Format the value for API submission
-                    formatted_value = field_object.format_for_api(value)
-                    payload[field_name] = formatted_value
-
-                    # Update the in-memory value (this does not change the original value)
-                    self[field_name] = value
-
-            # Debugging: Print the payload
-            self.logger.debug(f"Payload for API request: {payload}")
-
-            # Synchronize _row_data with the current state of _values
+        if memory_only:
             self._row_data.update(self.to_dict())
+            self.logger.debug(
+                f"Memory-only update for row with ID {self.id}. Skipping API request."
+            )
+            return self
 
-            if memory_only:
-                self.logger.debug(
-                    f"Memory-only update for row with ID {self.id}. Skipping API request."
-                )
-                return self
+        if not payload:
+            self.logger.warning("Update called, but no fields were updated.")
 
-            if not payload:
-                self.logger.warning("Update called, but no fields were updated.")
-
-            # Make the API request to update the row in the Baserow table
+        try:
+            self._row_data.update(self.to_dict())
             endpoint = (
                 f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
             )
             response = self.client.make_api_request(endpoint, method="PATCH", data=payload)
 
-            # Update _row_data and _values with the new data from the API
             self._row_data = response
             self._values = self._create_row_value_list(self._row_data)
             self.logger.debug(f"Successfully updated row with ID {self.id}.")
@@ -403,8 +386,8 @@ class Row:
                     f"Unexpected status code received: {response_code}"
                 )
 
-        except ValueError as e:
-            raise RowDeleteError(f"Failed to delete row with ID {self.id}.") from e
+        except RowDeleteError:
+            raise
         except Exception as e:
             self.logger.error(
                 f"Failed to delete row with ID {self.id} from table {self.table_id}. Error: {e}"

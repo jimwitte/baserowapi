@@ -152,7 +152,7 @@ class TableLinkField(Field):
             )
             raise FieldDataRetrievalError(
                 f"Failed to retrieve options from the related table. Error: {e}"
-            )
+            ) from e
 
     def validate_value(self, value: Union[int, str, List[Union[int, str]]]) -> None:
         """

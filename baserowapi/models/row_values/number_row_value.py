@@ -67,4 +67,4 @@ class NumberRowValue(RowValue):
             )
             raise RowValueOperationError(
                 f"Failed to set value for field {self.field.name}. Error: {e}"
-            )
+            ) from e

@@ -1,6 +1,23 @@
 ### Changelog
 
 
+#### 2026-09-01: 0.1.0b5
+
+- **Breaking Changes:**
+  - All package-defined exceptions now inherit from `BaserowAPIError` through consistent row, filter, field, and row-value groups.
+  - Low-level request timeouts, connection failures, other request failures, HTTP errors, and malformed JSON responses now raise package exceptions instead of raw `requests` exceptions or generic `Exception` instances.
+- **Exception Handling:**
+  - Removed duplicate row exception definitions and made every row operation exception inherit from `RowError`.
+  - Added structured request, timeout, connection, and response exceptions.
+  - `BaserowHTTPError` is now raised for every non-2xx response and exposes Baserow error details when supplied.
+  - High-level row operations retain their existing operation-specific exceptions and preserve the underlying failure through exception chaining.
+  - Validation failures are no longer indiscriminately converted into row update failures.
+- **Request Handling:**
+  - Prevented file-upload header changes from mutating the client's default headers.
+- **Documentation and Testing:**
+  - Corrected the documented error-handling contract and added offline exception and request-path coverage.
+
+
 #### 2024-08-06: 0.1.0b4
 
 - **Breaking Changes:**

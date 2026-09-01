@@ -51,4 +51,4 @@ class PasswordRowValue(RowValue):
             )
             raise InvalidRowValueError(
                 f"Failed to set password value for field {self.field.name}. Error: {e}"
-            )
+            ) from e

@@ -42,37 +42,31 @@ Examples
 Error Handling
 ---------------
 
-The `Baserow` client class is designed to handle errors in a systematic and consistent manner when interacting with the Baserow API. 
+All package-defined exceptions inherit from
+:class:`baserowapi.exceptions.BaserowAPIError`. Low-level calls made through
+:meth:`Baserow.make_api_request` use these exceptions:
 
-1. **Predefined Error Messages**:
-    The client has a predefined set of error messages for specific HTTP status codes:
+* :class:`~baserowapi.exceptions.BaserowTimeoutError` when a request times out.
+* :class:`~baserowapi.exceptions.BaserowConnectionError` when a connection cannot be established.
+* :class:`~baserowapi.exceptions.BaserowRequestError` for another request execution failure.
+* :class:`~baserowapi.exceptions.BaserowHTTPError` for every non-2xx response, not only a predefined set of status codes.
+* :class:`~baserowapi.exceptions.BaserowResponseError` when a response advertised as JSON cannot be decoded.
 
-    - **400 Bad Request**: The request contains invalid values, or the JSON couldn't be parsed.
-    - **401 Unauthorized**: Accessing an endpoint without a valid database token.
-    - **404 Not Found**: The requested row or table is not found.
-    - **413 Request Entity Too Large**: The request exceeded the allowed payload size.
-    - **415 Unsupported Media Type**: The media type in the request is not supported.
-    - **500 Internal Server Error**: An unexpected condition was encountered by the server.
-    - **502 Bad Gateway**: Baserow is restarting, or an unexpected outage is ongoing.
-    - **503 Service Unavailable**: The server couldn't process the request in time.
+The original ``requests`` exception is available through the raised
+exception's ``__cause__``. ``BaserowHTTPError`` provides ``status_code``,
+``method``, ``url``, ``error_code``, and ``description`` attributes. The last
+two contain Baserow's structured error details when the response supplies
+them.
 
-2. **Logging**:
-    Error messages are logged to the configured logger. Depending on the severity and type of the error, the client will use different log levels (`ERROR`, `WARNING`, `DEBUG`). The logs can be directed to the console or to a file, based on how you configure the Baserow client.
+Higher-level table and row operations retain operation-specific exceptions,
+such as :class:`~baserowapi.exceptions.RowFetchError` and
+:class:`~baserowapi.exceptions.RowUpdateError`. Their ``__cause__`` contains
+the lower-level failure. Caller validation errors remain distinct and are not
+converted into request errors.
 
-3. **Raising Exceptions**:
-    In case of an error response from the Baserow server:
-
-    - If the status code matches one of the predefined error codes, the corresponding error message is logged and raised as a `requests.exceptions.HTTPError`.
-    - A timeout during the request will raise a `requests.exceptions.Timeout`.
-    - Other request-related issues, such as connectivity problems, will raise a `requests.exceptions.RequestException`.
-    - Any unexpected issues will raise a generic `Exception`.
-
-4. **Response Parsing**:
-    Once a response is received from the server, the client attempts to parse it:
-
-    - If the response has a status code of 204 (No Content), it simply returns the status code.
-    - If the response contains JSON data, it's parsed and returned as a dictionary.
-    - If JSON parsing fails, the raw response text is returned.
+Successful JSON responses are decoded and returned. A 204 response returns
+the integer ``204``, and an empty response returns ``None``. A non-JSON
+response is returned as text when its content type does not advertise JSON.
 
 Token Management
 -----------------

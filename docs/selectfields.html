@@ -1,23 +1,21 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with Single Select and Multiple Select Fields in Baserow API &mdash; Baserow API Package 0.1.0b4 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Working with Single Select and Multiple Select Fields in Baserow API &mdash; Baserow API Package 0.1.0b5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=bcec09ca"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -111,25 +109,25 @@
 <span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># Retrieve available options for a select field</span>
-<span class="n">my_options</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;mySelectField&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">options</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available Options: </span><span class="si">{</span><span class="n">my_options</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">my_options</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span><span class="o">.</span><span class="n">options</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Available Options: </span><span class="si">{</span><span class="n">my_options</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># Set a specific option for a single select field in-memory</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;mySelectField&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;option 1&#39;</span>
+<span class="n">single_row</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'option 1'</span>
 
 <span class="c1"># Deselect any option for the single select field</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;mySelectField&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">single_row</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="c1"># For a multiple selection field, use a list to set multiple options</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;myMultiSelectField&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;option 1&#39;</span><span class="p">,</span> <span class="s1">&#39;option 2&#39;</span><span class="p">]</span>
+<span class="n">single_row</span><span class="p">[</span><span class="s1">'myMultiSelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'option 1'</span><span class="p">,</span> <span class="s1">'option 2'</span><span class="p">]</span>
 
 <span class="c1"># Alternatively, update a multiple selection field with a dictionary and save changes to the server</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-    <span class="p">{</span><span class="s1">&#39;myMultiSelectField&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;option 1&#39;</span><span class="p">,</span> <span class="s1">&#39;option 2&#39;</span><span class="p">]}</span>
+    <span class="p">{</span><span class="s1">'myMultiSelectField'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'option 1'</span><span class="p">,</span> <span class="s1">'option 2'</span><span class="p">]}</span>
 <span class="p">)</span>
 
 <span class="c1"># Set no options for a multiple selection field</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">&#39;myMultiSelectField&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">single_row</span><span class="p">[</span><span class="s1">'myMultiSelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="c1"># Finally, persist changes to the server</span>
 <span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>

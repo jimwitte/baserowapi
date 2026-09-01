@@ -1,23 +1,21 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baserow Client Class &mdash; Baserow API Package 0.1.0b4 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Baserow Client Class &mdash; Baserow API Package 0.1.0b5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=bcec09ca"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -114,68 +112,47 @@
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baserowapi</span> <span class="kn">import</span> <span class="n">Baserow</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Baserow</span>
 
 <span class="c1"># Default baserow client</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
 
 <span class="c1"># Specify a custom server URL</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
 
 <span class="c1"># Enable logging at DEBUG level</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">'DEBUG'</span><span class="p">)</span>
 
 <span class="c1"># Enable logging to a file</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://baserow.example.com&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">&#39;mytoken&#39;</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">'DEBUG'</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">'log.txt'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="error-handling">
 <h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
-<p>The <cite>Baserow</cite> client class is designed to handle errors in a systematic and consistent manner when interacting with the Baserow API.</p>
-<ol class="arabic simple">
-<li><dl class="simple">
-<dt><strong>Predefined Error Messages</strong>:</dt><dd><p>The client has a predefined set of error messages for specific HTTP status codes:</p>
+<p>All package-defined exceptions inherit from
+<a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowAPIError" title="baserowapi.exceptions.BaserowAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">baserowapi.exceptions.BaserowAPIError</span></code></a>. Low-level calls made through
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Baserow.make_api_request()</span></code> use these exceptions:</p>
 <ul class="simple">
-<li><p><strong>400 Bad Request</strong>: The request contains invalid values, or the JSON couldn’t be parsed.</p></li>
-<li><p><strong>401 Unauthorized</strong>: Accessing an endpoint without a valid database token.</p></li>
-<li><p><strong>404 Not Found</strong>: The requested row or table is not found.</p></li>
-<li><p><strong>413 Request Entity Too Large</strong>: The request exceeded the allowed payload size.</p></li>
-<li><p><strong>415 Unsupported Media Type</strong>: The media type in the request is not supported.</p></li>
-<li><p><strong>500 Internal Server Error</strong>: An unexpected condition was encountered by the server.</p></li>
-<li><p><strong>502 Bad Gateway</strong>: Baserow is restarting, or an unexpected outage is ongoing.</p></li>
-<li><p><strong>503 Service Unavailable</strong>: The server couldn’t process the request in time.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowTimeoutError" title="baserowapi.exceptions.BaserowTimeoutError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowTimeoutError</span></code></a> when a request times out.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowConnectionError" title="baserowapi.exceptions.BaserowConnectionError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowConnectionError</span></code></a> when a connection cannot be established.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowRequestError" title="baserowapi.exceptions.BaserowRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowRequestError</span></code></a> for another request execution failure.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowHTTPError" title="baserowapi.exceptions.BaserowHTTPError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code></a> for every non-2xx response, not only a predefined set of status codes.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowResponseError" title="baserowapi.exceptions.BaserowResponseError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowResponseError</span></code></a> when a response advertised as JSON cannot be decoded.</p></li>
 </ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>Logging</strong>:</dt><dd><p>Error messages are logged to the configured logger. Depending on the severity and type of the error, the client will use different log levels (<cite>ERROR</cite>, <cite>WARNING</cite>, <cite>DEBUG</cite>). The logs can be directed to the console or to a file, based on how you configure the Baserow client.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>Raising Exceptions</strong>:</dt><dd><p>In case of an error response from the Baserow server:</p>
-<ul class="simple">
-<li><p>If the status code matches one of the predefined error codes, the corresponding error message is logged and raised as a <cite>requests.exceptions.HTTPError</cite>.</p></li>
-<li><p>A timeout during the request will raise a <cite>requests.exceptions.Timeout</cite>.</p></li>
-<li><p>Other request-related issues, such as connectivity problems, will raise a <cite>requests.exceptions.RequestException</cite>.</p></li>
-<li><p>Any unexpected issues will raise a generic <cite>Exception</cite>.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>Response Parsing</strong>:</dt><dd><p>Once a response is received from the server, the client attempts to parse it:</p>
-<ul class="simple">
-<li><p>If the response has a status code of 204 (No Content), it simply returns the status code.</p></li>
-<li><p>If the response contains JSON data, it’s parsed and returned as a dictionary.</p></li>
-<li><p>If JSON parsing fails, the raw response text is returned.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ol>
+<p>The original <code class="docutils literal notranslate"><span class="pre">requests</span></code> exception is available through the raised
+exception’s <code class="docutils literal notranslate"><span class="pre">__cause__</span></code>. <code class="docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code> provides <code class="docutils literal notranslate"><span class="pre">status_code</span></code>,
+<code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>, <code class="docutils literal notranslate"><span class="pre">error_code</span></code>, and <code class="docutils literal notranslate"><span class="pre">description</span></code> attributes. The last
+two contain Baserow’s structured error details when the response supplies
+them.</p>
+<p>Higher-level table and row operations retain operation-specific exceptions,
+such as <a class="reference internal" href="baserowapi.html#baserowapi.exceptions.RowFetchError" title="baserowapi.exceptions.RowFetchError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowFetchError</span></code></a> and
+<a class="reference internal" href="baserowapi.html#baserowapi.exceptions.RowUpdateError" title="baserowapi.exceptions.RowUpdateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowUpdateError</span></code></a>. Their <code class="docutils literal notranslate"><span class="pre">__cause__</span></code> contains
+the lower-level failure. Caller validation errors remain distinct and are not
+converted into request errors.</p>
+<p>Successful JSON responses are decoded and returned. A 204 response returns
+the integer <code class="docutils literal notranslate"><span class="pre">204</span></code>, and an empty response returns <code class="docutils literal notranslate"><span class="pre">None</span></code>. A non-JSON
+response is returned as text when its content type does not advertise JSON.</p>
 </section>
 <section id="token-management">
 <h2>Token Management<a class="headerlink" href="#token-management" title="Link to this heading"></a></h2>

@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baserowapi.models.filter &mdash; Baserow API Package 0.1.0b4 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>baserowapi.models.filter &mdash; Baserow API Package 0.1.0b5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=bcec09ca"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=18948dd3"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -82,60 +80,60 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.filter</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">urllib.parse</span>
-<span class="kn">from</span> <span class="nn">baserowapi.exceptions</span> <span class="kn">import</span> <span class="n">InvalidFieldNameError</span><span class="p">,</span> <span class="n">InvalidOperatorError</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.parse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidFieldNameError</span><span class="p">,</span> <span class="n">InvalidOperatorError</span>
 
 
 <div class="viewcode-block" id="Filter">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.filter.Filter">[docs]</a>
-<span class="k">class</span> <span class="nc">Filter</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Filter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Represents a filter expression used to filter results when fetching rows from a table.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">    - field_name (str): The name of the field to apply the filter on.</span>
 <span class="sd">    - value (str, int, etc.): The value to compare against using the operator.</span>
-<span class="sd">    - operator (str): The comparison operator. Default is &quot;equal&quot;.</span>
+<span class="sd">    - operator (str): The comparison operator. Default is "equal".</span>
 
 <span class="sd">    Properties:</span>
-<span class="sd">    - query_string (str): Computes the API&#39;s required GET parameter string.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    - query_string (str): Computes the API's required GET parameter string.</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;equal&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"equal"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Initializes the Filter object with the given field name, value, and operator.</span>
 
 <span class="sd">        :param field_name: The name of the field.</span>
 <span class="sd">        :param value: The value for comparison.</span>
-<span class="sd">        :param operator: The comparison operator. Default is &quot;equal&quot;.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        :param operator: The comparison operator. Default is "equal".</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">field_name</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;field_name must be a non-empty string.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidFieldNameError</span><span class="p">(</span><span class="s2">&quot;field_name must be a non-empty string.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"field_name must be a non-empty string."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidFieldNameError</span><span class="p">(</span><span class="s2">"field_name must be a non-empty string."</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">operator</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;operator must be a non-empty string.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidOperatorError</span><span class="p">(</span><span class="s2">&quot;operator must be a non-empty string.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"operator must be a non-empty string."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidOperatorError</span><span class="p">(</span><span class="s2">"operator must be a non-empty string."</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">field_name</span> <span class="o">=</span> <span class="n">field_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">query_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the filter as a query string formatted for use as a GET parameter in an API call.</span>
 
 <span class="sd">        Format: filter__&lt;encoded_field_name&gt;__&lt;operator&gt;=&lt;encoded_value&gt;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Encoding the field name and value for URL compatibility</span>
         <span class="n">encoded_field_name</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_name</span><span class="p">)</span>
         <span class="n">encoded_value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;filter__</span><span class="si">{</span><span class="n">encoded_field_name</span><span class="si">}</span><span class="s2">__</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">encoded_value</span><span class="si">}</span><span class="s2">&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"filter__</span><span class="si">{</span><span class="n">encoded_field_name</span><span class="si">}</span><span class="s2">__</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">encoded_value</span><span class="si">}</span><span class="s2">"</span></div>
 
 </pre></div>
 
