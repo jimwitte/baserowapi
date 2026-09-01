@@ -15,5 +15,7 @@ Baserowapi: API wrapper for Baserow
    linkedfields
    selectfields
    filters
+   semantic_inventory
+   refactoring_plan
    code
    baserowapi

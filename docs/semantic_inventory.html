@@ -1,0 +1,788 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field semantic inventory &mdash; Baserow API Package 0.1.0b5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Semantic refactoring plan" href="refactoring_plan.html" />
+    <link rel="prev" title="Working with Filters in Baserow API" href="filters.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow Client Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Field semantic inventory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#purpose-and-status">Purpose and status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#support-levels">Support levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-cutting-value-pipeline">Cross-cutting value pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#field-by-field-inventory">Field-by-field inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-field-category-gaps">Known field-category gaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-coverage-inventory">Test coverage inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-should-remain-central">What should remain central</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#settled-design-decisions">Settled design decisions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#focus-and-authority">Focus and authority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scalar-representations">Scalar representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documented-inputs-and-validation">Documented inputs and validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identity-bearing-values">Identity-bearing values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selects-links-files-and-collaborators">Selects, links, files, and collaborators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#computed-fields">Computed fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unknown-fields">Unknown fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filters">Filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rows-containers-and-transport">Rows, containers, and transport</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#evidence-still-required">Evidence still required</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Baserow API Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Field semantic inventory</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/semantic_inventory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="field-semantic-inventory">
+<h1>Field semantic inventory<a class="headerlink" href="#field-semantic-inventory" title="Link to this heading"></a></h1>
+<section id="purpose-and-status">
+<h2>Purpose and status<a class="headerlink" href="#purpose-and-status" title="Link to this heading"></a></h2>
+<p>This document inventories the Baserow-specific knowledge currently encoded by
+<code class="docutils literal notranslate"><span class="pre">baserowapi</span></code>. It is a design input for narrowing the library’s focus. It does
+not expand the public API or promise support that the implementation does not
+currently provide.</p>
+<p>The proposed focus is a schema-aware client for Baserow’s database-token data
+API. Under that focus, the library should own behavior that callers would
+otherwise have to rediscover from Baserow, including field metadata, read and
+write representations, read-only rules, filtering, pagination, linked rows,
+file upload, and Baserow error responses. General Python collection helpers,
+permissive argument coercion, logging setup, and HTTP implementation details do
+not belong in the public contract unless they support one of those behaviors.</p>
+<p>Evidence for this inventory was collected from:</p>
+<ul class="simple">
+<li><p>package implementation and integration tests at release <code class="docutils literal notranslate"><span class="pre">0.1.0b5</span></code>;</p></li>
+<li><p>a read-only schema request to the configured hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> test table
+on 2026-09-01;</p></li>
+<li><p>the maintainer’s generated API documentation for that database, captured on
+2026-09-01 and kept as an ignored local test reference; and</p></li>
+<li><p>Baserow’s current <a class="reference external" href="https://baserow.io/user-docs/database-api">Database API documentation</a>, <a class="reference external" href="https://baserow.io/user-docs/baserow-field-overview">field overview</a>, and <a class="reference external" href="https://baserow.io/user-docs/personal-api-tokens">database token
+documentation</a>.</p></li>
+</ul>
+<p>Hosted Baserow is not version-pinned. Observations dated 2026-09-01 are
+compatibility evidence, not a claim about a particular Baserow release.</p>
+</section>
+<section id="support-levels">
+<h2>Support levels<a class="headerlink" href="#support-levels" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">Strong</span></code></dt><dd><p>The package encodes material Baserow behavior and integration tests exercise
+its important read and write forms.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Partial</span></code></dt><dd><p>The package has a dedicated type or behavior, but one or more important
+representations, settings, operations, or tests are missing or inconsistent.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Pass-through</span></code></dt><dd><p>The package mostly preserves the server value. The class name adds little or
+no semantic guarantee.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Fallback</span></code></dt><dd><p>An unknown type is preserved through <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> and
+<code class="docutils literal notranslate"><span class="pre">GenericRowValue</span></code>. This supports reading but deliberately provides no
+validation or type-specific filtering.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Absent</span></code></dt><dd><p>Current Baserow documentation identifies the field category, but the package
+has no dedicated support and the configured test table does not exercise it.</p>
+</dd>
+</dl>
+</section>
+<section id="cross-cutting-value-pipeline">
+<h2>Cross-cutting value pipeline<a class="headerlink" href="#cross-cutting-value-pipeline" title="Link to this heading"></a></h2>
+<p>The current field semantics are not applied uniformly. This is more important
+than the behavior of any individual field class.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19.0%" />
+<col style="width: 28.0%" />
+<col style="width: 25.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Path</p></th>
+<th class="head"><p>Current behavior</p></th>
+<th class="head"><p>Guarantee</p></th>
+<th class="head"><p>Required direction</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Read row</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Row</span></code> chooses a <code class="docutils literal notranslate"><span class="pre">RowValue</span></code> subclass using a second type map, then
+<code class="docutils literal notranslate"><span class="pre">row[name]</span></code> returns <code class="docutils literal notranslate"><span class="pre">RowValue.value</span></code>.</p></td>
+<td><p>Specialized classes decode selects, links, lookups, dates, and passwords.
+Most scalar classes return the raw value.</p></td>
+<td><p>One field semantic authority should decode every read value.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Create rows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> checks only that field names are writable. It sends
+caller values directly to the batch endpoint.</p></td>
+<td><p>Field validation and <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> are bypassed.</p></td>
+<td><p>Validate and encode through the same field operation used by updates.</p></td>
+</tr>
+<tr class="row-even"><td><p>Update one <code class="docutils literal notranslate"><span class="pre">Row</span></code></p></td>
+<td><p>Mapping values are validated and formatted by <code class="docutils literal notranslate"><span class="pre">Field</span></code>. An update with
+no mapping formats each writable <code class="docutils literal notranslate"><span class="pre">RowValue</span></code>.</p></td>
+<td><p>This is the most complete current value pipeline.</p></td>
+<td><p>Make this pipeline authoritative and reuse it everywhere.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Batch update mappings</p></td>
+<td><p>Values are validated but the original mapping is sent without
+<code class="docutils literal notranslate"><span class="pre">format_for_api</span></code>.</p></td>
+<td><p>Validation and wire encoding can disagree with single-row updates.</p></td>
+<td><p>Encode each supplied field value before constructing the batch payload.</p></td>
+</tr>
+<tr class="row-even"><td><p>Filter rows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Table</span></code> sends a JSON filter tree. <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> is public but is
+not called; <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code> is a separate unused encoding.</p></td>
+<td><p>Operators are effectively passed through to the hosted service.</p></td>
+<td><p>Choose either explicit advisory validation or tested strict validation;
+keep only the encoding that the row query path uses.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unknown type</p></td>
+<td><p>Field and value mappings independently fall back to generic classes and
+log warnings.</p></td>
+<td><p>Raw values remain readable; writable unknown fields can be sent without
+semantic validation.</p></td>
+<td><p>Preserve the fallback, expose the original type, and treat unknown types
+as expected forward compatibility rather than exceptional logging.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The two independent dispatch tables, <code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ROW_VALUE_TYPE_MAPPING</span></code>, duplicate the list of supported Baserow types. A new
+field currently requires coordinated changes to both maps and usually two
+classes. Field-level <code class="docutils literal notranslate"><span class="pre">decode</span></code>, <code class="docutils literal notranslate"><span class="pre">validate</span></code>, and <code class="docutils literal notranslate"><span class="pre">encode</span></code> operations would
+put this knowledge in one place.</p>
+</section>
+<section id="field-by-field-inventory">
+<h2>Field-by-field inventory<a class="headerlink" href="#field-by-field-inventory" title="Link to this heading"></a></h2>
+<p>The read and write columns below describe current package behavior, not every
+shape the Baserow server may accept. In particular, create currently bypasses
+the field encoders described in the write column.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13.0%" />
+<col style="width: 16.0%" />
+<col style="width: 18.0%" />
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 23.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>API type</p></th>
+<th class="head"><p>Baserow knowledge</p></th>
+<th class="head"><p>Current read value</p></th>
+<th class="head"><p>Current accepted or encoded write</p></th>
+<th class="head"><p>Level</p></th>
+<th class="head"><p>Finding</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">text</span></code></p></td>
+<td><p>Text default, primary-field metadata, text filters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; no transformation.</p></td>
+<td><p>Partial</p></td>
+<td><p>The field is useful schema metadata, but <code class="docutils literal notranslate"><span class="pre">TextRowValue</span></code> is only a
+type-checked pass-through. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">long_text</span></code></p></td>
+<td><p>Text default and rich-text flag.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; Markdown semantics are not interpreted.</p></td>
+<td><p>Partial</p></td>
+<td><p>The field class earns its metadata; the separate RowValue class does not.
+Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code></p></td>
+<td><p>Boolean filter and API scalar shape.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></td>
+<td><p>Exactly <code class="docutils literal notranslate"><span class="pre">bool</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected locally.</p></td>
+<td><p>Partial</p></td>
+<td><p>Dedicated RowValue behavior duplicates the field validator. Empty-value
+behavior needs a deliberate nullable policy and tests.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">number</span></code></p></td>
+<td><p>Decimal-place and negative-number settings; numeric filters.</p></td>
+<td><p>Hosted tests currently receive a decimal string such as <code class="docutils literal notranslate"><span class="pre">&quot;42.00&quot;</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, numeric <code class="docutils literal notranslate"><span class="pre">str</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>; value is returned
+unchanged after validation.</p></td>
+<td><p>Partial</p></td>
+<td><p>No canonical Python numeric type is defined. Float/string validation can
+lose decimal precision. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rating</span></code></p></td>
+<td><p>Maximum value, color, style, and bounded integer validation.</p></td>
+<td><p>Numeric value.</p></td>
+<td><p>Integer from zero through <code class="docutils literal notranslate"><span class="pre">max_value</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected.</p></td>
+<td><p>Partial</p></td>
+<td><p>Field validation is meaningful. RowValue only repeats it. Local filters
+omit inclusive comparisons present in generated documentation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">date</span></code></p></td>
+<td><p>Date-only versus datetime, display format, 12/24-hour display, timezone
+display, and forced timezone metadata.</p></td>
+<td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code>; helper converts it to <code class="docutils literal notranslate"><span class="pre">datetime</span></code>.</p></td>
+<td><p>Permissive date strings; date-only fields strip time and datetime fields
+append midnight or <code class="docutils literal notranslate"><span class="pre">Z</span></code>. RowValue also accepts <code class="docutils literal notranslate"><span class="pre">datetime</span></code>.</p></td>
+<td><p>Partial</p></td>
+<td><p>This is essential Baserow knowledge, but permissive two-digit years,
+slash normalization, local-machine display timezone, and unconditional
+<code class="docutils literal notranslate"><span class="pre">Z</span></code> handling are ambiguous. New <code class="docutils literal notranslate"><span class="pre">date_is*</span></code> filters are missing while
+deprecated operators dominate the local list.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">created_on</span></code></p></td>
+<td><p>Computed timestamp and date display metadata.</p></td>
+<td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code> with date helpers.</p></td>
+<td><p>Read-only; setter raises.</p></td>
+<td><p>Partial</p></td>
+<td><p>Read-only handling is valuable. Tests only check presence, not timestamp
+shape or field settings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_modified</span></code></p></td>
+<td><p>Computed timestamp and date display metadata.</p></td>
+<td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code> with date helpers.</p></td>
+<td><p>Read-only; setter raises.</p></td>
+<td><p>Partial</p></td>
+<td><p>Same semantic family as <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">created_on</span></code>; a separate RowValue
+class adds little beyond the read-only setter.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">url</span></code></p></td>
+<td><p>URL field identity and Baserow filters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p>Any <code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; URL form is not checked locally.</p></td>
+<td><p>Partial</p></td>
+<td><p>Baserow validates URL form, while the package only guarantees a string.
+Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">email</span></code></p></td>
+<td><p>Email field identity and Baserow filters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p>Any <code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; email form is not checked locally.</p></td>
+<td><p>Partial</p></td>
+<td><p>Baserow validates email form, while the package only guarantees a string.
+Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phone_number</span></code></p></td>
+<td><p>Baserow’s 100-character limit and permitted character set.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code>.</p></td>
+<td><p>Empty, <code class="docutils literal notranslate"><span class="pre">None</span></code>, or a matching phone string.</p></td>
+<td><p>Partial</p></td>
+<td><p>The validator encodes real server knowledge. RowValue duplicates the
+validator. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_select</span></code></p></td>
+<td><p>Option IDs, labels, colors, read object shape, write-by-ID-or-label, and
+first-match label behavior.</p></td>
+<td><p>Selected option label or <code class="docutils literal notranslate"><span class="pre">None</span></code>; raw option ID and color are discarded.</p></td>
+<td><p>Option ID, known label, option dictionary, or <code class="docutils literal notranslate"><span class="pre">None</span></code>; dictionaries
+encode to IDs.</p></td>
+<td><p>Strong</p></td>
+<td><p>This is a core semantic family. A canonical option object would preserve
+ID and label and avoid losing identity. Local filters omit
+<code class="docutils literal notranslate"><span class="pre">starts_with</span></code>, <code class="docutils literal notranslate"><span class="pre">single_select_is_any_of</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">single_select_is_none_of</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_select</span></code></p></td>
+<td><p>Option metadata, read object list, and write-by-ID-or-label semantics.</p></td>
+<td><p>List of option labels; IDs and colors are discarded.</p></td>
+<td><p>List of IDs, labels, or returned option dictionaries. The package does
+not implement the server’s comma-separated shorthand.</p></td>
+<td><p>Strong</p></td>
+<td><p>Core semantic family, but preserving option identity would avoid
+ambiguous duplicate labels and make round trips explicit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">link_row</span></code></p></td>
+<td><p>Related table ID, reverse field ID, selection-view metadata, complete-set
+replacement semantics, empty-list clearing, and ID-or-primary-label writes.</p></td>
+<td><p>List of primary-field labels, falling back to IDs; row identity is
+normally discarded.</p></td>
+<td><p>Single ID/label, list of IDs/labels, or comma-separated labels. Every
+update replaces the complete relationship set.</p></td>
+<td><p>Strong</p></td>
+<td><p>This is essential Baserow knowledge. <code class="docutils literal notranslate"><span class="pre">get_options</span></code> returns labels only,
+even though duplicate labels resolve to the first row in table order.
+Options and read values should preserve both row ID and display label.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">file</span></code></p></td>
+<td><p>File object shape, upload endpoints, assignment after upload, public file
+URL, visible name, and size verification.</p></td>
+<td><p>List of Baserow file dictionaries.</p></td>
+<td><p>Locally restricted to a list of dictionaries containing <code class="docutils literal notranslate"><span class="pre">name</span></code>. Upload
+helpers produce suitable dictionaries.</p></td>
+<td><p>Strong</p></td>
+<td><p>Upload behavior removes knowledge from callers. Validation is narrower
+than Baserow, which also documents arrays or comma-separated file names.
+Local filters omit <code class="docutils literal notranslate"><span class="pre">files_lower_than</span></code>. Downloading is useful but is not
+required to encode the database API.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">formula</span></code></p></td>
+<td><p>Formula text, result type, array result type, error, and read-only status.</p></td>
+<td><p>Raw server value.</p></td>
+<td><p>Read-only.</p></td>
+<td><p>Partial</p></td>
+<td><p>Result metadata is essential because formulas can return strings,
+numbers, dates, arrays, buttons, and other shapes. The configured field
+reports <code class="docutils literal notranslate"><span class="pre">formula_type=&quot;button&quot;</span></code>. The package does not decode by result
+type and declares no filters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">count</span></code></p></td>
+<td><p>Link-through metadata, numeric formula result, and read-only status.</p></td>
+<td><p>Raw server value.</p></td>
+<td><p>Read-only.</p></td>
+<td><p>Partial</p></td>
+<td><p>It should reuse canonical number-result semantics. Local filters omit
+<code class="docutils literal notranslate"><span class="pre">starts_with</span></code> and inclusive comparisons.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lookup</span></code></p></td>
+<td><p>Link field, target field, array result metadata, row IDs, values, and
+read-only status.</p></td>
+<td><p>List of extracted values; associated row IDs are discarded.</p></td>
+<td><p>Read-only.</p></td>
+<td><p>Partial</p></td>
+<td><p>The configured field reports <code class="docutils literal notranslate"><span class="pre">formula_type=&quot;array&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">array_formula_type=&quot;text&quot;</span></code>. Result type must drive decoding and
+filters. Dropping row IDs prevents callers from disambiguating results.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_collaborators</span></code></p></td>
+<td><p>Notification metadata, collaborator object shape, and collaborator
+filters.</p></td>
+<td><p>Raw list of collaborator dictionaries.</p></td>
+<td><p>List of dictionaries each containing <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p></td>
+<td><p>Partial</p></td>
+<td><p>The field validator has value; the RowValue is pass-through. Tests only
+exercise an empty list and do not establish returned user metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">password</span></code></p></td>
+<td><p>Write-only secret behavior: server reads are <code class="docutils literal notranslate"><span class="pre">null</span></code> or <code class="docutils literal notranslate"><span class="pre">true</span></code> and a
+string write sets the password.</p></td>
+<td><p>Boolean indicating whether the raw value is non-<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>, or literal <code class="docutils literal notranslate"><span class="pre">True</span></code> pass local validation.</p></td>
+<td><p>Partial</p></td>
+<td><p>The asymmetry is important, but accepting <code class="docutils literal notranslate"><span class="pre">True</span></code> for writes is not
+justified by generated API documentation. The RowValue contains unused
+state and would report a raw <code class="docutils literal notranslate"><span class="pre">False</span></code> as set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">uuid</span></code></p></td>
+<td><p>Read-only unique persistent identifier.</p></td>
+<td><p>Raw UUID value through generic fallback.</p></td>
+<td><p>Excluded from writes because hosted metadata says read-only.</p></td>
+<td><p>Fallback</p></td>
+<td><p>The 2026-09-01 hosted schema confirms API type <code class="docutils literal notranslate"><span class="pre">uuid</span></code>. Dedicated
+support should define UUID representation and equality filters without a
+parallel RowValue subclass.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">autonumber</span></code></p></td>
+<td><p>Read-only monotonically assigned row number.</p></td>
+<td><p>Raw numeric value through generic fallback.</p></td>
+<td><p>Excluded from writes because hosted metadata says read-only.</p></td>
+<td><p>Fallback</p></td>
+<td><p>The hosted schema confirms API type <code class="docutils literal notranslate"><span class="pre">autonumber</span></code>. It should reuse a
+read-only numeric semantic family and expose its filters.</p></td>
+</tr>
+<tr class="row-even"><td><p>Other unknown API type</p></td>
+<td><p>Original type string and arbitrary metadata are retained.</p></td>
+<td><p>Raw server value.</p></td>
+<td><p>Passed through if Baserow metadata does not mark the field read-only.</p></td>
+<td><p>Fallback</p></td>
+<td><p>This behavior is necessary because hosted Baserow changes independently
+of the package. Unknown writes should be explicitly documented as
+unvalidated rather than appearing fully supported.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="known-field-category-gaps">
+<h2>Known field-category gaps<a class="headerlink" href="#known-field-category-gaps" title="Link to this heading"></a></h2>
+<p>Baserow’s current field overview lists these categories in addition to those
+above. Their exact API type strings and wire representations have not been
+verified against the configured database, so display names must not be used as
+implementation keys without further evidence.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21.0%" />
+<col style="width: 18.0%" />
+<col style="width: 25.0%" />
+<col style="width: 36.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Baserow category</p></th>
+<th class="head"><p>Expected character</p></th>
+<th class="head"><p>Current handling</p></th>
+<th class="head"><p>Evidence needed before implementation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Duration</p></td>
+<td><p>Writable scalar with display-unit settings.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>API type string, raw and write units, precision, metadata, and filters.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Rollup</p></td>
+<td><p>Read-only computed scalar whose type depends on aggregation and target.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>API type string, aggregation metadata, result types, null/error forms,
+and result-dependent filters.</p></td>
+</tr>
+<tr class="row-even"><td><p>Created by</p></td>
+<td><p>Read-only collaborator-like value.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>API type string, returned user object, visibility rules, and filters.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Last modified by</p></td>
+<td><p>Read-only collaborator-like value.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>API type string, returned user object, visibility rules, and filters.</p></td>
+</tr>
+<tr class="row-even"><td><p>AI prompt</p></td>
+<td><p>Computed or asynchronously populated value.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>Availability, API type, result and error states, mutability, and whether
+database-token use has additional restrictions.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Edit row link</p></td>
+<td><p>Generated action/link value.</p></td>
+<td><p>Generic fallback if encountered.</p></td>
+<td><p>API type, returned representation, token/access behavior, and whether it
+belongs in a data client rather than an administrative client.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="test-coverage-inventory">
+<h2>Test coverage inventory<a class="headerlink" href="#test-coverage-inventory" title="Link to this heading"></a></h2>
+<p>All current tests use hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code>. A passing create test proves that
+the server accepts the supplied payload; it does not prove that the local field
+encoder was used because <code class="docutils literal notranslate"><span class="pre">add_rows</span></code> bypasses that encoder.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 28.0%" />
+<col style="width: 47.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Coverage</p></th>
+<th class="head"><p>Fields</p></th>
+<th class="head"><p>Missing assurance</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Create and returned value</p></td>
+<td><p>Text, long text, boolean, number, rating, three date configurations, URL,
+email, empty file, selects, phone, empty links, empty collaborators, and
+password.</p></td>
+<td><p>Invalid values, <code class="docutils literal notranslate"><span class="pre">None</span></code> policy, encoder use, option identity, duplicate
+labels, precision, timezone edges, and non-empty collaborators.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Specialized operation</p></td>
+<td><p>Date conversion/display, file upload/download, linked-row options and
+label update.</p></td>
+<td><p>Aware datetimes, forced timezone behavior, upload-by-URL, replacement,
+partial download failure, linked IDs, duplicate primary labels, and
+complete-set replacement.</p></td>
+</tr>
+<tr class="row-even"><td><p>Presence only</p></td>
+<td><p>Created on, last modified, formula, count, lookup, UUID, and Autonumber.</p></td>
+<td><p>Actual returned shapes, result-dependent formula/lookup behavior,
+read-only enforcement, decoding, formatting, and filters.</p></td>
+</tr>
+<tr class="row-odd"><td><p>No direct field-semantic test</p></td>
+<td><p>Field and RowValue mappings, Generic fallback contract, local validators,
+filter compatibility, and create/update encoding parity.</p></td>
+<td><p>These need focused offline tests around captured metadata and values,
+supplemented by a smaller live compatibility matrix.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="what-should-remain-central">
+<h2>What should remain central<a class="headerlink" href="#what-should-remain-central" title="Link to this heading"></a></h2>
+<p>The inventory supports retaining and strengthening these responsibilities:</p>
+<ul class="simple">
+<li><p>database-token authentication, Baserow endpoints, pagination, and structured
+error interpretation;</p></li>
+<li><p>table discovery, schema retrieval, cached metadata, and an explicit schema
+refresh operation;</p></li>
+<li><p>one field semantic authority for decoding, validation, encoding, read-only
+status, and result-dependent behavior;</p></li>
+<li><p>row reads, singular and batch writes, movement, deletion, and uniform value
+encoding;</p></li>
+<li><p>query construction for Baserow filters, ordering, search, views, includes,
+excludes, and pagination;</p></li>
+<li><p>select-option and linked-row identity, including Baserow’s ambiguous
+label-resolution rules;</p></li>
+<li><p>file upload and assignment; and</p></li>
+<li><p>forward-compatible raw access for field types the package does not yet know.</p></li>
+</ul>
+<p>These responsibilities do not require a public custom field list, a public
+custom row-value list, one RowValue subclass per Baserow type, global logging
+configuration, or multiple public request-parsing helpers. <code class="docutils literal notranslate"><span class="pre">Row</span></code> convenience
+methods can remain if they delegate to the same singular or batch primitives
+and therefore preserve one semantic implementation.</p>
+</section>
+<section id="settled-design-decisions">
+<h2>Settled design decisions<a class="headerlink" href="#settled-design-decisions" title="Link to this heading"></a></h2>
+<p>These decisions describe the intended contract for the refactor. They do not
+describe behavior already implemented in release <code class="docutils literal notranslate"><span class="pre">0.1.0b5</span></code>.</p>
+<section id="focus-and-authority">
+<h3>Focus and authority<a class="headerlink" href="#focus-and-authority" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">baserowapi</span></code> will focus on the schema-aware database-token data API. It will
+encode Baserow field, query, row, file, and error behavior without growing into
+a complete administration SDK or a general HTTP framework.</p>
+<p>Each Field will become the single semantic authority for decoding a Baserow
+response, validating a supported input, encoding an API write, reporting
+read-only status, exposing advisory filter knowledge, and interpreting computed
+result metadata. Create, single-update, and batch-update operations will use the
+same field encoder.</p>
+</section>
+<section id="scalar-representations">
+<h3>Scalar representations<a class="headerlink" href="#scalar-representations" title="Link to this heading"></a></h3>
+<p>Ordinary reads will preserve Baserow scalar representations:</p>
+<ul class="simple">
+<li><p>Number values remain Baserow decimal strings, including significant trailing
+zeroes such as <code class="docutils literal notranslate"><span class="pre">&quot;42.00&quot;</span></code>. Validation may use <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> internally but will
+not expose <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> as the row value.</p></li>
+<li><p>Date-only values remain ISO date strings and datetime values remain ISO
+timestamp strings.</p></li>
+<li><p>Explicit date helpers may parse date-only values to <code class="docutils literal notranslate"><span class="pre">date</span></code> and datetime
+values to timezone-aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code>. Display formatting is also explicit
+and may apply field metadata such as <code class="docutils literal notranslate"><span class="pre">date_force_timezone</span></code>.</p></li>
+<li><p>Date writes accept <code class="docutils literal notranslate"><span class="pre">None</span></code>, the appropriate Python <code class="docutils literal notranslate"><span class="pre">date</span></code> or timezone-aware
+<code class="docutils literal notranslate"><span class="pre">datetime</span></code>, and strict ISO strings. The core path will not guess two-digit
+years, accept locale-dependent slash formats, assume midnight, append an
+unjustified <code class="docutils literal notranslate"><span class="pre">Z</span></code>, or silently use the executing machine’s timezone.</p></li>
+</ul>
+</section>
+<section id="documented-inputs-and-validation">
+<h3>Documented inputs and validation<a class="headerlink" href="#documented-inputs-and-validation" title="Link to this heading"></a></h3>
+<p>The core client will accept every input representation documented by Baserow.
+This includes IDs, labels, lists, comma-separated strings, and empty forms where
+the relevant field documentation permits them. The package will document
+Baserow’s first-match behavior for ambiguous option labels and linked-row
+primary values instead of imposing a narrower contract.</p>
+<p>Optional strict helpers may resolve stable IDs and reject absent or ambiguous
+labels. Local validation will enforce stable structural rules but will not use a
+stale local compatibility matrix to block behavior accepted by the unpinned
+hosted service. Convenience coercions not documented by Baserow must be
+explicit, deterministic helpers rather than implicit core behavior.</p>
+</section>
+<section id="identity-bearing-values">
+<h3>Identity-bearing values<a class="headerlink" href="#identity-bearing-values" title="Link to this heading"></a></h3>
+<p>Reads will use small, lossless domain objects when Baserow identity or structure
+would otherwise be discarded. Initial concepts include:</p>
+<ul class="simple">
+<li><p>a select option retaining ID, value, color, and raw metadata;</p></li>
+<li><p>a linked-row reference retaining row ID, display value, and raw metadata;</p></li>
+<li><p>a Baserow file retaining its server name, visible name, URL, size, MIME type
+when present, and raw metadata;</p></li>
+<li><p>a collaborator retaining user ID, available display information, and raw
+metadata; and</p></li>
+<li><p>a lookup entry retaining related row ID, decoded value, and raw metadata.</p></li>
+</ul>
+<p>These will be independent value records, not a shared hierarchy or capability
+framework. They will use ordinary Python collections, contain no HTTP behavior,
+and remain suitable as write inputs. Scalar values will not be wrapped merely
+for symmetry.</p>
+</section>
+<section id="selects-links-files-and-collaborators">
+<h3>Selects, links, files, and collaborators<a class="headerlink" href="#selects-links-files-and-collaborators" title="Link to this heading"></a></h3>
+<p>Select and link writes will accept both the lossless domain objects and every
+documented Baserow representation. IDs or returned objects are the recommended
+deterministic forms; labels and comma-separated strings retain Baserow’s
+documented resolution behavior. Strict lookup helpers live on the relevant
+Field and reject ambiguity when requested.</p>
+<p>Linked-row updates replace the complete relationship set. Empty lists clear the
+relationship. Any add/remove convenience must make the resulting complete-set
+write explicit and document that it cannot provide an atomic concurrent update
+when the Baserow endpoint itself only replaces the set.</p>
+<p>File upload will be a Client operation that returns an unattached Baserow file
+object. Assignment to a row will be explicit, for example by passing the
+returned object in a file-field update. Append and replace behavior will be
+expressed by the list supplied to the row update rather than hidden RowValue
+state. Generic downloading of public file URLs and recursive directory upload
+do not belong in the semantic core; they may be separate utilities if retained.</p>
+<p>Collaborator values will preserve identity and raw returned metadata. The data
+client will assign documented collaborator values but will not take on user
+invitations, permissions, or workspace administration.</p>
+</section>
+<section id="computed-fields">
+<h3>Computed fields<a class="headerlink" href="#computed-fields" title="Link to this heading"></a></h3>
+<p>Formula, lookup, count, rollup, and other computed fields will decode according
+to result metadata such as <code class="docutils literal notranslate"><span class="pre">formula_type</span></code> and <code class="docutils literal notranslate"><span class="pre">array_formula_type</span></code> as well
+as their declared field type. They will reuse the corresponding scalar or
+identity-bearing representation. Count uses number semantics; computed dates
+use date semantics; computed select or linked values preserve identity.</p>
+<p>Computed fields remain read-only when their hosted metadata says so. Unknown
+result types, including unverified button, AI, and error states, remain raw
+until their representations are observed. The package will not collapse a
+formula error or unfamiliar result into <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</section>
+<section id="unknown-fields">
+<h3>Unknown fields<a class="headerlink" href="#unknown-fields" title="Link to this heading"></a></h3>
+<p>Unknown hosted field types are expected compatibility cases. Their original API
+type and raw metadata remain inspectable. Reads return the raw value unchanged;
+writes pass values through unchanged only when hosted metadata marks the field
+writable. The package will not claim validation, formatting, or filter knowledge
+for an unknown type. Unknown types will not produce a warning for every field
+and row. The existing generic fallback may remain as a compatibility alias while
+the public concept is clarified.</p>
+</section>
+<section id="filters">
+<h3>Filters<a class="headerlink" href="#filters" title="Link to this heading"></a></h3>
+<p>Normal filter validation will cover stable query structure, not enforce the
+current static compatibility lists. Operator names and values pass through to
+Baserow. Known field/operator compatibility remains advisory and must
+distinguish <code class="docutils literal notranslate"><span class="pre">unknown</span></code> from <code class="docutils literal notranslate"><span class="pre">unsupported</span></code>. An optional strict helper may
+reject operators known to be incompatible.</p>
+<p>The JSON filter-tree representation used by row queries will be authoritative.
+The detached <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> and unused legacy <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code> will
+be removed or replaced rather than maintained as competing paths. Recursive
+groups will be supported only to the extent verified in current Baserow
+documentation and hosted behavior.</p>
+</section>
+<section id="rows-containers-and-transport">
+<h3>Rows, containers, and transport<a class="headerlink" href="#rows-containers-and-transport" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Table.fields</span></code> will become an ordered read-only mapping from field name to
+Field. <code class="docutils literal notranslate"><span class="pre">FieldList</span></code> and <code class="docutils literal notranslate"><span class="pre">RowValueList</span></code> will not remain public abstractions.
+Row access will return values decoded by the Field, with explicit access to the
+original raw value when needed. Per-type RowValue classes will be removed after
+their behavior has moved to Fields and domain records.</p>
+<p>Explicit <code class="docutils literal notranslate"><span class="pre">row.update({...})</span></code> is the preferred persistence operation. The
+current staged <code class="docutils literal notranslate"><span class="pre">row[name]</span> <span class="pre">=</span> <span class="pre">value;</span> <span class="pre">row.update()</span></code> behavior should be removed or
+modeled explicitly rather than allowing raw and decoded state to diverge. Row
+operation conveniences may remain as thin delegates to the same Table
+primitives used for singular and batch requests.</p>
+<p>The Client will retain one request boundary for authentication, timeouts,
+connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging
+configuration, header combination, request execution, and response parsing will
+be private implementation details. A documented low-level <code class="docutils literal notranslate"><span class="pre">request</span></code> escape
+hatch will remain public for hosted endpoints not yet modeled by the package;
+it provides transport and error handling, not schema semantics or endpoint
+stability. Mutating requests will not be retried without an idempotency
+guarantee.</p>
+</section>
+</section>
+<section id="evidence-still-required">
+<h2>Evidence still required<a class="headerlink" href="#evidence-still-required" title="Link to this heading"></a></h2>
+<p>The design direction is settled, but implementation still requires evidence
+for several hosted representations:</p>
+<ul class="simple">
+<li><p>non-empty collaborator reads and every documented collaborator write form;</p></li>
+<li><p>exact API types, metadata, read values, write values, and filters for Duration,
+Rollup, Created by, Last modified by, AI prompt, and Edit row link;</p></li>
+<li><p>formula and rollup values for each result family, including per-field and
+per-cell error states;</p></li>
+<li><p>lookup entries whose target is not text;</p></li>
+<li><p>current nested filter-group limits and serialization; and</p></li>
+<li><p>duplicate select labels and linked primary values, selection-view limits, and
+complete-set replacement behavior.</p></li>
+</ul>
+<p>Do not invent an API type string, result shape, or validation rule to fill these
+gaps. Add a live field to the disposable test database, inspect the generated
+documentation and response, record sanitized fixtures, and describe hosted
+compatibility by verification date.</p>
+<p>The implementation sequence and phase exit criteria are recorded in
+<a class="reference internal" href="refactoring_plan.html"><span class="doc">Semantic refactoring plan</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="filters.html" class="btn btn-neutral float-left" title="Working with Filters in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="refactoring_plan.html" class="btn btn-neutral float-right" title="Semantic refactoring plan" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

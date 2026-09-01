@@ -22,6 +22,51 @@ Important locations:
 * `docsrc/` contains the handwritten Sphinx documentation sources.
 * `docs/` contains generated, tracked documentation output.
 
+## Design direction
+
+Treat `baserowapi` as a schema-aware client for Baserow's database-token data
+API. The package should encode Baserow-specific knowledge that callers would
+otherwise need to rediscover, including field metadata and value shapes,
+read-only behavior, filters, pagination, linked-row replacement semantics, file
+upload, and structured Baserow errors. Do not expand it into a general HTTP
+framework or a complete Baserow administration SDK without an explicit design
+decision.
+
+Preserve Baserow's representation by default. Add Python conveniences only when
+they are explicit, deterministic, and grounded in Baserow metadata. In
+particular, preserve number values as Baserow decimal strings and date values as
+ISO strings on ordinary reads. Typed parsing, display formatting, and similar
+conversions should be explicit helpers. Do not guess date formats, assume a
+timezone, or add other undocumented coercion in the core value path.
+
+Accept every input representation documented by Baserow. Where Baserow permits
+potentially ambiguous forms such as option labels, linked-row primary values,
+or comma-separated strings, support and document that behavior. Optional strict
+helpers may resolve stable IDs and reject ambiguity, but the core client should
+not impose a narrower contract than Baserow. Keep local validation focused on
+stable structural rules so it does not unnecessarily block behavior added by
+the unpinned hosted service.
+
+Use small domain objects when they preserve meaningful Baserow identity or
+structure, such as a select option or linked-row reference. Keep these objects
+lossless and simple: retain raw metadata, use ordinary collections, and avoid
+shared hierarchies, registries, HTTP behavior, or wrappers added only for
+symmetry. Do not wrap scalar values merely to make the object model uniform.
+
+The intended semantic authority is the field definition: decoding, validation,
+API encoding, read-only behavior, filters, and computed-result metadata should
+eventually have one implementation used by create, single-update, and batch
+update paths. Until that refactor occurs, follow the current requirement to
+update both field and RowValue mappings. Always retain a raw generic fallback
+for hosted Baserow field types the package does not yet recognize.
+
+`docsrc/semantic_inventory.rst` records implementation evidence, current
+coverage, settled semantic decisions, and remaining evidence gaps. Treat settled
+rules in this file as agent policy; do not invent behavior for gaps that still
+require hosted verification. `docsrc/refactoring_plan.rst` defines the reviewed
+phase order and exit criteria; completing one phase does not authorize starting
+the next without review.
+
 ## Working rules
 
 Inspect the relevant implementation, callers, tests, and documentation before

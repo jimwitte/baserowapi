@@ -1,0 +1,503 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semantic refactoring plan &mdash; Baserow API Package 0.1.0b5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Code Structure" href="code.html" />
+    <link rel="prev" title="Field semantic inventory" href="semantic_inventory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Baserow API Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Baserow Client Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Semantic refactoring plan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#purpose">Purpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constraints">Constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-1-establish-offline-characterization-tests">Phase 1: Establish offline characterization tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#goal">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#work">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exit-criteria">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-2-introduce-the-field-semantic-interface">Phase 2: Introduce the Field semantic interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-3-add-identity-bearing-values-and-file-upload">Phase 3: Add identity-bearing values and file upload</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-4-implement-computed-unknown-and-filter-semantics">Phase 4: Implement computed, unknown, and filter semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-5-unify-row-create-and-update-encoding">Phase 5: Unify row create and update encoding</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-6-simplify-the-public-row-and-field-model">Phase 6: Simplify the public row and field model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id15">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-7-consolidate-transport-and-discovery">Phase 7: Consolidate transport and discovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id17">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-8-compatibility-documentation-and-beta-release">Phase 8: Compatibility, documentation, and beta release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id19">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id20">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#working-method-for-each-phase">Working method for each phase</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Baserow API Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Semantic refactoring plan</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/refactoring_plan.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="semantic-refactoring-plan">
+<h1>Semantic refactoring plan<a class="headerlink" href="#semantic-refactoring-plan" title="Link to this heading"></a></h1>
+<section id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading"></a></h2>
+<p>This plan turns the decisions in <a class="reference internal" href="semantic_inventory.html"><span class="doc">Field semantic inventory</span></a> into reviewable,
+independently verifiable phases. It does not authorize all phases at once. Each
+phase should begin only after the preceding phase is complete and the next
+scope has been reviewed.</p>
+<p>The refactor is successful when the package presents a smaller conceptual model
+while encoding more Baserow knowledge. It should remove duplicated value
+semantics, make all write paths agree, preserve hosted forward compatibility,
+and leave another maintainer able to find each rule in one place.</p>
+<p>The working release target is <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> on branch
+<code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. The new minor beta identifies this as a deliberate,
+potentially breaking public API revision. Keep the installed package and Sphinx
+release at the last published version until Phase 8 prepares the release.</p>
+</section>
+<section id="constraints">
+<h2>Constraints<a class="headerlink" href="#constraints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> is not version-pinned. Live behavior must be described
+by service and verification date.</p></li>
+<li><p>Existing public contracts should remain until a phase explicitly replaces
+them. Breaking changes are permitted during beta but must be deliberate,
+documented, and tested.</p></li>
+<li><p>The existing generic fallback must remain usable throughout the refactor.</p></li>
+<li><p>Live tests must run serially against the disposable configured tables and
+clean up resources they create.</p></li>
+<li><p>No phase should introduce a registry, plugin system, shared value hierarchy,
+or new dependency without a demonstrated requirement.</p></li>
+<li><p>Administrative workspace, database, table, view, user, and permission APIs
+remain out of scope.</p></li>
+<li><p>Automatic retries for mutating requests remain out of scope without an
+idempotency guarantee.</p></li>
+</ul>
+</section>
+<section id="phase-1-establish-offline-characterization-tests">
+<h2>Phase 1: Establish offline characterization tests<a class="headerlink" href="#phase-1-establish-offline-characterization-tests" title="Link to this heading"></a></h2>
+<section id="goal">
+<h3>Goal<a class="headerlink" href="#goal" title="Link to this heading"></a></h3>
+<p>Create a fast, credential-free safety net around the Baserow metadata and value
+shapes the refactor will move.</p>
+</section>
+<section id="work">
+<h3>Work<a class="headerlink" href="#work" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Add sanitized JSON or Python fixtures derived from hosted field metadata and
+row responses. Fixtures must contain no token, authorization header, personal
+path, or unrelated user data.</p></li>
+<li><p>Characterize current number, date, select, linked-row, file, password,
+computed, collaborator, UUID, Autonumber, and unknown-field behavior.</p></li>
+<li><p>Test filter-tree and row payload serialization without making HTTP requests.</p></li>
+<li><p>Test structured error parsing at the request boundary using constructed
+responses or a fake session.</p></li>
+<li><p>Mark offline tests separately from live integration tests so both suites can
+be selected explicitly.</p></li>
+</ul>
+</section>
+<section id="exit-criteria">
+<h3>Exit criteria<a class="headerlink" href="#exit-criteria" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Offline tests run without <code class="docutils literal notranslate"><span class="pre">.env</span></code> or network access.</p></li>
+<li><p>Existing live integration tests still pass serially.</p></li>
+<li><p>Fixtures document their hosted verification date and source scenario.</p></li>
+<li><p>No public behavior has changed.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-2-introduce-the-field-semantic-interface">
+<h2>Phase 2: Introduce the Field semantic interface<a class="headerlink" href="#phase-2-introduce-the-field-semantic-interface" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>Goal<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Give decoding, validation, and API encoding one explicit owner without yet
+removing the existing public RowValue surface.</p>
+</section>
+<section id="id2">
+<h3>Work<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Add explicit Field operations equivalent to <code class="docutils literal notranslate"><span class="pre">decode(raw)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">validate(value)</span></code>, and <code class="docutils literal notranslate"><span class="pre">encode(value)</span></code>. Exact method names may follow
+established package terminology, but their responsibilities must remain
+distinct.</p></li>
+<li><p>Make the base or unknown Field pass raw values through and preserve original
+API type and metadata.</p></li>
+<li><p>Implement the settled scalar contracts first: text-like values, booleans,
+ratings, Baserow decimal strings, and strict ISO dates. Keep UUID and
+Autonumber lossless through the unknown fallback until their dedicated field
+knowledge is added in Phase 4.</p></li>
+<li><p>Add explicit date parsing and display helpers driven by field metadata.</p></li>
+<li><p>Keep current RowValue classes as temporary delegates where compatibility
+requires them; do not duplicate newly moved logic.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Exit criteria<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Each implemented scalar rule has one Field-owned implementation and focused
+offline tests.</p></li>
+<li><p>Number reads preserve decimal strings and date reads preserve ISO strings.</p></li>
+<li><p>Date helpers reject implicit timezone and locale guessing.</p></li>
+<li><p>Unknown fields remain lossless and do not emit per-row warnings.</p></li>
+<li><p>Existing public Row and Table behavior remains available unless a reviewed
+defect requires an earlier correction.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-3-add-identity-bearing-values-and-file-upload">
+<h2>Phase 3: Add identity-bearing values and file upload<a class="headerlink" href="#phase-3-add-identity-bearing-values-and-file-upload" title="Link to this heading"></a></h2>
+<section id="id4">
+<h3>Goal<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>Preserve Baserow identity for structured values and separate file creation from
+row assignment.</p>
+</section>
+<section id="id5">
+<h3>Work<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Add independent, lossless value records for select options, linked rows,
+Baserow files, collaborators, and lookup entries as verified by fixtures.</p></li>
+<li><p>Decode single and multiple selects without discarding option IDs or metadata.</p></li>
+<li><p>Decode linked rows and lookups without discarding related row IDs.</p></li>
+<li><p>Accept the value records plus every Baserow-documented write form.</p></li>
+<li><p>Add optional strict label-resolution helpers that reject missing or ambiguous
+matches while preserving ordinary server-compatible label writes.</p></li>
+<li><p>Move file upload and upload-via-URL operations to the Client. Return an
+unattached Baserow file value and require explicit row assignment.</p></li>
+<li><p>Keep generic file downloading and directory traversal outside the semantic
+core. If retained, place them in a clearly separate utility.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Exit criteria<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Structured reads preserve identity and raw metadata.</p></li>
+<li><p>Returned domain values round-trip through the Field encoder.</p></li>
+<li><p>IDs, labels, documented comma-separated forms, and empty forms match hosted
+Baserow behavior.</p></li>
+<li><p>Duplicate-label strict helpers have deterministic tests.</p></li>
+<li><p>File upload and row assignment are independently testable operations.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-4-implement-computed-unknown-and-filter-semantics">
+<h2>Phase 4: Implement computed, unknown, and filter semantics<a class="headerlink" href="#phase-4-implement-computed-unknown-and-filter-semantics" title="Link to this heading"></a></h2>
+<section id="id7">
+<h3>Goal<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>Interpret computed results through their declared result metadata and make
+filter compatibility forward-compatible.</p>
+</section>
+<section id="id8">
+<h3>Work<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Dispatch formula, lookup, count, rollup, and related results through their
+result metadata and the existing scalar or identity value semantics.</p></li>
+<li><p>Preserve unknown computed result and error shapes raw.</p></li>
+<li><p>Add dedicated UUID and Autonumber field knowledge while retaining the unknown
+fallback for newer hosted types.</p></li>
+<li><p>Replace strict static filter enforcement with structural validation and
+advisory known compatibility.</p></li>
+<li><p>Distinguish supported, unsupported, and unknown filter compatibility.</p></li>
+<li><p>Keep JSON filter trees as the sole row-query encoding and remove the unused
+query-string path when migration permits.</p></li>
+<li><p>Add new field categories only after their hosted representations have been
+observed and recorded.</p></li>
+</ul>
+</section>
+<section id="id9">
+<h3>Exit criteria<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Computed values reuse the same representations as equivalent writable fields.</p></li>
+<li><p>Read-only status prevents every create and update path from sending computed
+fields.</p></li>
+<li><p>Unknown result types and unknown filter operators remain pass-through rather
+than becoming false client errors.</p></li>
+<li><p>Current hosted filter examples pass focused live compatibility tests.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-5-unify-row-create-and-update-encoding">
+<h2>Phase 5: Unify row create and update encoding<a class="headerlink" href="#phase-5-unify-row-create-and-update-encoding" title="Link to this heading"></a></h2>
+<section id="id10">
+<h3>Goal<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<p>Make every row write operation apply the same Field semantics and produce the
+same wire representation for the same value.</p>
+</section>
+<section id="id11">
+<h3>Work<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Route singular create, batch create, singular update, and batch update through
+one internal row encoder.</p></li>
+<li><p>Separate singular and plural methods where the current union inputs or return
+types make the contract ambiguous.</p></li>
+<li><p>Validate row IDs, batch sizes, writable fields, and response shapes in one
+consistent location.</p></li>
+<li><p>Define and test behavior for partial batch failure before adding any retry or
+recovery mechanism.</p></li>
+<li><p>Keep Row convenience operations as thin delegates to the same Table
+primitives.</p></li>
+</ul>
+</section>
+<section id="id12">
+<h3>Exit criteria<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Equivalent singular and batch inputs produce equivalent encoded field values.</p></li>
+<li><p>Create no longer bypasses Field validation and encoding.</p></li>
+<li><p>Mapping-based and object-based updates no longer diverge.</p></li>
+<li><p>Return types are fixed and documented for singular and plural operations.</p></li>
+<li><p>Live integration tests cover representative scalar, identity, computed
+exclusion, file, and unknown-field cases.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-6-simplify-the-public-row-and-field-model">
+<h2>Phase 6: Simplify the public row and field model<a class="headerlink" href="#phase-6-simplify-the-public-row-and-field-model" title="Link to this heading"></a></h2>
+<section id="id13">
+<h3>Goal<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<p>Remove containers and per-cell classes that no longer own Baserow knowledge.</p>
+</section>
+<section id="id14">
+<h3>Work<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Expose Table fields as an ordered read-only mapping by field name.</p></li>
+<li><p>Make Row item access return Field-decoded values and provide explicit raw
+value access.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">FieldList</span></code>, <code class="docutils literal notranslate"><span class="pre">RowValueList</span></code>, and per-type RowValue classes after all
+retained behavior has moved to Fields, value records, Client operations, or
+explicit utilities.</p></li>
+<li><p>Remove or explicitly model staged Row mutation so raw, decoded, and pending
+state cannot diverge.</p></li>
+<li><p>Review root-package exports and expose only the concepts intended as public
+contracts.</p></li>
+<li><p>Provide migration examples for label-only select/link values, file upload,
+<code class="docutils literal notranslate"><span class="pre">row.values</span></code>, field iteration, and staged updates.</p></li>
+</ul>
+</section>
+<section id="id15">
+<h3>Exit criteria<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>No remaining RowValue or custom-container behavior is required by the package
+implementation or tests.</p></li>
+<li><p>The public workflow remains Client to Table to Row, with Fields and a small
+set of Baserow value records.</p></li>
+<li><p>Raw Baserow values and metadata remain inspectable.</p></li>
+<li><p>Removed imports and changed return types are listed in the changelog and
+migration documentation.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-7-consolidate-transport-and-discovery">
+<h2>Phase 7: Consolidate transport and discovery<a class="headerlink" href="#phase-7-consolidate-transport-and-discovery" title="Link to this heading"></a></h2>
+<section id="id16">
+<h3>Goal<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<p>Keep one reliable Baserow request boundary while making incidental transport
+mechanics private.</p>
+</section>
+<section id="id17">
+<h3>Work<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Consolidate authentication, timeout, connectivity, HTTP, parsing, and Baserow
+error behavior in one request implementation.</p></li>
+<li><p>Remove global logging configuration from client initialization.</p></li>
+<li><p>Make header combination, raw execution, and response parsing private.</p></li>
+<li><p>Retain one documented low-level request escape hatch with explicitly limited
+guarantees.</p></li>
+<li><p>Add table discovery and explicit schema refresh within the database-token
+scope.</p></li>
+<li><p>Configure timeout and any safe read-retry policy at Client construction.</p></li>
+<li><p>Do not retry mutating operations without an idempotency guarantee.</p></li>
+</ul>
+</section>
+<section id="id18">
+<h3>Exit criteria<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Endpoint methods, file uploads, pagination, and the low-level escape hatch all
+use the same exception and response boundary.</p></li>
+<li><p>Importing or constructing the package does not configure application logging.</p></li>
+<li><p>Schema refresh invalidates every dependent field cache consistently.</p></li>
+<li><p>Table discovery is verified against hosted database-token permissions.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-8-compatibility-documentation-and-beta-release">
+<h2>Phase 8: Compatibility, documentation, and beta release<a class="headerlink" href="#phase-8-compatibility-documentation-and-beta-release" title="Link to this heading"></a></h2>
+<section id="id19">
+<h3>Goal<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<p>Verify the complete conceptual model and prepare one deliberate beta migration.</p>
+</section>
+<section id="id20">
+<h3>Work<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Run the full offline suite and the serial hosted integration suite.</p></li>
+<li><p>Exercise the generated API documentation’s representative field and filter
+forms against the disposable tables.</p></li>
+<li><p>Update user documentation, docstrings, examples, public API reference, and
+changelog to describe the implemented behavior rather than the plan.</p></li>
+<li><p>Regenerate tracked Sphinx output.</p></li>
+<li><p>Update the package version, Sphinx release, and changelog consistently to the
+working target <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> after the implementation and migration scope is
+complete.</p></li>
+<li><p>Build wheel and source distributions, check them, and install the wheel in a
+clean Python 3.12 environment.</p></li>
+</ul>
+</section>
+<section id="id21">
+<h3>Exit criteria<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Offline and hosted suites pass without parallel execution.</p></li>
+<li><p>Every public contract in the documentation has a corresponding test or an
+explicitly identified hosted compatibility dependency.</p></li>
+<li><p>The migration guide covers every intentional breaking change.</p></li>
+<li><p>Distribution verification succeeds before any tag or publication request.</p></li>
+</ul>
+</section>
+</section>
+<section id="working-method-for-each-phase">
+<h2>Working method for each phase<a class="headerlink" href="#working-method-for-each-phase" title="Link to this heading"></a></h2>
+<p>Before implementation, turn the phase into a bounded checklist tied to current
+files and tests. Keep commits aligned with one coherent outcome. At the end of a
+phase:</p>
+<ol class="arabic simple">
+<li><p>run its offline tests and the relevant serial live tests;</p></li>
+<li><p>compare public exports and documented return types;</p></li>
+<li><p>update the inventory when new hosted evidence changes a recorded fact;</p></li>
+<li><p>update user documentation only for behavior actually implemented;</p></li>
+<li><p>report deferred risks separately rather than expanding the phase; and</p></li>
+<li><p>review the next phase before beginning it.</p></li>
+</ol>
+<p>The first implementation phase should not begin by deleting RowValue classes.
+The semantic replacement and characterization tests must exist before the old
+authority is removed.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="semantic_inventory.html" class="btn btn-neutral float-left" title="Field semantic inventory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="code.html" class="btn btn-neutral float-right" title="Code Structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James P Witte.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
