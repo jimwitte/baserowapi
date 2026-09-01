@@ -1,2 +1,2 @@
-pytz>=2023.3.post1
+pytz>=2026.3.post1
 Requests~=2.31
