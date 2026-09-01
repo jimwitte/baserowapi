@@ -2,6 +2,24 @@
 
 This README file describes the schema of the test tables used for functional testing of the Baserow API. Each column corresponds to a specific field type available in Baserow. The environment variable for the table ID is `BASEROW_TABLE_ID`.
 
+## Running tests
+
+Credential-free characterization and request-boundary tests run with:
+
+```sh
+python -m pytest -m offline
+```
+
+Live tests require the configured disposable hosted Baserow tables and run
+serially with:
+
+```sh
+python -m pytest -m integration
+```
+
+Do not run the live tests in parallel. Sanitized hosted response fixtures used
+by the offline suite are documented in `tests/fixtures/README.md`.
+
 ## All Fields Testing Table
 
 ### Columns

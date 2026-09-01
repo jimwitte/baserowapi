@@ -105,8 +105,12 @@ python -m pip install --no-cache-dir -r requirements_dev.txt
 python -m pip install --no-cache-dir -e .
 ```
 
-Do not assume an offline unit-test suite exists. The current test suite requires
-network access and configured Baserow credentials.
+The test suite contains credential-free offline characterization tests and live
+integration tests. Run the offline suite with:
+
+```sh
+python -m pytest -m offline
+```
 
 Keep runtime and development dependency declarations consistent when changing
 dependencies. Do not edit build output, distribution archives, egg metadata,
@@ -114,9 +118,9 @@ Python caches, or pytest caches by hand.
 
 ## Integration tests
 
-All existing tests are live integration tests against hosted `baserow.io`.
-They create, update, move, upload files to, and delete rows. The configured test
-tables are disposable and are authorized for test mutation.
+Live integration tests run against hosted `baserow.io`. They create, update,
+move, upload files to, and delete rows. The configured test tables are
+disposable and are authorized for test mutation.
 
 The tests read configuration from `.env` through these environment variables:
 

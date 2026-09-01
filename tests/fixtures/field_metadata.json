@@ -1,0 +1,185 @@
+[
+  {
+    "id": 1,
+    "table_id": 10,
+    "name": "Name",
+    "order": 0,
+    "type": "text",
+    "primary": true,
+    "read_only": false,
+    "text_default": ""
+  },
+  {
+    "id": 2,
+    "table_id": 10,
+    "name": "Number",
+    "order": 1,
+    "type": "number",
+    "primary": false,
+    "read_only": false,
+    "number_decimal_places": 2,
+    "number_negative": true
+  },
+  {
+    "id": 3,
+    "table_id": 10,
+    "name": "Date Only",
+    "order": 2,
+    "type": "date",
+    "primary": false,
+    "read_only": false,
+    "date_format": "ISO",
+    "date_include_time": false,
+    "date_time_format": "24",
+    "date_show_tzinfo": false,
+    "date_force_timezone": null
+  },
+  {
+    "id": 4,
+    "table_id": 10,
+    "name": "Date Time",
+    "order": 3,
+    "type": "date",
+    "primary": false,
+    "read_only": false,
+    "date_format": "ISO",
+    "date_include_time": true,
+    "date_time_format": "24",
+    "date_show_tzinfo": true,
+    "date_force_timezone": "UTC"
+  },
+  {
+    "id": 5,
+    "table_id": 10,
+    "name": "Status",
+    "order": 4,
+    "type": "single_select",
+    "primary": false,
+    "read_only": false,
+    "select_options": [
+      {"id": 101, "value": "Open", "color": "green"},
+      {"id": 102, "value": "Closed", "color": "red"}
+    ]
+  },
+  {
+    "id": 6,
+    "table_id": 10,
+    "name": "Tags",
+    "order": 5,
+    "type": "multiple_select",
+    "primary": false,
+    "read_only": false,
+    "select_options": [
+      {"id": 201, "value": "Urgent", "color": "red"},
+      {"id": 202, "value": "Customer", "color": "blue"}
+    ]
+  },
+  {
+    "id": 7,
+    "table_id": 10,
+    "name": "Related",
+    "order": 6,
+    "type": "link_row",
+    "primary": false,
+    "read_only": false,
+    "link_row_table_id": 20,
+    "link_row_related_field_id": 8,
+    "link_row_limit_selection_view_id": null
+  },
+  {
+    "id": 8,
+    "table_id": 10,
+    "name": "Files",
+    "order": 7,
+    "type": "file",
+    "primary": false,
+    "read_only": false
+  },
+  {
+    "id": 9,
+    "table_id": 10,
+    "name": "Formula",
+    "order": 8,
+    "type": "formula",
+    "primary": false,
+    "read_only": true,
+    "formula": "field('Name')",
+    "formula_type": "text",
+    "array_formula_type": null,
+    "error": null
+  },
+  {
+    "id": 10,
+    "table_id": 10,
+    "name": "Count",
+    "order": 9,
+    "type": "count",
+    "primary": false,
+    "read_only": true,
+    "through_field_id": 7,
+    "formula_type": "number",
+    "number_decimal_places": 0
+  },
+  {
+    "id": 11,
+    "table_id": 10,
+    "name": "Lookup",
+    "order": 10,
+    "type": "lookup",
+    "primary": false,
+    "read_only": true,
+    "through_field_id": 7,
+    "through_field_name": "Related",
+    "target_field_id": 21,
+    "target_field_name": "Name",
+    "formula_type": "array",
+    "array_formula_type": "text"
+  },
+  {
+    "id": 12,
+    "table_id": 10,
+    "name": "Collaborators",
+    "order": 11,
+    "type": "multiple_collaborators",
+    "primary": false,
+    "read_only": false,
+    "notify_user_when_added": false
+  },
+  {
+    "id": 13,
+    "table_id": 10,
+    "name": "UUID",
+    "order": 12,
+    "type": "uuid",
+    "primary": false,
+    "read_only": true
+  },
+  {
+    "id": 14,
+    "table_id": 10,
+    "name": "Autonumber",
+    "order": 13,
+    "type": "autonumber",
+    "primary": false,
+    "read_only": true
+  },
+  {
+    "id": 15,
+    "table_id": 10,
+    "name": "Password",
+    "order": 14,
+    "type": "password",
+    "primary": false,
+    "read_only": false
+  },
+  {
+    "id": 16,
+    "table_id": 10,
+    "name": "Future Value",
+    "order": 15,
+    "type": "future_type",
+    "primary": false,
+    "read_only": false,
+    "future_setting": "preserve-me"
+  }
+]

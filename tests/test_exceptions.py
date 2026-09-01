@@ -1,3 +1,5 @@
+import pytest
+
 from baserowapi.exceptions import (
     BaserowAPIError,
     BaserowConnectionError,
@@ -22,6 +24,8 @@ from baserowapi.exceptions import (
     RowValueError,
     RowValueOperationError,
 )
+
+pytestmark = pytest.mark.offline
 
 
 def test_package_exceptions_share_a_common_base():

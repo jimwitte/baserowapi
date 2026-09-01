@@ -1,0 +1,33 @@
+{
+  "id": 1001,
+  "order": "1.00000000000000000000",
+  "Name": "Example",
+  "Number": "42.00",
+  "Date Only": "2026-09-01",
+  "Date Time": "2026-09-01T12:30:00Z",
+  "Status": {"id": 101, "value": "Open", "color": "green"},
+  "Tags": [
+    {"id": 201, "value": "Urgent", "color": "red"},
+    {"id": 202, "value": "Customer", "color": "blue"}
+  ],
+  "Related": [{"id": 501, "value": "Acme"}],
+  "Files": [
+    {
+      "name": "hashed-name.png",
+      "visible_name": "example.png",
+      "url": "https://files.example.invalid/hashed-name.png",
+      "size": 1234,
+      "mime_type": "image/png"
+    }
+  ],
+  "Formula": "Example",
+  "Count": "1",
+  "Lookup": [{"id": 501, "value": "Acme"}],
+  "Collaborators": [
+    {"id": 701, "name": "Example User", "email": "user@example.invalid"}
+  ],
+  "UUID": "123e4567-e89b-12d3-a456-426614174000",
+  "Autonumber": 12,
+  "Password": true,
+  "Future Value": {"new": "shape"}
+}

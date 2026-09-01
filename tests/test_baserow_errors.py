@@ -15,6 +15,8 @@ from baserowapi.exceptions import (
 )
 from baserowapi.models.row import Row
 
+pytestmark = pytest.mark.offline
+
 
 def make_response(
     status_code=200, body=b"{}", content_type="application/json"

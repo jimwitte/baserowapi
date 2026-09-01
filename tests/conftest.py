@@ -1,9 +1,55 @@
 import os
+import json
+from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from dotenv import load_dotenv
 
 from baserowapi import Baserow
+from baserowapi.models.fields import FieldList
+from baserowapi.models.row import Row
+from baserowapi.models.table import Table
+
+
+FIXTURE_DIRECTORY = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+def characterized_field_metadata():
+    with (FIXTURE_DIRECTORY / "field_metadata.json").open(encoding="utf-8") as stream:
+        return json.load(stream)
+
+
+@pytest.fixture
+def characterized_row_response():
+    with (FIXTURE_DIRECTORY / "row_response.json").open(encoding="utf-8") as stream:
+        return json.load(stream)
+
+
+@pytest.fixture
+def characterized_table(characterized_field_metadata):
+    client = Mock()
+    client.batch_size = 10
+    table = Table(10, client)
+    table._fields = FieldList(
+        [
+            Table._field_class_from_data(field_data)(
+                field_data["name"], field_data, client=client
+            )
+            for field_data in characterized_field_metadata
+        ]
+    )
+    return table
+
+
+@pytest.fixture
+def characterized_row(characterized_table, characterized_row_response):
+    return Row(
+        row_data=characterized_row_response,
+        table=characterized_table,
+        client=characterized_table.client,
+    )
 
 
 @pytest.fixture(scope="session")
