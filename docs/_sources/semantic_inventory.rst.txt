@@ -25,6 +25,11 @@ Evidence for this inventory was collected from:
 * disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
   number precision beyond the configured decimal places, and a datetime with a
   non-UTC ISO offset;
+* disposable hosted write probes on 2026-09-01 for select, link-row, and file
+  IDs, labels, returned objects, comma-separated forms, empty forms, and nulls;
+* hosted upload and explicit row-assignment tests on 2026-09-01, including the
+  distinct user-file ``original_name`` and attached-file ``visible_name``
+  payloads;
 * the maintainer's generated API documentation for that database, captured on
   2026-09-01 and kept as an ignored local test reference; and
 * Baserow's current `Database API documentation
@@ -76,11 +81,10 @@ than the behavior of any individual field class.
    * - Read row
      - ``Row`` chooses a ``RowValue`` subclass using a second type map, then
        ``row[name]`` returns ``RowValue.value``.
-     - Scalar and unknown RowValues delegate to ``Field.decode_value``.
-       Structured selects, links, lookups, and passwords still decode in their
-       RowValue subclasses.
-     - Phase 2 established field-owned scalar decoding; later phases must move
-       the remaining structured types.
+     - Scalar, unknown, select, link, lookup, file, and collaborator RowValues
+       delegate to ``Field.decode_value``. Password remains an exception.
+     - Fields now own scalar and identity-bearing semantics. RowValue classes
+       remain compatibility facades until the public row model is simplified.
    * - Create rows
      - ``Table.add_rows`` checks only that field names are writable. It sends
        caller values directly to the batch endpoint.
@@ -112,11 +116,10 @@ than the behavior of any individual field class.
 
 The two independent dispatch tables, ``Table.FIELD_TYPE_CLASS_MAP`` and
 ``ROW_VALUE_TYPE_MAPPING``, duplicate the list of supported Baserow types. A new
-field currently requires coordinated changes to both maps and usually two
-classes. Phase 2 added ``decode_value``, ``validate_value``, and ``encode_value``
-to Field and retained ``format_for_api`` as a compatibility alias. The duplicate
-dispatch remains until later phases move structured decoding and simplify the
-public row model.
+field currently requires coordinated changes to both maps. Fields own scalar
+and structured decoding, validation, and encoding; ``format_for_api`` remains a
+compatibility alias. The duplicate dispatch remains until the public row model
+is simplified.
 
 Field-by-field inventory
 ------------------------
@@ -225,44 +228,44 @@ the field encoders described in the write column.
    * - ``single_select``
      - Option IDs, labels, colors, read object shape, write-by-ID-or-label, and
        first-match label behavior.
-     - Selected option label or ``None``; raw option ID and color are discarded.
-     - Option ID, known label, option dictionary, or ``None``; dictionaries
-       encode to IDs.
+     - ``SelectOption`` retaining ID, label, color, and raw metadata, or
+       ``None``.
+     - Option record, ID, label, returned option dictionary, or ``None``;
+       identity-bearing forms encode to IDs.
      - Strong
-     - This is a core semantic family. A canonical option object would preserve
-       ID and label and avoid losing identity. Local filters omit
+     - The canonical option record preserves identity. ``resolve_option``
+       optionally rejects missing or duplicate labels. Local filters omit
        ``starts_with``, ``single_select_is_any_of``, and
        ``single_select_is_none_of``.
    * - ``multiple_select``
      - Option metadata, read object list, and write-by-ID-or-label semantics.
-     - List of option labels; IDs and colors are discarded.
-     - List of IDs, labels, or returned option dictionaries. The package does
-       not implement the server's comma-separated shorthand.
+     - List of ``SelectOption`` records retaining identity and raw metadata.
+     - List of option records, IDs, labels, or returned dictionaries;
+       comma-separated labels and empty lists follow hosted behavior.
      - Strong
-     - Core semantic family, but preserving option identity would avoid
-       ambiguous duplicate labels and make round trips explicit.
+     - Returned records round-trip by ID. Ordinary label writes retain hosted
+       resolution behavior; the strict resolver rejects ambiguity on request.
    * - ``link_row``
      - Related table ID, reverse field ID, selection-view metadata, complete-set
        replacement semantics, empty-list clearing, and ID-or-primary-label writes.
-     - List of primary-field labels, falling back to IDs; row identity is
-       normally discarded.
-     - Single ID/label, list of IDs/labels, or comma-separated labels. Every
-       update replaces the complete relationship set.
+     - List of ``LinkedRow`` records retaining table ID, row ID, display value,
+       and raw metadata.
+     - Linked-row records, returned dictionaries, single IDs/labels, lists, or
+       comma-separated labels. Every update replaces the complete set.
      - Strong
-     - This is essential Baserow knowledge. ``get_options`` returns labels only,
-       even though duplicate labels resolve to the first row in table order.
-       Options and read values should preserve both row ID and display label.
+     - ``get_linked_rows`` preserves IDs and honors the selection view.
+       ``resolve_linked_row`` optionally rejects absent or ambiguous labels.
    * - ``file``
      - File object shape, upload endpoints, assignment after upload, public file
        URL, visible name, and size verification.
-     - List of Baserow file dictionaries.
-     - Locally restricted to a list of dictionaries containing ``name``. Upload
-       helpers produce suitable dictionaries.
+     - List of ``BaserowFile`` records retaining stored, visible, and original
+       names plus returned metadata.
+     - File records, returned dictionaries, stored filename forms, empty lists,
+       or ``None``. Upload methods return unattached records.
      - Strong
-     - Upload behavior removes knowledge from callers. Validation is narrower
-       than Baserow, which also documents arrays or comma-separated file names.
-       Local filters omit ``files_lower_than``. Downloading is useful but is not
-       required to encode the database API.
+     - Client-level upload and explicit assignment separate the two Baserow
+       operations. Generic downloading is outside the semantic core. Local
+       filters omit ``files_lower_than``.
    * - ``formula``
      - Formula text, result type, array result type, error, and read-only status.
      - Raw server value.
@@ -282,20 +285,21 @@ the field encoders described in the write column.
    * - ``lookup``
      - Link field, target field, array result metadata, row IDs, values, and
        read-only status.
-     - List of extracted values; associated row IDs are discarded.
+     - List of ``LookupEntry`` records retaining row ID, raw entry, and an
+       intentionally raw inner value pending result-type semantics.
      - Read-only.
      - Partial
-     - The configured field reports ``formula_type="array"`` and
-       ``array_formula_type="text"``. Result type must drive decoding and
-       filters. Dropping row IDs prevents callers from disambiguating results.
+     - Row identity is now preserved. Phase 4 must use ``formula_type`` and
+       ``array_formula_type`` to decode the inner result and filters.
    * - ``multiple_collaborators``
      - Notification metadata, collaborator object shape, and collaborator
        filters.
-     - Raw list of collaborator dictionaries.
-     - List of dictionaries each containing ``id``.
+     - List of ``Collaborator`` records retaining ID and returned metadata.
+     - List of collaborator records or returned dictionaries; both encode to
+       ``{"id": ...}`` objects.
      - Partial
-     - The field validator has value; the RowValue is pass-through. Tests only
-       exercise an empty list and do not establish returned user metadata.
+     - Identity is preserved offline, but a non-empty hosted collaborator read
+       and the complete documented write surface still need verification.
    * - ``password``
      - Write-only secret behavior: server reads are ``null`` or ``true`` and a
        string write sets the password.
@@ -392,22 +396,21 @@ used because ``add_rows`` still bypasses that encoder.
      - Text, long text, boolean, number, rating, three date configurations, URL,
        email, empty file, selects, phone, empty links, empty collaborators, and
        password.
-     - Invalid values, ``None`` policy, encoder use, option identity, duplicate
-       labels, precision, timezone edges, and non-empty collaborators.
+     - Create still bypasses the encoder. Non-empty collaborators and hosted
+       duplicate-label configurations remain unverified.
    * - Specialized operation
-     - Date conversion/display, file upload/download, linked-row options and
-       label update.
-     - Aware datetimes, forced timezone behavior, upload-by-URL, replacement,
-       partial download failure, linked IDs, duplicate primary labels, and
-       complete-set replacement.
+     - Date conversion/display, client file upload and upload-by-URL with
+       explicit assignment, and linked-row discovery/update by ID.
+     - Forced-timezone display, duplicate hosted primary labels, selection-view
+       limits, and concurrent complete-set replacement remain unverified.
    * - Presence only
      - Created on, last modified, formula, count, lookup, UUID, and Autonumber.
      - Actual returned shapes, result-dependent formula/lookup behavior,
        read-only enforcement, decoding, formatting, and filters.
    * - Direct scalar field semantics
-     - Text-like pass-through, boolean, rating, number, date/datetime, and the
-       Generic fallback.
-     - Structured field decoding, filter compatibility, and create/update
+     - Text-like pass-through, boolean, rating, number, date/datetime, generic
+       fallback, and identity-bearing structured fields.
+     - Computed result semantics, filter compatibility, and create/update
        encoding parity remain for later phases.
 
 What should remain central
@@ -439,8 +442,10 @@ and therefore preserve one semantic implementation.
 Settled design decisions
 ------------------------
 
-These decisions describe the intended contract for the refactor. They do not
-describe behavior already implemented in release ``0.1.0b5``.
+These decisions describe the intended contract for the refactor. Phase 2 scalar
+semantics and Phase 3 identity-bearing values are implemented on
+``release/0.2.0b1``; later sections remain design direction until their phase is
+completed.
 
 Focus and authority
 ~~~~~~~~~~~~~~~~~~~

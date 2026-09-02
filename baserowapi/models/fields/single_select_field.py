@@ -1,16 +1,12 @@
-from typing import Any, Dict, List, Union, Optional
-import logging
+from typing import Any, Optional
+
+from baserowapi.exceptions import FieldValidationError, FieldValueError
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError
+from baserowapi.models.values import SelectOption
 
 
 class SingleSelectField(Field):
-    """
-    Represents a single select field in Baserow.
-
-    :ivar TYPE: The type of the field, which is 'single_select'.
-    :vartype TYPE: str
-    """
+    """Baserow metadata and value semantics for a single-select field."""
 
     TYPE = "single_select"
     _COMPATIBLE_FILTERS = [
@@ -24,104 +20,102 @@ class SingleSelectField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initialize a SingleSelectField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
+    def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
         super().__init__(name, field_data, client)
-        self.logger = logging.getLogger(__name__)
-        if "select_options" not in field_data or not isinstance(
-            field_data["select_options"], list
-        ):
-            self.logger.error(
-                "Invalid or missing select_options provided for SingleSelectField initialization."
-            )
+        if not isinstance(field_data.get("select_options"), list):
             raise FieldValidationError(
-                "select_options should be a non-empty list in field_data."
+                "select_options must be a list in single-select field metadata."
             )
 
     @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this SingleSelectField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
+    def compatible_filters(self) -> list[str]:
         return self._COMPATIBLE_FILTERS
 
+    @staticmethod
+    def _decode_option(raw_value: dict[str, Any]) -> SelectOption:
+        if not isinstance(raw_value, dict):
+            raise FieldValueError("A Baserow select option must be an object.")
+        option_id = raw_value.get("id")
+        value = raw_value.get("value")
+        if option_id is not None and (
+            isinstance(option_id, bool) or not isinstance(option_id, int)
+        ):
+            raise FieldValueError("A Baserow select option ID must be an integer.")
+        if value is not None and not isinstance(value, str):
+            raise FieldValueError("A Baserow select option value must be a string.")
+        return SelectOption(
+            id=option_id,
+            value=value,
+            color=raw_value.get("color"),
+            raw=dict(raw_value),
+        )
+
     @property
-    def options(self) -> List[str]:
-        """
-        Retrieve a list of select option values from the field_data.
-
-        :return: List of select option values.
-        :rtype: List[str]
-        """
-        return [option["value"] for option in self.field_data["select_options"]]
-
-    @property
-    def options_details(self) -> List[Dict[str, Any]]:
-        """
-        Retrieve a list including details like id, value, color of each select_option.
-
-        :return: List of detailed select_options.
-        :rtype: List[Dict[str, Any]]
-        """
-        return self.field_data["select_options"]
+    def options(self) -> list[SelectOption]:
+        """Return the configured options without discarding IDs or metadata."""
+        return [
+            self._decode_option(option)
+            for option in self.field_data["select_options"]
+        ]
 
     def _get_option_by_id_or_value(
-        self, value: Union[int, str]
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Utility method to retrieve an option by its id or value.
-
-        :param value: The id or value of the option to retrieve.
-        :type value: Union[int, str]
-        :return: The option if found, otherwise None.
-        :rtype: Optional[Dict[str, Any]]
-        """
-        for option in self.options_details:
-            if option["id"] == value or option["value"] == value:
+        self, value: int | str
+    ) -> Optional[SelectOption]:
+        for option in self.options:
+            if option.id == value or option.value == value:
                 return option
         return None
 
-    def validate_value(self, value: Union[int, str]) -> None:
-        """
-        Validates the value for a SingleSelectField.
+    def resolve_option(self, label: str) -> SelectOption:
+        """Resolve one option by label, rejecting missing or duplicate labels."""
+        if not isinstance(label, str):
+            raise FieldValidationError("A select option label must be a string.")
+        matches = [option for option in self.options if option.value == label]
+        if not matches:
+            raise FieldValidationError(
+                f"No option with label {label!r} exists for field {self.name!r}."
+            )
+        if len(matches) > 1:
+            raise FieldValidationError(
+                f"Label {label!r} is ambiguous for field {self.name!r}; "
+                f"it matches {len(matches)} options."
+            )
+        return matches[0]
 
-        :param value: The value to validate.
-        :type value: Union[int, str]
-        :raises FieldValidationError: If the provided value doesn't match any select option.
-        """
-        if value is not None:
-            option = self._get_option_by_id_or_value(value)
-            if not option:
-                raise FieldValidationError(
-                    f"The provided value '{value}' doesn't match any select option."
-                )
+    def decode_value(self, raw_value: Any) -> Optional[SelectOption]:
+        if raw_value is None or isinstance(raw_value, SelectOption):
+            return raw_value
+        if isinstance(raw_value, dict):
+            return self._decode_option(raw_value)
+        if isinstance(raw_value, bool):
+            raise FieldValueError("A select option ID cannot be a boolean.")
+        if isinstance(raw_value, int):
+            known = self._get_option_by_id_or_value(raw_value)
+            return known or SelectOption(raw_value, None, raw={"id": raw_value})
+        if isinstance(raw_value, str):
+            known = self._get_option_by_id_or_value(raw_value)
+            return known or SelectOption(None, raw_value, raw={"value": raw_value})
+        raise FieldValueError(
+            f"Cannot decode {type(raw_value).__name__} as a select option."
+        )
 
-    def encode_value(self, value: Union[dict, int, str]) -> Union[int, str]:
-        """
-        Formats the single select value for API submission.
+    def validate_value(self, value: Any) -> None:
+        if value is None or isinstance(value, SelectOption):
+            return
+        if isinstance(value, bool) or not isinstance(value, (dict, int, str)):
+            raise FieldValidationError(
+                "A single-select value must be an option, returned object, ID, "
+                "label, or None."
+            )
+        if isinstance(value, dict) and "id" not in value:
+            raise FieldValidationError(
+                "A returned single-select object must contain an 'id'."
+            )
 
-        :param value: The value to format (can be an option dictionary, ID, or string).
-        :type value: Union[dict, int, str]
-        :return: The ID or value string to be submitted to the API.
-        :rtype: Union[int, str]
-        :raises FieldValidationError: If the value is not valid.
-        """
-        # If the value is a dict (as returned by the API), extract the 'value' or 'id'
-        if isinstance(value, dict):
-            return value["id"]  # or value["value"], depending on your preference
-
-        # Validate and return the value if it's already in the correct form
+    def encode_value(self, value: Any) -> Any:
         self.validate_value(value)
+        if isinstance(value, SelectOption):
+            return value.id if value.id is not None else value.value
+        if isinstance(value, dict):
+            return value["id"]
         return value

@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -82,73 +82,91 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.file_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span><span class="p">,</span> <span class="n">FieldValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaserowFile</span>
 
 
 <div class="viewcode-block" id="FileField">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.FileField">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FileField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a field in Baserow that handles file data.</span>
-
-<span class="sd">    :ivar TYPE: The type of the field, which is 'file'.</span>
-<span class="sd">    :vartype TYPE: str</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Baserow file-object and assignment semantics."""</span>
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"file"</span>
     <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"filename_contains"</span><span class="p">,</span> <span class="s2">"has_file_type"</span><span class="p">,</span> <span class="s2">"empty"</span><span class="p">,</span> <span class="s2">"not_empty"</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initialize a FileField object.</span>
-
-<span class="sd">        :param name: The name of the field.</span>
-<span class="sd">        :type name: str</span>
-<span class="sd">        :param field_data: A dictionary containing the field's data and attributes.</span>
-<span class="sd">        :type field_data: Dict[str, Any]</span>
-<span class="sd">        :param client: The Baserow API client. Defaults to None.</span>
-<span class="sd">        :type client: Optional[Any]</span>
-<span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the list of compatible filters for this FileField.</span>
-
-<span class="sd">        :return: The list of compatible filters.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_file</span><span class="p">(</span><span class="n">raw_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaserowFile</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">BaserowFile</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">raw_value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">BaserowFile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">raw_value</span><span class="p">})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span> <span class="nb">str</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A Baserow file object must contain a string 'name'."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaserowFile</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">raw_value</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+            <span class="n">visible_name</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visible_name"</span><span class="p">),</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size"</span><span class="p">),</span>
+            <span class="n">mime_type</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mime_type"</span><span class="p">),</span>
+            <span class="n">original_name</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"original_name"</span><span class="p">),</span>
+            <span class="n">raw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">raw_value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="FileField.decode_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.FileField.decode_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaserowFile</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">raw_value</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">raw_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A file-field response must be a list."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode_file</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw_value</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="FileField.validate_value">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.FileField.validate_value">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Validates the value for a FileField.</span>
-
-<span class="sd">        :param value: A list of file objects to validate.</span>
-<span class="sd">        :type value: List[Dict[str, Any]]</span>
-
-<span class="sd">        :raises FieldValidationError: If the value is not a list or if a file object is missing</span>
-<span class="sd">                            the 'name' attribute.</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Expected a list for FileField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Expected a list for FileField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="s2">"A file-field value must be a filename string, list, or None."</span>
             <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">file_obj</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"File object is missing the 'name' attribute."</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="n">BaserowFile</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                    <span class="s2">"File object is missing the 'name' attribute."</span>
+                    <span class="s2">"Each file item must be a BaserowFile, filename, or returned "</span>
+                    <span class="s2">"object containing 'name'."</span>
                 <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FileField.encode_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.FileField.encode_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">BaserowFile</span><span class="p">):</span>
+                <span class="n">encoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">encoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">encoded</span></div>
 </div>
 
 </pre></div>

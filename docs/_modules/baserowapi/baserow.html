@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -84,8 +84,10 @@
   <h1>Source code for baserowapi.baserow</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaserowFile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">urllib.parse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaserowConnectionError</span><span class="p">,</span>
@@ -197,6 +199,48 @@
 <span class="sd">        :rtype: Table</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_uploaded_file_from_response</span><span class="p">(</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaserowFile</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="s2">"Baserow returned an invalid user-file object."</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaserowFile</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+            <span class="n">visible_name</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visible_name"</span><span class="p">),</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size"</span><span class="p">),</span>
+            <span class="n">mime_type</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mime_type"</span><span class="p">),</span>
+            <span class="n">original_name</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"original_name"</span><span class="p">),</span>
+            <span class="n">raw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Baserow.upload_file">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.upload_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">BaserowFile</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Upload one local file and return it without assigning it to a row."""</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="s2">"/api/user-files/upload-file/"</span>
+        <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s2">"file"</span><span class="p">:</span> <span class="n">stream</span><span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uploaded_file_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Baserow.upload_file_via_url">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.upload_file_via_url">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_file_via_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaserowFile</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Ask Baserow to import one URL and return the unattached user file."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A non-empty URL string is required."</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="s2">"/api/user-files/upload-via-url/"</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"url"</span><span class="p">:</span> <span class="n">url</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uploaded_file_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Baserow.make_api_request">

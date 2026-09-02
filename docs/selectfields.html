@@ -6,11 +6,11 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with Single Select and Multiple Select Fields in Baserow API &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Working with Select Fields &mdash; Baserow API Package 0.1.0b5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=18948dd3"></script>
@@ -20,17 +20,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Working with Filters in Baserow API" href="filters.html" />
-    <link rel="prev" title="Working with Linked Fields in Baserow API" href="linkedfields.html" /> 
+    <link rel="prev" title="Working with Linked Fields" href="linkedfields.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -50,13 +50,9 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Single Select and Multiple Select Fields in Baserow API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#basics-of-selection-fields">Basics of Selection Fields</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#working-with-selection-fields-examples">Working with Selection Fields: Examples</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -78,7 +74,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Working with Single Select and Multiple Select Fields in Baserow API</li>
+      <li class="breadcrumb-item active">Working with Select Fields</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/selectfields.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,62 +83,46 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
-  <section id="working-with-single-select-and-multiple-select-fields-in-baserow-api">
-<h1>Working with Single Select and Multiple Select Fields in Baserow API<a class="headerlink" href="#working-with-single-select-and-multiple-select-fields-in-baserow-api" title="Link to this heading"></a></h1>
-<p>Baserow provides both single and multiple selection fields for your data tables, allowing you to define a set of predefined options and select one or multiple of them for each row. Understanding how to work with these fields can help streamline your data input and validation processes.</p>
-<section id="basics-of-selection-fields">
-<h2>Basics of Selection Fields<a class="headerlink" href="#basics-of-selection-fields" title="Link to this heading"></a></h2>
-<p><strong>Single Select Fields</strong>:</p>
-<ul class="simple">
-<li><p>Allows you to choose one option from a list of predefined values.</p></li>
-<li><p>If no option is chosen, the value can be set to <cite>None</cite>.</p></li>
-</ul>
-<p><strong>Multiple Select Fields</strong>:</p>
-<ul class="simple">
-<li><p>Allows you to choose multiple options from a list of predefined values.</p></li>
-<li><p>The values are represented as a list of chosen options.</p></li>
-<li><p>An empty list signifies no options have been selected.</p></li>
-</ul>
-</section>
-<section id="working-with-selection-fields-examples">
-<h2>Working with Selection Fields: Examples<a class="headerlink" href="#working-with-selection-fields-examples" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fetch a specific row for this example</span>
-<span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># Retrieve available options for a select field</span>
-<span class="n">my_options</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span><span class="o">.</span><span class="n">options</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Available Options: </span><span class="si">{</span><span class="n">my_options</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+  <section id="working-with-select-fields">
+<h1>Working with Select Fields<a class="headerlink" href="#working-with-select-fields" title="Link to this heading"></a></h1>
+<p>Select reads preserve the option identity returned by Baserow. A single-select
+value is a <code class="xref py py-class docutils literal notranslate"><span class="pre">baserowapi.SelectOption</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; a multiple-select value
+is a list of <code class="docutils literal notranslate"><span class="pre">SelectOption</span></code> records. Each record exposes <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">color</span></code>, and the complete returned metadata in <code class="docutils literal notranslate"><span class="pre">raw</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">'Status'</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">selected</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">selected</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">selected</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
 
-<span class="c1"># Set a specific option for a single select field in-memory</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'option 1'</span>
-
-<span class="c1"># Deselect any option for the single select field</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">'mySelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
-<span class="c1"># For a multiple selection field, use a list to set multiple options</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">'myMultiSelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'option 1'</span><span class="p">,</span> <span class="s1">'option 2'</span><span class="p">]</span>
-
-<span class="c1"># Alternatively, update a multiple selection field with a dictionary and save changes to the server</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-    <span class="p">{</span><span class="s1">'myMultiSelectField'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'option 1'</span><span class="p">,</span> <span class="s1">'option 2'</span><span class="p">]}</span>
-<span class="p">)</span>
-
-<span class="c1"># Set no options for a multiple selection field</span>
-<span class="n">single_row</span><span class="p">[</span><span class="s1">'myMultiSelectField'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="c1"># Finally, persist changes to the server</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'Status'</span><span class="p">]</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
+<p>Writes accept the forms documented by Baserow. A single-select field accepts an
+option ID, label, returned object, <code class="docutils literal notranslate"><span class="pre">SelectOption</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>. A
+multiple-select field accepts lists of IDs, labels, returned objects, or
+<code class="docutils literal notranslate"><span class="pre">SelectOption</span></code> records, as well as Baserow’s comma-separated label form. Use
+an empty list to clear a multiple-select field; baserow.io rejects <code class="docutils literal notranslate"><span class="pre">None</span></code> for
+that operation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Status'</span><span class="p">:</span> <span class="n">selected</span><span class="p">})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Status'</span><span class="p">:</span> <span class="n">selected</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Status'</span><span class="p">:</span> <span class="s1">'Open'</span><span class="p">})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Tags'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Urgent'</span><span class="p">,</span> <span class="s1">'Customer'</span><span class="p">]})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Tags'</span><span class="p">:</span> <span class="s1">'Urgent, Customer'</span><span class="p">})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Tags'</span><span class="p">:</span> <span class="p">[]})</span>
+</pre></div>
+</div>
+<p>Baserow resolves label writes. When code needs deterministic local resolution,
+<code class="docutils literal notranslate"><span class="pre">field.resolve_option(label)</span></code> returns the unique configured option and raises
+<code class="docutils literal notranslate"><span class="pre">FieldValidationError</span></code> if the label is missing or duplicated. Prefer an ID or
+<code class="docutils literal notranslate"><span class="pre">SelectOption</span></code> for writes that must remain unambiguous.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="linkedfields.html" class="btn btn-neutral float-left" title="Working with Linked Fields in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="linkedfields.html" class="btn btn-neutral float-left" title="Working with Linked Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="filters.html" class="btn btn-neutral float-right" title="Working with Filters in Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -155,7 +135,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -166,7 +146,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

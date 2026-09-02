@@ -4,6 +4,13 @@ import pytest
 
 from baserowapi.exceptions import FieldValidationError
 from baserowapi.models.fields import GenericField
+from baserowapi.models.values import (
+    BaserowFile,
+    Collaborator,
+    LinkedRow,
+    LookupEntry,
+    SelectOption,
+)
 
 
 pytestmark = pytest.mark.offline
@@ -15,26 +22,26 @@ def test_current_scalar_reads_preserve_baserow_strings(characterized_row):
     assert characterized_row["Date Time"] == "2026-09-01T12:30:00Z"
 
 
-def test_current_structured_reads_discard_some_identity(characterized_row):
-    assert characterized_row["Status"] == "Open"
-    assert characterized_row["Tags"] == ["Urgent", "Customer"]
-    assert characterized_row["Related"] == ["Acme"]
-    assert characterized_row["Lookup"] == ["Acme"]
+def test_structured_reads_preserve_baserow_identity(characterized_row):
+    assert characterized_row["Status"] == SelectOption(101, "Open", "green")
+    assert characterized_row["Tags"] == [
+        SelectOption(201, "Urgent", "red"),
+        SelectOption(202, "Customer", "blue"),
+    ]
+    assert characterized_row["Related"] == [LinkedRow(20, 501, "Acme")]
+    assert characterized_row["Lookup"] == [LookupEntry(501, "Acme")]
 
-    assert characterized_row.values["Status"]._raw_value["id"] == 101
-    assert characterized_row.values["Related"]._raw_value[0]["id"] == 501
-    assert characterized_row.values["Lookup"]._raw_value[0]["id"] == 501
+    assert characterized_row["Status"].raw["id"] == 101
+    assert characterized_row["Related"][0].raw["id"] == 501
+    assert characterized_row["Lookup"][0].raw["id"] == 501
 
 
-def test_current_file_and_collaborator_reads_preserve_raw_objects(characterized_row):
-    assert characterized_row["Files"][0]["name"] == "hashed-name.png"
-    assert characterized_row["Files"][0]["visible_name"] == "example.png"
+def test_file_and_collaborator_reads_use_identity_records(characterized_row):
+    assert isinstance(characterized_row["Files"][0], BaserowFile)
+    assert characterized_row["Files"][0].name == "hashed-name.png"
+    assert characterized_row["Files"][0].visible_name == "example.png"
     assert characterized_row["Collaborators"] == [
-        {
-            "id": 701,
-            "name": "Example User",
-            "email": "user@example.invalid",
-        }
+        Collaborator(701, "Example User", "user@example.invalid")
     ]
 
 
@@ -76,13 +83,13 @@ def test_date_encoder_does_not_guess_missing_information(characterized_table):
         characterized_table.fields["Date Time"].format_for_api("2026-09-01")
 
 
-def test_current_row_dictionary_contains_decoded_values_only(characterized_row):
+def test_row_dictionary_contains_decoded_values_only(characterized_row):
     values = characterized_row.to_dict()
 
     assert "id" not in values
     assert "order" not in values
-    assert values["Status"] == "Open"
-    assert values["Related"] == ["Acme"]
+    assert values["Status"] == SelectOption(101, "Open", "green")
+    assert values["Related"] == [LinkedRow(20, 501, "Acme")]
 
 
 def test_current_custom_containers_iterate_over_objects(characterized_row):

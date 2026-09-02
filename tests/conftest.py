@@ -109,7 +109,7 @@ def link_field_table(baserow_client):
 
 
 @pytest.fixture
-def single_row_data():
+def single_row_data(all_fields_table):
     return {
         "Name": {
             "input": "Test Name",
@@ -178,12 +178,17 @@ def single_row_data():
         },
         "SingleSelect": {
             "input": "option 1",
-            "expected": "option 1",
+            "expected": all_fields_table.fields["SingleSelect"].resolve_option(
+                "option 1"
+            ),
             "read_only": False,
         },
         "MultipleSelect": {
             "input": ["option 1", "option 2"],
-            "expected": ["option 1", "option 2"],
+            "expected": [
+                all_fields_table.fields["MultipleSelect"].resolve_option("option 1"),
+                all_fields_table.fields["MultipleSelect"].resolve_option("option 2"),
+            ],
             "read_only": False,
         },
         "Phone": {

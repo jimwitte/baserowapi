@@ -9,6 +9,14 @@
     or timezone-aware Python `datetime` objects. The client no longer guesses
     two-digit years, normalizes slash-separated dates, assumes midnight or UTC,
     strips time values, or uses the executing machine's timezone implicitly.
+  - Select, linked-row, file, collaborator, and lookup reads now return
+    identity-bearing records instead of labels or raw dictionaries.
+  - Replaced `TableLinkField.get_options()` with `get_linked_rows()`, which
+    preserves row IDs.
+  - Select field `options` now returns `SelectOption` records; the redundant
+    raw-dictionary `options_details` property was removed.
+  - Removed file upload and download behavior from `FileRowValue`. Uploads are
+    now client operations and row assignment is explicit.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -18,11 +26,24 @@
     `Decimal` arithmetic without exposing `Decimal` as a row value.
   - Unknown hosted field types retain their API type, metadata, and raw values
     without emitting routine warnings.
+  - Added independent `SelectOption`, `LinkedRow`, `BaserowFile`, `Collaborator`,
+    and `LookupEntry` records with retained raw metadata.
+  - Added strict select-option and linked-row label resolvers that reject
+    missing or duplicate matches without narrowing ordinary Baserow writes.
+  - Select, link-row, and file encoders accept the documented ID, label,
+    returned-object, comma-separated, and empty forms supported by each field.
+- **Files:**
+  - Added `Baserow.upload_file()` and `Baserow.upload_file_via_url()`, returning
+    unattached `BaserowFile` records.
+  - Distinguished upload `original_name` metadata from attached-file
+    `visible_name` metadata.
 - **Exceptions:**
   - Added `FieldValueError` for explicit field conversion failures.
 - **Testing and Documentation:**
   - Added credential-free scalar field tests and recorded hosted compatibility
     probes for nullability, numeric precision, and timezone-offset writes.
+  - Added offline structured-value tests and live select, linked-row, and file
+    assignment coverage against hosted baserow.io.
 
 
 #### 2026-09-01: 0.1.0b5

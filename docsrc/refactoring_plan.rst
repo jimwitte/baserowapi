@@ -115,6 +115,12 @@ Exit criteria
 Phase 3: Add identity-bearing values and file upload
 ----------------------------------------------------
 
+Status: implemented on branch ``release/0.2.0b1`` and verified against hosted
+``baserow.io`` on 2026-09-01. Upload responses use ``original_name`` while
+attached row-file responses can use ``visible_name``; both endpoint shapes are
+preserved. Commit status is intentionally tracked separately from phase
+completion.
+
 Goal
 ~~~~
 

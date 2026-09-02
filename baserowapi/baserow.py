@@ -1,7 +1,9 @@
 import requests
 import logging
+from pathlib import Path
 from typing import IO, Union, Dict, Optional, Any
 from baserowapi.models.table import Table
+from baserowapi.models.values import BaserowFile
 import urllib.parse
 from baserowapi.exceptions import (
     BaserowConnectionError,
@@ -106,6 +108,42 @@ class Baserow:
         :rtype: Table
         """
         return Table(table_id, self)
+
+    @staticmethod
+    def _uploaded_file_from_response(
+        response: Any, *, endpoint: str
+    ) -> BaserowFile:
+        if not isinstance(response, dict) or not isinstance(response.get("name"), str):
+            raise BaserowResponseError(
+                "Baserow returned an invalid user-file object.", url=endpoint
+            )
+        return BaserowFile(
+            name=response["name"],
+            visible_name=response.get("visible_name"),
+            url=response.get("url"),
+            size=response.get("size"),
+            mime_type=response.get("mime_type"),
+            original_name=response.get("original_name"),
+            raw=dict(response),
+        )
+
+    def upload_file(self, file_path: Union[str, Path]) -> BaserowFile:
+        """Upload one local file and return it without assigning it to a row."""
+        path = Path(file_path)
+        endpoint = "/api/user-files/upload-file/"
+        with path.open("rb") as stream:
+            response = self.make_api_request(
+                endpoint, method="POST", files={"file": stream}
+            )
+        return self._uploaded_file_from_response(response, endpoint=endpoint)
+
+    def upload_file_via_url(self, url: str) -> BaserowFile:
+        """Ask Baserow to import one URL and return the unattached user file."""
+        if not isinstance(url, str) or not url:
+            raise ValueError("A non-empty URL string is required.")
+        endpoint = "/api/user-files/upload-via-url/"
+        response = self.make_api_request(endpoint, method="POST", data={"url": url})
+        return self._uploaded_file_from_response(response, endpoint=endpoint)
 
     def make_api_request(
         self,

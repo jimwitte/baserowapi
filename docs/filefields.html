@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with File Fields in Baserow API &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Working with File Fields &mdash; Baserow API Package 0.1.0b5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Working with Linked Fields in Baserow API" href="linkedfields.html" />
+    <link rel="next" title="Working with Linked Fields" href="linkedfields.html" />
     <link rel="prev" title="Working with Date Fields in Baserow API" href="datefields.html" /> 
 </head>
 
@@ -50,15 +50,12 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with File Fields in Baserow API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up">Setting Up</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#downloading-files">Downloading Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#uploading-files">Uploading Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#inspecting-file-data">Inspecting File Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with File Fields</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-reads-and-metadata">File Reads and Metadata</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -80,7 +77,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Working with File Fields in Baserow API</li>
+      <li class="breadcrumb-item active">Working with File Fields</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/filefields.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,45 +87,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="working-with-file-fields-in-baserow-api">
-<h1>Working with File Fields in Baserow API<a class="headerlink" href="#working-with-file-fields-in-baserow-api" title="Link to this heading"></a></h1>
-<p>The Baserow API provides tools to interact with file fields, making it easy to upload, download, and inspect file data within your rows. This guide will walk you through the core operations associated with file fields.</p>
-<section id="setting-up">
-<h2>Setting Up<a class="headerlink" href="#setting-up" title="Link to this heading"></a></h2>
-<p>Before working with file fields, you should have a table instance and a target row:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given this example row:</span>
-<span class="n">single_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="downloading-files">
-<h2>Downloading Files<a class="headerlink" href="#downloading-files" title="Link to this heading"></a></h2>
-<p>Files associated with a row can be downloaded to a specified local directory:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download files from a row value to '/tmp' directory</span>
-<span class="n">download_result</span> <span class="o">=</span> <span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myFileField'</span><span class="p">]</span><span class="o">.</span><span class="n">download_files</span><span class="p">(</span><span class="s1">'/tmp'</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="uploading-files">
-<h2>Uploading Files<a class="headerlink" href="#uploading-files" title="Link to this heading"></a></h2>
-<p>You can upload files to Baserow either from a local source or directly from a URL. After uploading, use the <cite>.update()</cite> method to save the changed row to the server:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Upload a local file to the server</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myFileField'</span><span class="p">]</span><span class="o">.</span><span class="n">upload_file_to_server</span><span class="p">(</span><span class="s1">'fixie.jpg'</span><span class="p">)</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+  <section id="working-with-file-fields">
+<h1>Working with File Fields<a class="headerlink" href="#working-with-file-fields" title="Link to this heading"></a></h1>
+<p>File creation and row assignment are separate operations. Uploading through the
+client returns an unattached <code class="xref py py-class docutils literal notranslate"><span class="pre">baserowapi.BaserowFile</span></code>; it does not mutate
+any row. Assign the returned record explicitly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">uploaded</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s1">'fixie.jpg'</span><span class="p">)</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Files'</span><span class="p">:</span> <span class="p">[</span><span class="n">uploaded</span><span class="p">]})</span>
 
-<span class="c1"># Upload a file from a URL</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myFileField'</span><span class="p">]</span><span class="o">.</span><span class="n">upload_file_to_server</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://www.jimwitte.net/bison.jpg'</span><span class="p">)</span>
-<span class="n">single_row</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<span class="n">imported</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">upload_file_via_url</span><span class="p">(</span><span class="s1">'https://example.com/bison.jpg'</span><span class="p">)</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'Files'</span><span class="p">:</span> <span class="p">[</span><span class="n">uploaded</span><span class="p">,</span> <span class="n">imported</span><span class="p">]})</span>
 </pre></div>
 </div>
-</section>
-<section id="inspecting-file-data">
-<h2>Inspecting File Data<a class="headerlink" href="#inspecting-file-data" title="Link to this heading"></a></h2>
-<p>A file field value in a row contains a list of file objects, each providing details about the stored files:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print the file objects associated with 'myFileField'</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">single_row</span><span class="p">[</span><span class="s1">'myFileField'</span><span class="p">])</span>
+<p>The file-field update is the complete desired list. Pass <code class="docutils literal notranslate"><span class="pre">[]</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code> to
+clear the field. Baserow also accepts stored filenames, lists of stored
+filenames, returned file objects, and comma-separated stored filenames.</p>
+<section id="file-reads-and-metadata">
+<h2>File Reads and Metadata<a class="headerlink" href="#file-reads-and-metadata" title="Link to this heading"></a></h2>
+<p>A file field reads as a list of <code class="docutils literal notranslate"><span class="pre">BaserowFile</span></code> records. <code class="docutils literal notranslate"><span class="pre">name</span></code> is Baserow’s
+stored filename and is the stable value used for assignment. Depending on the
+endpoint, <code class="docutils literal notranslate"><span class="pre">visible_name</span></code> describes the name shown on an attached row and
+<code class="docutils literal notranslate"><span class="pre">original_name</span></code> describes the source name returned by upload. URL, size, MIME
+type, and the complete payload in <code class="docutils literal notranslate"><span class="pre">raw</span></code> are retained when supplied.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s1">'Files'</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">visible_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The semantic client does not download file URLs or traverse local directories.
+Use an ordinary HTTP/file utility when an application needs that separate
+behavior.</p>
 </section>
 </section>
 
@@ -137,7 +124,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="datefields.html" class="btn btn-neutral float-left" title="Working with Date Fields in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="linkedfields.html" class="btn btn-neutral float-right" title="Working with Linked Fields in Baserow API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="linkedfields.html" class="btn btn-neutral float-right" title="Working with Linked Fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

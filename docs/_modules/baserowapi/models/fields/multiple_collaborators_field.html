@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -82,20 +82,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.multiple_collaborators_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span><span class="p">,</span> <span class="n">FieldValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">Collaborator</span>
 
 
 <div class="viewcode-block" id="MultipleCollaboratorsField">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.MultipleCollaboratorsField">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MultipleCollaboratorsField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a list of Baserow collaborators.</span>
-
-<span class="sd">    :ivar TYPE: The type of the field, which is 'multiple_collaborators'.</span>
-<span class="sd">    :vartype TYPE: str</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Baserow collaborator identity and assignment semantics."""</span>
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"multiple_collaborators"</span>
     <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
@@ -105,58 +102,69 @@
         <span class="s2">"not_empty"</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initializes a MultipleCollaboratorsField object.</span>
-
-<span class="sd">        :param name: The name of the field.</span>
-<span class="sd">        :type name: str</span>
-<span class="sd">        :param field_data: A dictionary containing the field's data and attributes.</span>
-<span class="sd">        :type field_data: Dict[str, Any]</span>
-<span class="sd">        :param client: The Baserow API client. Defaults to None.</span>
-<span class="sd">        :type client: Optional[Any]</span>
-<span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
-
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the list of compatible filters for this MultipleCollaboratorsField.</span>
-
-<span class="sd">        :return: The list of compatible filters.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">notify_user_when_added</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Determine if the user should be notified when added.</span>
-
-<span class="sd">        :return: True if the user should be notified, False otherwise.</span>
-<span class="sd">        :rtype: bool</span>
-<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notify_user_when_added"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_collaborator</span><span class="p">(</span><span class="n">raw_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Collaborator</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">Collaborator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">raw_value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A Baserow collaborator must be an object."</span><span class="p">)</span>
+        <span class="n">collaborator_id</span> <span class="o">=</span> <span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">collaborator_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">collaborator_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span>
+                <span class="s2">"A Baserow collaborator must contain an integer 'id'."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Collaborator</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">collaborator_id</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">),</span>
+            <span class="n">raw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">raw_value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="MultipleCollaboratorsField.decode_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.MultipleCollaboratorsField.decode_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Collaborator</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A collaborators response must be a list."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode_collaborator</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw_value</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="MultipleCollaboratorsField.validate_value">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.MultipleCollaboratorsField.validate_value">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Validate the value for a MultipleCollaboratorsField.</span>
-
-<span class="sd">        :param value: A list of dictionaries representing collaborator data.</span>
-<span class="sd">        :type value: List[Dict[str, Any]]</span>
-<span class="sd">        :raises FieldValidationError: If the provided value is not a list or if the format is incorrect.</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Expected a list for MultipleCollaboratorsField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-        <span class="k">for</span> <span class="n">collaborator</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">collaborator</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"id"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">collaborator</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span><span class="s2">"A collaborators value must be a list."</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Collaborator</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span> <span class="nb">bool</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                    <span class="s2">"Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key"</span>
+                    <span class="s2">"Each collaborator must be a Collaborator or an object "</span>
+                    <span class="s2">"with an integer 'id'."</span>
                 <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultipleCollaboratorsField.encode_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.MultipleCollaboratorsField.encode_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Collaborator</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]}</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span>
+        <span class="p">]</span></div>
 </div>
 
 </pre></div>

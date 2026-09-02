@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -82,21 +82,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.single_select_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span><span class="p">,</span> <span class="n">FieldValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">SelectOption</span>
 
 
 <div class="viewcode-block" id="SingleSelectField">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SingleSelectField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a single select field in Baserow.</span>
-
-<span class="sd">    :ivar TYPE: The type of the field, which is 'single_select'.</span>
-<span class="sd">    :vartype TYPE: str</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Baserow metadata and value semantics for a single-select field."""</span>
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"single_select"</span>
     <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
@@ -110,111 +106,115 @@
         <span class="s2">"not_empty"</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initialize a SingleSelectField object.</span>
-
-<span class="sd">        :param name: The name of the field.</span>
-<span class="sd">        :type name: str</span>
-<span class="sd">        :param field_data: A dictionary containing the field's data and attributes.</span>
-<span class="sd">        :type field_data: Dict[str, Any]</span>
-<span class="sd">        :param client: The Baserow API client. Defaults to None.</span>
-<span class="sd">        :type client: Optional[Any]</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">"select_options"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">field_data</span><span class="p">[</span><span class="s2">"select_options"</span><span class="p">],</span> <span class="nb">list</span>
-        <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">"Invalid or missing select_options provided for SingleSelectField initialization."</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"select_options"</span><span class="p">),</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="s2">"select_options should be a non-empty list in field_data."</span>
+                <span class="s2">"select_options must be a list in single-select field metadata."</span>
             <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the list of compatible filters for this SingleSelectField.</span>
-
-<span class="sd">        :return: The list of compatible filters.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_option</span><span class="p">(</span><span class="n">raw_value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SelectOption</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A Baserow select option must be an object."</span><span class="p">)</span>
+        <span class="n">option_id</span> <span class="o">=</span> <span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">option_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">option_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">option_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A Baserow select option ID must be an integer."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A Baserow select option value must be a string."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SelectOption</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">option_id</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">raw_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"color"</span><span class="p">),</span>
+            <span class="n">raw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">raw_value</span><span class="p">),</span>
+        <span class="p">)</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Retrieve a list of select option values from the field_data.</span>
-
-<span class="sd">        :return: List of select option values.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">option</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="p">[</span><span class="s2">"select_options"</span><span class="p">]]</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">options_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Retrieve a list including details like id, value, color of each select_option.</span>
-
-<span class="sd">        :return: List of detailed select_options.</span>
-<span class="sd">        :rtype: List[Dict[str, Any]]</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="p">[</span><span class="s2">"select_options"</span><span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SelectOption</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the configured options without discarding IDs or metadata."""</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decode_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_data</span><span class="p">[</span><span class="s2">"select_options"</span><span class="p">]</span>
+        <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_option_by_id_or_value</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Utility method to retrieve an option by its id or value.</span>
-
-<span class="sd">        :param value: The id or value of the option to retrieve.</span>
-<span class="sd">        :type value: Union[int, str]</span>
-<span class="sd">        :return: The option if found, otherwise None.</span>
-<span class="sd">        :rtype: Optional[Dict[str, Any]]</span>
-<span class="sd">        """</span>
-        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_details</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">option</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">==</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">option</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectOption</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">option</span>
         <span class="k">return</span> <span class="kc">None</span>
 
+<div class="viewcode-block" id="SingleSelectField.resolve_option">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.resolve_option">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SelectOption</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resolve one option by label, rejecting missing or duplicate labels."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span><span class="s2">"A select option label must be a string."</span><span class="p">)</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">option</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">label</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"No option with label </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> exists for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Label </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> is ambiguous for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; "</span>
+                <span class="sa">f</span><span class="s2">"it matches </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2"> options."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="SingleSelectField.decode_value">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.decode_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectOption</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">SelectOption</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">raw_value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_option</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span><span class="s2">"A select option ID cannot be a boolean."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_option_by_id_or_value</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">known</span> <span class="ow">or</span> <span class="n">SelectOption</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">raw_value</span><span class="p">})</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_option_by_id_or_value</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">known</span> <span class="ow">or</span> <span class="n">SelectOption</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="n">raw_value</span><span class="p">})</span>
+        <span class="k">raise</span> <span class="n">FieldValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Cannot decode </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> as a select option."</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="SingleSelectField.validate_value">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.validate_value">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Validates the value for a SingleSelectField.</span>
-
-<span class="sd">        :param value: The value to validate.</span>
-<span class="sd">        :type value: Union[int, str]</span>
-<span class="sd">        :raises FieldValidationError: If the provided value doesn't match any select option.</span>
-<span class="sd">        """</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">option</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_option_by_id_or_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">option</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"The provided value '</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">' doesn't match any select option."</span>
-                <span class="p">)</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SelectOption</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="s2">"A single-select value must be an option, returned object, ID, "</span>
+                <span class="s2">"label, or None."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"id"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="s2">"A returned single-select object must contain an 'id'."</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SingleSelectField.encode_value">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.SingleSelectField.encode_value">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">encode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Formats the single select value for API submission.</span>
-
-<span class="sd">        :param value: The value to format (can be an option dictionary, ID, or string).</span>
-<span class="sd">        :type value: Union[dict, int, str]</span>
-<span class="sd">        :return: The ID or value string to be submitted to the API.</span>
-<span class="sd">        :rtype: Union[int, str]</span>
-<span class="sd">        :raises FieldValidationError: If the value is not valid.</span>
-<span class="sd">        """</span>
-        <span class="c1"># If the value is a dict (as returned by the API), extract the 'value' or 'id'</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>  <span class="c1"># or value["value"], depending on your preference</span>
-
-        <span class="c1"># Validate and return the value if it's already in the correct form</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SelectOption</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">value</span></div>
 </div>
 

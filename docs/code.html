@@ -50,9 +50,9 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#baserow-class">Baserow Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#table-class">Table Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#row-class">Row Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identity-bearing-values">Identity-bearing Values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#filter-objects">Filter Objects</a></li>
 </ul>
 </li>
@@ -110,9 +111,21 @@
 <p>This class represents rows in a Baserow table, encompassing:</p>
 <ul class="simple">
 <li><p><strong>Values Property</strong>: A property containing the value of a <cite>RowValueList</cite> object. The <cite>RowValueList</cite> embeds multiple <cite>RowValue</cite> objects, each correlating to a specific field object.</p></li>
-<li><p><strong>RowValue Objects</strong>: Representing the value for a particular field in a specified row, RowValues can be accessed or modified using setters and getters. Additional methods provided in the Row class include deleting, updating, and moving rows. For batch operations on rows, consider using methods from the table object.</p></li>
+<li><p><strong>RowValue Objects</strong>: Compatibility objects currently back each field value.
+Their decoding, validation, and encoding delegate to the associated Field.
+Additional methods on Row include deleting, updating, and moving rows. For
+batch operations, use the Table methods.</p></li>
 </ul>
-<p>Note: Some <cite>RowValue</cite> objects offer utility functions. For instance, there are methods for converting date values into datetime objects or for uploading and downloading files for a file field value.</p>
+<p>Date RowValues retain explicit parsing and display helpers for compatibility.
+File upload is a Baserow client operation and returns an unattached file record;
+row assignment is a separate explicit update.</p>
+</section>
+<section id="identity-bearing-values">
+<h2>Identity-bearing Values<a class="headerlink" href="#identity-bearing-values" title="Link to this heading"></a></h2>
+<p>Select options, linked rows, files, collaborators, and lookup results use small
+independent records that preserve Baserow IDs and raw metadata. These records
+contain no HTTP behavior and can be passed back to the corresponding writable
+Field. Scalar reads remain ordinary Python values.</p>
 </section>
 <section id="filter-objects">
 <h2>Filter Objects<a class="headerlink" href="#filter-objects" title="Link to this heading"></a></h2>

@@ -24,13 +24,25 @@ This class represents rows in a Baserow table, encompassing:
 
 - **Values Property**: A property containing the value of a `RowValueList` object. The `RowValueList` embeds multiple `RowValue` objects, each correlating to a specific field object.
 
-- **RowValue Objects**: Representing the value for a particular field in a specified row, RowValues can be accessed or modified using setters and getters. Additional methods provided in the Row class include deleting, updating, and moving rows. For batch operations on rows, consider using methods from the table object.
+- **RowValue Objects**: Compatibility objects currently back each field value.
+  Their decoding, validation, and encoding delegate to the associated Field.
+  Additional methods on Row include deleting, updating, and moving rows. For
+  batch operations, use the Table methods.
 
-Note: Some `RowValue` objects offer utility functions. For instance, there are methods for converting date values into datetime objects or for uploading and downloading files for a file field value.
+Date RowValues retain explicit parsing and display helpers for compatibility.
+File upload is a Baserow client operation and returns an unattached file record;
+row assignment is a separate explicit update.
+
+Identity-bearing Values
+-----------------------
+
+Select options, linked rows, files, collaborators, and lookup results use small
+independent records that preserve Baserow IDs and raw metadata. These records
+contain no HTTP behavior and can be passed back to the corresponding writable
+Field. Scalar reads remain ordinary Python values.
 
 Filter Objects
 --------------
 
 Designed for use with the `table.get_rows()` function. Filters can be initiated independently from tables. On application, each filter is validated against the table field to ensure the existence of a compatible field with the correct name.
-
 

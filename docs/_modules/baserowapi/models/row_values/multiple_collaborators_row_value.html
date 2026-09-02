@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
@@ -82,64 +82,29 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.row_values.multiple_collaborators_row_value</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidRowValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultipleCollaboratorsField</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row_values.row_value</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowValue</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidRowValueError</span><span class="p">,</span> <span class="n">RowValueOperationError</span>
 
 
 <div class="viewcode-block" id="MultipleCollaboratorsRowValue">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.row_values.MultipleCollaboratorsRowValue">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MultipleCollaboratorsRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a RowValue designed for a MultipleCollaboratorsField.</span>
-
-<span class="sd">    :param field: The associated MultipleCollaboratorsField object.</span>
-<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
-<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
-<span class="sd">    :raises InvalidRowValueError: If the provided field is not an instance of the MultipleCollaboratorsField class.</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Compatibility facade for field-owned collaborator semantics."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">field</span><span class="p">:</span> <span class="s2">"MultipleCollaboratorsField"</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="n">MultipleCollaboratorsField</span><span class="p">,</span>
         <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span> <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[],</span> <span class="n">client</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">MultipleCollaboratorsField</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidRowValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"The provided field is not an instance of the MultipleCollaboratorsField class. Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the value in a user-friendly format. This method returns the raw value.</span>
-
-<span class="sd">        :return: The raw value.</span>
-<span class="sd">        :rtype: Any</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
-
-    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Validate and set the new value for MultipleCollaboratorsRowValue.</span>
-
-<span class="sd">        :param new_value: The new value to be set.</span>
-<span class="sd">        :raises RowValueOperationError: If the new value is not valid.</span>
-<span class="sd">        """</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span> <span class="o">=</span> <span class="n">new_value</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">RowValueOperationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Failed to set value for field </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+                <span class="sa">f</span><span class="s2">"Expected MultipleCollaboratorsField, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span></div>
 
 </pre></div>
 

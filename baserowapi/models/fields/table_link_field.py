@@ -1,15 +1,16 @@
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Optional
+
+from baserowapi.exceptions import (
+    FieldDataRetrievalError,
+    FieldValidationError,
+    FieldValueError,
+)
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError, FieldDataRetrievalError
+from baserowapi.models.values import LinkedRow
 
 
 class TableLinkField(Field):
-    """
-    Represents a field that links to rows in another table.
-
-    :ivar TYPE: The type of the field, which is 'link_row'.
-    :vartype TYPE: str
-    """
+    """Baserow metadata and complete-set semantics for a link-row field."""
 
     TYPE = "link_row"
     _COMPATIBLE_FILTERS = [
@@ -21,159 +22,142 @@ class TableLinkField(Field):
         "not_empty",
     ]
 
-    def __init__(
-        self, name: str, field_data: Dict[str, Any], client: Optional[Any] = None
-    ):
-        """
-        Initializes a TableLinkField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        :raises FieldValidationError: If the field type doesn't match the expected type.
-        """
-        super().__init__(name, field_data, client)
-        if self.type != self.TYPE:
-            self.logger.error(
-                f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
-            )
-            raise FieldValidationError(
-                f"Invalid type for TableLinkField. Expected {self.TYPE}, got {self.type}."
-            )
-
     @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this TableLinkField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
+    def compatible_filters(self) -> list[str]:
         return self._COMPATIBLE_FILTERS
-
-    def encode_value(
-        self, value: Union[int, str, List[Union[int, str]]]
-    ) -> List[Union[int, str]]:
-        """
-        Format the value for API submission. This method normalizes and validates the input value,
-        returning a list of IDs or values suitable for API submission.
-
-        :param value: A single ID, a comma-separated string of names, or a list of IDs/values.
-        :type value: Union[int, str, List[Union[int, str]]]
-        :return: A list of IDs or values suitable for API submission.
-        :rtype: List[Union[int, str]]
-        :raises FieldValidationError: If the provided value is not in an expected format.
-        """
-        # Normalize input into a list
-        if isinstance(value, int) or (
-            isinstance(value, str) and not value.strip().startswith("[")
-        ):
-            # Handle single ID or comma-separated string
-            if isinstance(value, str) and "," in value:
-                value = [v.strip() for v in value.split(",")]
-            else:
-                value = [value]
-        elif isinstance(value, list):
-            # No change needed if it's already a list
-            pass
-        else:
-            raise FieldValidationError(
-                "The provided value should be an integer, string, or list of integers/strings."
-            )
-
-        # Validate the normalized value
-        self.validate_value(value)
-
-        # Return the value as-is after validation, as it's now guaranteed to be in the correct format
-        return value
 
     @property
     def link_row_table_id(self) -> Optional[int]:
-        """
-        Retrieve the link_row_table_id of the field from field_data.
-
-        :return: The link_row_table_id of the field.
-        :rtype: Optional[int]
-        """
-        return self.field_data.get("link_row_table_id", None)
+        return self.field_data.get("link_row_table_id")
 
     @property
     def link_row_related_field_id(self) -> Optional[int]:
-        """
-        Retrieve the link_row_related_field_id of the field from field_data.
-
-        :return: The link_row_related_field_id of the field.
-        :rtype: Optional[int]
-        """
-        return self.field_data.get("link_row_related_field_id", None)
+        return self.field_data.get("link_row_related_field_id")
 
     @property
     def link_row_limit_selection_view_id(self) -> Optional[int]:
-        """
-        Retrieve the link_row_limit_selection_view_id of the field from field_data.
+        return self.field_data.get("link_row_limit_selection_view_id")
 
-        :return: The link_row_limit_selection_view_id of the field.
-        :rtype: Optional[int]
-        """
-        return self.field_data.get("link_row_limit_selection_view_id", None)
+    def _decode_link(self, raw_value: Any) -> LinkedRow:
+        table_id = self.link_row_table_id
+        if table_id is None:
+            raise FieldValueError(
+                f"Link-row field {self.name!r} has no linked table ID."
+            )
+        if isinstance(raw_value, LinkedRow):
+            return raw_value
+        if isinstance(raw_value, dict):
+            row_id = raw_value.get("id")
+            if row_id is not None and (
+                isinstance(row_id, bool) or not isinstance(row_id, int)
+            ):
+                raise FieldValueError("A linked row ID must be an integer.")
+            return LinkedRow(
+                table_id=table_id,
+                id=row_id,
+                value=raw_value.get("value"),
+                raw=dict(raw_value),
+            )
+        if isinstance(raw_value, bool):
+            raise FieldValueError("A linked row ID cannot be a boolean.")
+        if isinstance(raw_value, int):
+            return LinkedRow(table_id, raw_value, raw={"id": raw_value})
+        if isinstance(raw_value, str):
+            return LinkedRow(table_id, None, raw_value, {"value": raw_value})
+        raise FieldValueError(
+            f"Cannot decode {type(raw_value).__name__} as a linked row."
+        )
 
-    def get_options(self) -> List[str]:
-        """
-        Fetches and returns the primary values from the related table that are possible
-        for the TableLinkRowValue.
+    def decode_value(self, raw_value: Any) -> list[LinkedRow]:
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, str):
+            raw_value = [part.strip() for part in raw_value.split(",") if part.strip()]
+        elif isinstance(raw_value, (int, LinkedRow, dict)) and not isinstance(
+            raw_value, bool
+        ):
+            raw_value = [raw_value]
+        if not isinstance(raw_value, list):
+            raise FieldValueError("A link-row response must be a list.")
+        return [self._decode_link(item) for item in raw_value]
 
-        This method retrieves the rows from the related table and extracts the primary
-        field values from each row.
+    def validate_value(self, value: Any) -> None:
+        if value is None:
+            raise FieldValidationError(
+                "A link-row value cannot be None; use [] to clear it."
+            )
+        if isinstance(value, bool):
+            raise FieldValidationError("A linked row ID cannot be a boolean.")
+        if isinstance(value, (int, str, LinkedRow, dict)):
+            value = [value]
+        if not isinstance(value, list):
+            raise FieldValidationError(
+                "A link-row value must be an ID, label, returned object, or list."
+            )
+        for item in value:
+            if isinstance(item, LinkedRow):
+                continue
+            if isinstance(item, bool) or not isinstance(item, (dict, int, str)):
+                raise FieldValidationError(
+                    "Each linked-row item must be a reference, returned object, "
+                    "ID, or label."
+                )
+            if isinstance(item, dict) and "id" not in item:
+                raise FieldValidationError(
+                    "A returned linked-row object must contain an 'id'."
+                )
 
-        :return: A list of primary field values from the related table.
-        :rtype: List[str]
-        :raises FieldDataRetrievalError: If there's an error fetching the primary values from the related table.
-        """
+    def encode_value(self, value: Any) -> Any:
+        self.validate_value(value)
+        if isinstance(value, (int, str)) and not isinstance(value, bool):
+            return value
+        if isinstance(value, (LinkedRow, dict)):
+            value = [value]
+        encoded = []
+        for item in value:
+            if isinstance(item, LinkedRow):
+                encoded.append(item.id if item.id is not None else item.value)
+            elif isinstance(item, dict):
+                encoded.append(item["id"])
+            else:
+                encoded.append(item)
+        return encoded
+
+    def get_linked_rows(self) -> list[LinkedRow]:
+        """Return selectable related rows with their row IDs and display values."""
         if self.client is None:
-            self.logger.error("Baserow client not provided.")
             raise FieldDataRetrievalError("Baserow client not provided.")
-
         try:
             related_table = self.client.get_table(self.link_row_table_id)
-            primary_field_name = related_table.primary_field
-            returned_rows = related_table.get_rows(include=[primary_field_name])
-            options = [row[primary_field_name] for row in returned_rows]
-
-            self.logger.debug(
-                f"Retrieved {len(options)} options for TableLinkField '{self.name}' from related table {related_table.id}"
+            primary_field = related_table.primary_field
+            rows = related_table.get_rows(
+                include=[primary_field],
+                view_id=self.link_row_limit_selection_view_id,
             )
-            return options
-        except Exception as e:
-            self.logger.error(
-                f"Failed to retrieve options for TableLinkField '{self.name}'. Error: {e}"
-            )
+            return [
+                LinkedRow(
+                    table_id=related_table.id,
+                    id=row.id,
+                    value=row[primary_field],
+                    raw={"id": row.id, "value": row[primary_field]},
+                )
+                for row in rows
+            ]
+        except Exception as error:
             raise FieldDataRetrievalError(
-                f"Failed to retrieve options from the related table. Error: {e}"
-            ) from e
+                f"Failed to retrieve linked rows for field {self.name!r}."
+            ) from error
 
-    def validate_value(self, value: Union[int, str, List[Union[int, str]]]) -> None:
-        """
-        Validate the value for the TableLinkField. Ensure it's a list of integers or strings,
-        or a single integer or string that can be converted to a list.
-
-        This method checks whether the provided value is valid according to the rules defined
-        for the TableLinkField. If the value is not valid, it raises a FieldValidationError.
-
-        :param value: The value to be validated. It can be an integer, a string, or a list of these.
-        :type value: Union[int, str, List[Union[int, str]]]
-        :raises FieldValidationError: If the value is not in the expected format.
-        """
-        if isinstance(value, (int, str)):
-            # A single integer or string is valid, but will be converted to a list.
-            value = [value]
-        elif not isinstance(value, list):
-            # If the value is not a list, integer, or string, it's invalid.
-            self.logger.error(
-                "Value provided for TableLinkField should be a list, integer, or string."
-            )
+    def resolve_linked_row(self, label: Any) -> LinkedRow:
+        """Resolve one related row by display label, rejecting ambiguity."""
+        matches = [row for row in self.get_linked_rows() if row.value == label]
+        if not matches:
             raise FieldValidationError(
-                "Value provided for TableLinkField should be a list, integer, or string."
+                f"No linked row with label {label!r} exists for field {self.name!r}."
             )
+        if len(matches) > 1:
+            raise FieldValidationError(
+                f"Label {label!r} is ambiguous for field {self.name!r}; "
+                f"it matches {len(matches)} rows."
+            )
+        return matches[0]

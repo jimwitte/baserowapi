@@ -1,50 +1,36 @@
-Working with File Fields in Baserow API
-=======================================
+Working with File Fields
+========================
 
-The Baserow API provides tools to interact with file fields, making it easy to upload, download, and inspect file data within your rows. This guide will walk you through the core operations associated with file fields.
-
-Setting Up
-----------
-
-Before working with file fields, you should have a table instance and a target row:
+File creation and row assignment are separate operations. Uploading through the
+client returns an unattached :class:`baserowapi.BaserowFile`; it does not mutate
+any row. Assign the returned record explicitly.
 
 .. code-block:: python
 
-    # Given this example row:
-    single_row = table.get_row(1)
+    uploaded = db.upload_file('fixie.jpg')
+    row.update({'Files': [uploaded]})
 
-Downloading Files
------------------
+    imported = db.upload_file_via_url('https://example.com/bison.jpg')
+    row.update({'Files': [uploaded, imported]})
 
-Files associated with a row can be downloaded to a specified local directory:
+The file-field update is the complete desired list. Pass ``[]`` or ``None`` to
+clear the field. Baserow also accepts stored filenames, lists of stored
+filenames, returned file objects, and comma-separated stored filenames.
 
-.. code-block:: python
+File Reads and Metadata
+-----------------------
 
-    # Download files from a row value to '/tmp' directory
-    download_result = single_row.values['myFileField'].download_files('/tmp')
-
-Uploading Files
----------------
-
-You can upload files to Baserow either from a local source or directly from a URL. After uploading, use the `.update()` method to save the changed row to the server:
-
-.. code-block:: python
-
-    # Upload a local file to the server
-    single_row.values['myFileField'].upload_file_to_server('fixie.jpg')
-    single_row.update()
-
-    # Upload a file from a URL
-    single_row.values['myFileField'].upload_file_to_server(url='https://www.jimwitte.net/bison.jpg')
-    single_row.update()
-
-Inspecting File Data
---------------------
-
-A file field value in a row contains a list of file objects, each providing details about the stored files:
+A file field reads as a list of ``BaserowFile`` records. ``name`` is Baserow's
+stored filename and is the stable value used for assignment. Depending on the
+endpoint, ``visible_name`` describes the name shown on an attached row and
+``original_name`` describes the source name returned by upload. URL, size, MIME
+type, and the complete payload in ``raw`` are retained when supplied.
 
 .. code-block:: python
 
-    # Print the file objects associated with 'myFileField'
-    print(single_row['myFileField'])
+    for item in row['Files']:
+        print(item.name, item.visible_name, item.url)
 
+The semantic client does not download file URLs or traverse local directories.
+Use an ordinary HTTP/file utility when an application needs that separate
+behavior.

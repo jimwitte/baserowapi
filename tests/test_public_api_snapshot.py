@@ -22,7 +22,7 @@ def resolve_qualified_attribute(qualified_name):
     return getattr(getattr(baserowapi, owner_name), attribute_name)
 
 
-def test_release_0_1_0b5_root_exports_are_recorded():
+def test_intended_root_exports_are_recorded():
     expected = set(load_snapshot()["root_names"])
     actual = {name for name in vars(baserowapi) if not name.startswith("_")}
 
@@ -33,7 +33,7 @@ def test_release_0_1_0b5_root_exports_are_recorded():
     "qualified_name,expected_parameters",
     load_snapshot()["parameters"].items(),
 )
-def test_release_0_1_0b5_public_signatures_are_recorded(
+def test_intended_public_signatures_are_recorded(
     qualified_name, expected_parameters
 ):
     callable_object = resolve_qualified_attribute(qualified_name)

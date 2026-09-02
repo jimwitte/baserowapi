@@ -52,6 +52,15 @@ RowValue
    :show-inheritance:
    :noindex:
 
+Identity-bearing Values
+-----------------------------------
+
+.. automodule:: baserowapi.models.values
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :noindex:
+
 Filter
 -------------------------------
 

@@ -50,9 +50,9 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields in Baserow API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Single Select and Multiple Select Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Field semantic inventory</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#purpose-and-status">Purpose and status</a></li>
@@ -129,6 +129,11 @@ on 2026-09-01;</p></li>
 <li><p>disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
 number precision beyond the configured decimal places, and a datetime with a
 non-UTC ISO offset;</p></li>
+<li><p>disposable hosted write probes on 2026-09-01 for select, link-row, and file
+IDs, labels, returned objects, comma-separated forms, empty forms, and nulls;</p></li>
+<li><p>hosted upload and explicit row-assignment tests on 2026-09-01, including the
+distinct user-file <code class="docutils literal notranslate"><span class="pre">original_name</span></code> and attached-file <code class="docutils literal notranslate"><span class="pre">visible_name</span></code>
+payloads;</p></li>
 <li><p>the maintainer’s generated API documentation for that database, captured on
 2026-09-01 and kept as an ignored local test reference; and</p></li>
 <li><p>Baserow’s current <a class="reference external" href="https://baserow.io/user-docs/database-api">Database API documentation</a>, <a class="reference external" href="https://baserow.io/user-docs/baserow-field-overview">field overview</a>, and <a class="reference external" href="https://baserow.io/user-docs/personal-api-tokens">database token
@@ -180,11 +185,10 @@ than the behavior of any individual field class.</p>
 <tr class="row-even"><td><p>Read row</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Row</span></code> chooses a <code class="docutils literal notranslate"><span class="pre">RowValue</span></code> subclass using a second type map, then
 <code class="docutils literal notranslate"><span class="pre">row[name]</span></code> returns <code class="docutils literal notranslate"><span class="pre">RowValue.value</span></code>.</p></td>
-<td><p>Scalar and unknown RowValues delegate to <code class="docutils literal notranslate"><span class="pre">Field.decode_value</span></code>.
-Structured selects, links, lookups, and passwords still decode in their
-RowValue subclasses.</p></td>
-<td><p>Phase 2 established field-owned scalar decoding; later phases must move
-the remaining structured types.</p></td>
+<td><p>Scalar, unknown, select, link, lookup, file, and collaborator RowValues
+delegate to <code class="docutils literal notranslate"><span class="pre">Field.decode_value</span></code>. Password remains an exception.</p></td>
+<td><p>Fields now own scalar and identity-bearing semantics. RowValue classes
+remain compatibility facades until the public row model is simplified.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Create rows</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> checks only that field names are writable. It sends
@@ -223,11 +227,10 @@ expected forward compatibility.</p></td>
 </table>
 <p>The two independent dispatch tables, <code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ROW_VALUE_TYPE_MAPPING</span></code>, duplicate the list of supported Baserow types. A new
-field currently requires coordinated changes to both maps and usually two
-classes. Phase 2 added <code class="docutils literal notranslate"><span class="pre">decode_value</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">encode_value</span></code>
-to Field and retained <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> as a compatibility alias. The duplicate
-dispatch remains until later phases move structured decoding and simplify the
-public row model.</p>
+field currently requires coordinated changes to both maps. Fields own scalar
+and structured decoding, validation, and encoding; <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> remains a
+compatibility alias. The duplicate dispatch remains until the public row model
+is simplified.</p>
 </section>
 <section id="field-by-field-inventory">
 <h2>Field-by-field inventory<a class="headerlink" href="#field-by-field-inventory" title="Link to this heading"></a></h2>
@@ -354,47 +357,47 @@ validator. Local filters omit <code class="docutils literal notranslate"><span c
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_select</span></code></p></td>
 <td><p>Option IDs, labels, colors, read object shape, write-by-ID-or-label, and
 first-match label behavior.</p></td>
-<td><p>Selected option label or <code class="docutils literal notranslate"><span class="pre">None</span></code>; raw option ID and color are discarded.</p></td>
-<td><p>Option ID, known label, option dictionary, or <code class="docutils literal notranslate"><span class="pre">None</span></code>; dictionaries
-encode to IDs.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SelectOption</span></code> retaining ID, label, color, and raw metadata, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p>Option record, ID, label, returned option dictionary, or <code class="docutils literal notranslate"><span class="pre">None</span></code>;
+identity-bearing forms encode to IDs.</p></td>
 <td><p>Strong</p></td>
-<td><p>This is a core semantic family. A canonical option object would preserve
-ID and label and avoid losing identity. Local filters omit
+<td><p>The canonical option record preserves identity. <code class="docutils literal notranslate"><span class="pre">resolve_option</span></code>
+optionally rejects missing or duplicate labels. Local filters omit
 <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>, <code class="docutils literal notranslate"><span class="pre">single_select_is_any_of</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">single_select_is_none_of</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_select</span></code></p></td>
 <td><p>Option metadata, read object list, and write-by-ID-or-label semantics.</p></td>
-<td><p>List of option labels; IDs and colors are discarded.</p></td>
-<td><p>List of IDs, labels, or returned option dictionaries. The package does
-not implement the server’s comma-separated shorthand.</p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">SelectOption</span></code> records retaining identity and raw metadata.</p></td>
+<td><p>List of option records, IDs, labels, or returned dictionaries;
+comma-separated labels and empty lists follow hosted behavior.</p></td>
 <td><p>Strong</p></td>
-<td><p>Core semantic family, but preserving option identity would avoid
-ambiguous duplicate labels and make round trips explicit.</p></td>
+<td><p>Returned records round-trip by ID. Ordinary label writes retain hosted
+resolution behavior; the strict resolver rejects ambiguity on request.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">link_row</span></code></p></td>
 <td><p>Related table ID, reverse field ID, selection-view metadata, complete-set
 replacement semantics, empty-list clearing, and ID-or-primary-label writes.</p></td>
-<td><p>List of primary-field labels, falling back to IDs; row identity is
-normally discarded.</p></td>
-<td><p>Single ID/label, list of IDs/labels, or comma-separated labels. Every
-update replaces the complete relationship set.</p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">LinkedRow</span></code> records retaining table ID, row ID, display value,
+and raw metadata.</p></td>
+<td><p>Linked-row records, returned dictionaries, single IDs/labels, lists, or
+comma-separated labels. Every update replaces the complete set.</p></td>
 <td><p>Strong</p></td>
-<td><p>This is essential Baserow knowledge. <code class="docutils literal notranslate"><span class="pre">get_options</span></code> returns labels only,
-even though duplicate labels resolve to the first row in table order.
-Options and read values should preserve both row ID and display label.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">get_linked_rows</span></code> preserves IDs and honors the selection view.
+<code class="docutils literal notranslate"><span class="pre">resolve_linked_row</span></code> optionally rejects absent or ambiguous labels.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">file</span></code></p></td>
 <td><p>File object shape, upload endpoints, assignment after upload, public file
 URL, visible name, and size verification.</p></td>
-<td><p>List of Baserow file dictionaries.</p></td>
-<td><p>Locally restricted to a list of dictionaries containing <code class="docutils literal notranslate"><span class="pre">name</span></code>. Upload
-helpers produce suitable dictionaries.</p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">BaserowFile</span></code> records retaining stored, visible, and original
+names plus returned metadata.</p></td>
+<td><p>File records, returned dictionaries, stored filename forms, empty lists,
+or <code class="docutils literal notranslate"><span class="pre">None</span></code>. Upload methods return unattached records.</p></td>
 <td><p>Strong</p></td>
-<td><p>Upload behavior removes knowledge from callers. Validation is narrower
-than Baserow, which also documents arrays or comma-separated file names.
-Local filters omit <code class="docutils literal notranslate"><span class="pre">files_lower_than</span></code>. Downloading is useful but is not
-required to encode the database API.</p></td>
+<td><p>Client-level upload and explicit assignment separate the two Baserow
+operations. Generic downloading is outside the semantic core. Local
+filters omit <code class="docutils literal notranslate"><span class="pre">files_lower_than</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">formula</span></code></p></td>
 <td><p>Formula text, result type, array result type, error, and read-only status.</p></td>
@@ -417,21 +420,22 @@ type and declares no filters.</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lookup</span></code></p></td>
 <td><p>Link field, target field, array result metadata, row IDs, values, and
 read-only status.</p></td>
-<td><p>List of extracted values; associated row IDs are discarded.</p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">LookupEntry</span></code> records retaining row ID, raw entry, and an
+intentionally raw inner value pending result-type semantics.</p></td>
 <td><p>Read-only.</p></td>
 <td><p>Partial</p></td>
-<td><p>The configured field reports <code class="docutils literal notranslate"><span class="pre">formula_type=&quot;array&quot;</span></code> and
-<code class="docutils literal notranslate"><span class="pre">array_formula_type=&quot;text&quot;</span></code>. Result type must drive decoding and
-filters. Dropping row IDs prevents callers from disambiguating results.</p></td>
+<td><p>Row identity is now preserved. Phase 4 must use <code class="docutils literal notranslate"><span class="pre">formula_type</span></code> and
+<code class="docutils literal notranslate"><span class="pre">array_formula_type</span></code> to decode the inner result and filters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_collaborators</span></code></p></td>
 <td><p>Notification metadata, collaborator object shape, and collaborator
 filters.</p></td>
-<td><p>Raw list of collaborator dictionaries.</p></td>
-<td><p>List of dictionaries each containing <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">Collaborator</span></code> records retaining ID and returned metadata.</p></td>
+<td><p>List of collaborator records or returned dictionaries; both encode to
+<code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">...}</span></code> objects.</p></td>
 <td><p>Partial</p></td>
-<td><p>The field validator has value; the RowValue is pass-through. Tests only
-exercise an empty list and do not establish returned user metadata.</p></td>
+<td><p>Identity is preserved offline, but a non-empty hosted collaborator read
+and the complete documented write surface still need verification.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">password</span></code></p></td>
 <td><p>Write-only secret behavior: server reads are <code class="docutils literal notranslate"><span class="pre">null</span></code> or <code class="docutils literal notranslate"><span class="pre">true</span></code> and a
@@ -552,15 +556,14 @@ used because <code class="docutils literal notranslate"><span class="pre">add_ro
 <td><p>Text, long text, boolean, number, rating, three date configurations, URL,
 email, empty file, selects, phone, empty links, empty collaborators, and
 password.</p></td>
-<td><p>Invalid values, <code class="docutils literal notranslate"><span class="pre">None</span></code> policy, encoder use, option identity, duplicate
-labels, precision, timezone edges, and non-empty collaborators.</p></td>
+<td><p>Create still bypasses the encoder. Non-empty collaborators and hosted
+duplicate-label configurations remain unverified.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Specialized operation</p></td>
-<td><p>Date conversion/display, file upload/download, linked-row options and
-label update.</p></td>
-<td><p>Aware datetimes, forced timezone behavior, upload-by-URL, replacement,
-partial download failure, linked IDs, duplicate primary labels, and
-complete-set replacement.</p></td>
+<td><p>Date conversion/display, client file upload and upload-by-URL with
+explicit assignment, and linked-row discovery/update by ID.</p></td>
+<td><p>Forced-timezone display, duplicate hosted primary labels, selection-view
+limits, and concurrent complete-set replacement remain unverified.</p></td>
 </tr>
 <tr class="row-even"><td><p>Presence only</p></td>
 <td><p>Created on, last modified, formula, count, lookup, UUID, and Autonumber.</p></td>
@@ -568,9 +571,9 @@ complete-set replacement.</p></td>
 read-only enforcement, decoding, formatting, and filters.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Direct scalar field semantics</p></td>
-<td><p>Text-like pass-through, boolean, rating, number, date/datetime, and the
-Generic fallback.</p></td>
-<td><p>Structured field decoding, filter compatibility, and create/update
+<td><p>Text-like pass-through, boolean, rating, number, date/datetime, generic
+fallback, and identity-bearing structured fields.</p></td>
+<td><p>Computed result semantics, filter compatibility, and create/update
 encoding parity remain for later phases.</p></td>
 </tr>
 </tbody>
@@ -603,8 +606,10 @@ and therefore preserve one semantic implementation.</p>
 </section>
 <section id="settled-design-decisions">
 <h2>Settled design decisions<a class="headerlink" href="#settled-design-decisions" title="Link to this heading"></a></h2>
-<p>These decisions describe the intended contract for the refactor. They do not
-describe behavior already implemented in release <code class="docutils literal notranslate"><span class="pre">0.1.0b5</span></code>.</p>
+<p>These decisions describe the intended contract for the refactor. Phase 2 scalar
+semantics and Phase 3 identity-bearing values are implemented on
+<code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>; later sections remain design direction until their phase is
+completed.</p>
 <section id="focus-and-authority">
 <h3>Focus and authority<a class="headerlink" href="#focus-and-authority" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">baserowapi</span></code> will focus on the schema-aware database-token data API. It will

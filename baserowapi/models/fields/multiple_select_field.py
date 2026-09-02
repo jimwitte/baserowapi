@@ -1,16 +1,12 @@
-from typing import Any, Dict, List, Union, Optional
-import logging
+from typing import Any, Optional
+
+from baserowapi.exceptions import FieldValidationError, FieldValueError
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError
+from baserowapi.models.values import SelectOption
 
 
 class MultipleSelectField(Field):
-    """
-    Represents a multiple-select field allowing the user to select multiple options from a predefined set of options.
-
-    :ivar TYPE: The type of the field, which is 'multiple_select'.
-    :vartype TYPE: str
-    """
+    """Baserow metadata and value semantics for a multiple-select field."""
 
     TYPE = "multiple_select"
     _COMPATIBLE_FILTERS = [
@@ -24,123 +20,126 @@ class MultipleSelectField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initialize a MultipleSelectField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
+    def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
         super().__init__(name, field_data, client)
-        self.logger = logging.getLogger(__name__)
-        if "select_options" not in field_data or not isinstance(
-            field_data["select_options"], list
-        ):
-            self.logger.error(
-                "Invalid or missing select_options provided for MultipleSelectField initialization."
-            )
+        if not isinstance(field_data.get("select_options"), list):
             raise FieldValidationError(
-                "select_options should be a non-empty list in field_data."
+                "select_options must be a list in multiple-select field metadata."
             )
 
     @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this MultipleSelectField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
+    def compatible_filters(self) -> list[str]:
         return self._COMPATIBLE_FILTERS
 
+    @staticmethod
+    def _decode_option(raw_value: dict[str, Any]) -> SelectOption:
+        if not isinstance(raw_value, dict):
+            raise FieldValueError("A Baserow select option must be an object.")
+        option_id = raw_value.get("id")
+        value = raw_value.get("value")
+        if option_id is not None and (
+            isinstance(option_id, bool) or not isinstance(option_id, int)
+        ):
+            raise FieldValueError("A Baserow select option ID must be an integer.")
+        if value is not None and not isinstance(value, str):
+            raise FieldValueError("A Baserow select option value must be a string.")
+        return SelectOption(
+            id=option_id,
+            value=value,
+            color=raw_value.get("color"),
+            raw=dict(raw_value),
+        )
+
     @property
-    def options(self) -> List[str]:
-        """
-        Retrieve a list of select option values from the field_data.
-
-        :return: List of select option values.
-        :rtype: List[str]
-        """
-        return [option["value"] for option in self.field_data["select_options"]]
-
-    @property
-    def options_details(self) -> List[Dict[str, Any]]:
-        """
-        Retrieve a list including details like id, value, color of each select_option.
-
-        :return: List of detailed select_options.
-        :rtype: List[Dict[str, Any]]
-        """
-        return self.field_data["select_options"]
+    def options(self) -> list[SelectOption]:
+        """Return the configured options without discarding IDs or metadata."""
+        return [
+            self._decode_option(option)
+            for option in self.field_data["select_options"]
+        ]
 
     def _get_option_by_id_or_value(
-        self, value: Union[int, str]
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Utility method to retrieve an option by its id or value.
-
-        :param value: The id or value of the option to retrieve.
-        :type value: Union[int, str]
-        :return: The option if found, otherwise None.
-        :rtype: Optional[Dict[str, Any]]
-        """
-        for option in self.options_details:
-            if option["id"] == value or option["value"] == value:
+        self, value: int | str
+    ) -> Optional[SelectOption]:
+        for option in self.options:
+            if option.id == value or option.value == value:
                 return option
         return None
 
-    def validate_value(self, values: List[Union[int, str]]) -> None:
-        """
-        Validates the values for a MultipleSelectField.
-
-        :param values: The list of values to validate.
-        :type values: List[Union[int, str]]
-        :raises FieldValidationError: If the provided values list contains a value that doesn't match any select option.
-        """
-        if values is None:
-            return
-
-        if not isinstance(values, list):
+    def resolve_option(self, label: str) -> SelectOption:
+        """Resolve one option by label, rejecting missing or duplicate labels."""
+        if not isinstance(label, str):
+            raise FieldValidationError("A select option label must be a string.")
+        matches = [option for option in self.options if option.value == label]
+        if not matches:
             raise FieldValidationError(
-                "The provided value should be a list for a MultipleSelectField."
+                f"No option with label {label!r} exists for field {self.name!r}."
             )
+        if len(matches) > 1:
+            raise FieldValidationError(
+                f"Label {label!r} is ambiguous for field {self.name!r}; "
+                f"it matches {len(matches)} options."
+            )
+        return matches[0]
 
-        for value in values:
-            option = self._get_option_by_id_or_value(value)
-            if not option:
+    def decode_value(self, raw_value: Any) -> list[SelectOption]:
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, str):
+            raw_value = [part.strip() for part in raw_value.split(",") if part.strip()]
+        if not isinstance(raw_value, list):
+            raise FieldValueError("A multiple-select response must be a list.")
+
+        decoded = []
+        for item in raw_value:
+            if isinstance(item, SelectOption):
+                decoded.append(item)
+            elif isinstance(item, dict):
+                decoded.append(self._decode_option(item))
+            elif isinstance(item, bool):
+                raise FieldValueError("A select option ID cannot be a boolean.")
+            elif isinstance(item, int):
+                known = self._get_option_by_id_or_value(item)
+                decoded.append(known or SelectOption(item, None, raw={"id": item}))
+            elif isinstance(item, str):
+                known = self._get_option_by_id_or_value(item)
+                decoded.append(known or SelectOption(None, item, raw={"value": item}))
+            else:
+                raise FieldValueError(
+                    f"Cannot decode {type(item).__name__} as a select option."
+                )
+        return decoded
+
+    def validate_value(self, value: Any) -> None:
+        if isinstance(value, str):
+            return
+        if not isinstance(value, list):
+            raise FieldValidationError(
+                "A multiple-select value must be a list or comma-separated string."
+            )
+        for item in value:
+            if isinstance(item, SelectOption):
+                continue
+            if isinstance(item, bool) or not isinstance(item, (dict, int, str)):
                 raise FieldValidationError(
-                    f"The provided value '{value}' doesn't match any select option."
+                    "Each multiple-select item must be an option, returned object, "
+                    "ID, or label."
+                )
+            if isinstance(item, dict) and "id" not in item:
+                raise FieldValidationError(
+                    "A returned multiple-select object must contain an 'id'."
                 )
 
-    def encode_value(self, values: List[Union[Dict[str, Any], int, str]]) -> List[Union[int, str]]:
-        """
-        Formats the multiple select values for API submission.
-
-        :param values: The list of values to format. Can include dictionaries (from raw_value), IDs, or strings.
-        :type values: List[Union[Dict[str, Any], int, str]]
-        :return: A list of IDs or value strings to be submitted to the API.
-        :rtype: List[Union[int, str]]
-        :raises FieldValidationError: If any value in the list is not valid.
-        """
-        if values is None:
-            return []
-
-        formatted_values = []
-        for value in values:
-            # If the value is a dictionary (as returned by the API), extract the 'id' or 'value'
-            if isinstance(value, dict):
-                formatted_values.append(value["id"])  # or value["value"], depending on your preference
+    def encode_value(self, value: Any) -> Any:
+        self.validate_value(value)
+        if isinstance(value, str):
+            return value
+        encoded = []
+        for item in value:
+            if isinstance(item, SelectOption):
+                encoded.append(item.id if item.id is not None else item.value)
+            elif isinstance(item, dict):
+                encoded.append(item["id"])
             else:
-                # Validate and format the value if it's already in the correct form (int or str)
-                self.validate_value([value])
-                option = self._get_option_by_id_or_value(value)
-                if option:
-                    formatted_values.append(option["id"])  # or option["value"], depending on your preference
-                else:
-                    raise FieldValidationError(f"Cannot format value '{value}' for API submission.")
-
-        return formatted_values
+                encoded.append(item)
+        return encoded

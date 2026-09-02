@@ -1,10 +1,12 @@
 {
   "root_names": [
     "Baserow",
+    "BaserowFile",
     "BooleanField",
     "BooleanRowValue",
     "CountField",
     "CountRowValue",
+    "Collaborator",
     "CreatedOnField",
     "CreatedOnRowValue",
     "DateField",
@@ -24,8 +26,10 @@
     "LastModifiedRowValue",
     "LongTextField",
     "LongTextRowValue",
+    "LinkedRow",
     "LookupField",
     "LookupRowValue",
+    "LookupEntry",
     "MultipleCollaboratorsField",
     "MultipleCollaboratorsRowValue",
     "MultipleSelectField",
@@ -42,6 +46,7 @@
     "RowValueList",
     "SingleSelectField",
     "SingleSelectRowValue",
+    "SelectOption",
     "Table",
     "TableLinkField",
     "TableLinkRowValue",
@@ -57,7 +62,8 @@
     "row",
     "row_values",
     "table",
-    "validators"
+    "validators",
+    "values"
   ],
   "parameters": {
     "Baserow.__init__": [
@@ -77,6 +83,8 @@
       "timeout",
       "files"
     ],
+    "Baserow.upload_file": ["self", "file_path"],
+    "Baserow.upload_file_via_url": ["self", "url"],
     "Table.get_rows": [
       "self",
       "include",

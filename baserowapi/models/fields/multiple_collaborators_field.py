@@ -1,15 +1,12 @@
-from typing import Any, Dict, List
+from typing import Any
+
+from baserowapi.exceptions import FieldValidationError, FieldValueError
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError
+from baserowapi.models.values import Collaborator
 
 
 class MultipleCollaboratorsField(Field):
-    """
-    Represents a list of Baserow collaborators.
-
-    :ivar TYPE: The type of the field, which is 'multiple_collaborators'.
-    :vartype TYPE: str
-    """
+    """Baserow collaborator identity and assignment semantics."""
 
     TYPE = "multiple_collaborators"
     _COMPATIBLE_FILTERS = [
@@ -19,53 +16,58 @@ class MultipleCollaboratorsField(Field):
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initializes a MultipleCollaboratorsField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
-        super().__init__(name, field_data, client)
-
     @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this MultipleCollaboratorsField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
+    def compatible_filters(self) -> list[str]:
         return self._COMPATIBLE_FILTERS
 
     @property
     def notify_user_when_added(self) -> bool:
-        """
-        Determine if the user should be notified when added.
-
-        :return: True if the user should be notified, False otherwise.
-        :rtype: bool
-        """
         return self.field_data.get("notify_user_when_added", False)
 
-    def validate_value(self, value: List[Dict[str, Any]]) -> None:
-        """
-        Validate the value for a MultipleCollaboratorsField.
-
-        :param value: A list of dictionaries representing collaborator data.
-        :type value: List[Dict[str, Any]]
-        :raises FieldValidationError: If the provided value is not a list or if the format is incorrect.
-        """
-        if not isinstance(value, list):
-            raise FieldValidationError(
-                f"Expected a list for MultipleCollaboratorsField but got {type(value)}"
+    @staticmethod
+    def _decode_collaborator(raw_value: Any) -> Collaborator:
+        if isinstance(raw_value, Collaborator):
+            return raw_value
+        if not isinstance(raw_value, dict):
+            raise FieldValueError("A Baserow collaborator must be an object.")
+        collaborator_id = raw_value.get("id")
+        if isinstance(collaborator_id, bool) or not isinstance(collaborator_id, int):
+            raise FieldValueError(
+                "A Baserow collaborator must contain an integer 'id'."
             )
-        for collaborator in value:
-            if not isinstance(collaborator, dict) or "id" not in collaborator:
+        return Collaborator(
+            id=collaborator_id,
+            name=raw_value.get("name"),
+            email=raw_value.get("email"),
+            raw=dict(raw_value),
+        )
+
+    def decode_value(self, raw_value: Any) -> list[Collaborator]:
+        if raw_value is None:
+            return []
+        if not isinstance(raw_value, list):
+            raise FieldValueError("A collaborators response must be a list.")
+        return [self._decode_collaborator(item) for item in raw_value]
+
+    def validate_value(self, value: Any) -> None:
+        if not isinstance(value, list):
+            raise FieldValidationError("A collaborators value must be a list.")
+        for item in value:
+            if isinstance(item, Collaborator):
+                continue
+            if (
+                not isinstance(item, dict)
+                or isinstance(item.get("id"), bool)
+                or not isinstance(item.get("id"), int)
+            ):
                 raise FieldValidationError(
-                    "Each collaborator in MultipleCollaboratorsField should be a dictionary with an 'id' key"
+                    "Each collaborator must be a Collaborator or an object "
+                    "with an integer 'id'."
                 )
+
+    def encode_value(self, value: Any) -> list[dict[str, int]]:
+        self.validate_value(value)
+        return [
+            {"id": item.id if isinstance(item, Collaborator) else item["id"]}
+            for item in value
+        ]
