@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sys
 import sphinx_rtd_theme
@@ -7,7 +8,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 project = "Baserow API Package"
-copyright = "2024, James P Witte"
+copyright = f"2024-{datetime.now().year}, James P Witte"
 author = "James P Witte"
 release = "0.1.0b5"
 
@@ -24,3 +25,4 @@ exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "sphinx_rtd_theme"
+html_last_updated_fmt = "%B %d, %Y at %I:%M %p"
