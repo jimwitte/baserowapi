@@ -19,6 +19,7 @@ To install `baserowapi`, simply use pip:
 ## Features
 
 * Efficient API Calls: The Baserow class offers a streamlined way to make API requests.
+* Table Discovery: Discover every table visible to a database token while retaining Baserow metadata.
 * Robust Data Management: Manipulate and manage Baserow tables with ease using the Table and Row classes.
 * Advanced Filtering: Employ Filter objects to efficiently retrieve data from tables.
 

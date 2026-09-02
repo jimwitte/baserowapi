@@ -100,14 +100,16 @@ structured Baserow values.</p>
 <section id="baserow-class">
 <h2>Baserow Class<a class="headerlink" href="#baserow-class" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Baserow</span></code> is the client and request boundary. It owns authentication,
-transport errors, table construction, and file upload operations.</p>
+safe read retries, transport errors, table construction and discovery, and file
+upload operations. It does not configure application logging.</p>
 </section>
 <section id="table-class">
 <h2>Table Class<a class="headerlink" href="#table-class" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Table</span></code> owns schema metadata and row operations. <code class="docutils literal notranslate"><span class="pre">fields</span></code> and
 <code class="docutils literal notranslate"><span class="pre">writable_fields</span></code> are ordered, read-only mappings from field name to Field.
 Specific Field classes expose Baserow metadata and own decoding, validation,
-and API encoding. Recreate the Table to retrieve changed hosted schema.</p>
+and API encoding. Discovered Tables retain name, database, order, and raw
+metadata. Recreate the Table to retrieve changed hosted schema.</p>
 </section>
 <section id="row-class">
 <h2>Row Class<a class="headerlink" href="#row-class" title="Link to this heading"></a></h2>

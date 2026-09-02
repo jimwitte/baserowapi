@@ -82,6 +82,19 @@ require hosted verification. `docsrc/refactoring_plan.rst` defines the reviewed
 phase order and exit criteria; completing one phase does not authorize starting
 the next without review.
 
+`Baserow.make_api_request` is the one public low-level database-token escape
+hatch. Authentication, URL validation, header merging, execution, and response
+parsing remain private. Absolute pagination URLs must use the configured
+Baserow origin. Client safe-read retries apply only to GET and HEAD; never add
+automatic retries for mutating requests. The package emits logging records but
+must not configure application logging or log request payloads and file values.
+
+`Baserow.get_tables()` discovers token-visible Tables and preserves returned
+name, database ID, order, and raw metadata. `Baserow.get_table()` remains
+uncached, and each Table lazily caches its own schema snapshot. Construct a new
+Table after an external schema change; do not introduce in-place schema refresh
+without a demonstrated need and an explicit policy for existing Rows.
+
 Row writes have explicit singular and plural contracts. `Table.add_row` and
 `Table.update_row` return one `Row`; `Table.add_rows` and `Table.update_rows`
 accept non-empty lists and return `list[Row]`. Route every create and update

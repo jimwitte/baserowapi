@@ -24,6 +24,7 @@ def make_response(
     response = requests.Response()
     response.status_code = status_code
     response._content = body
+    response.raw = Mock()
     response.headers["Content-Type"] = content_type
     response.url = "https://api.baserow.io/test/"
     return response
@@ -31,12 +32,12 @@ def make_response(
 
 @pytest.mark.parametrize("status_code", [302, 400, 401, 403, 404, 429, 500])
 def test_every_http_error_status_raises_baserow_http_error(status_code):
-    client = Baserow(token="test-token")
+    client = Baserow(token="test-token", read_retries=0)
     response = make_response(
         status_code,
         b'{"error":"ERROR_TEST","description":"Test failure"}',
     )
-    client.session.request = Mock(return_value=response)
+    client._session.request = Mock(return_value=response)
 
     with pytest.raises(BaserowHTTPError) as raised:
         client.make_api_request("/test/")
@@ -48,9 +49,9 @@ def test_every_http_error_status_raises_baserow_http_error(status_code):
 
 
 def test_timeout_is_translated_and_chained():
-    client = Baserow(token="test-token")
+    client = Baserow(token="test-token", read_retries=0)
     original_error = requests.exceptions.Timeout("too slow")
-    client.session.request = Mock(side_effect=original_error)
+    client._session.request = Mock(side_effect=original_error)
 
     with pytest.raises(BaserowTimeoutError) as raised:
         client.make_api_request("/test/")
@@ -59,9 +60,9 @@ def test_timeout_is_translated_and_chained():
 
 
 def test_connection_error_is_translated_and_chained():
-    client = Baserow(token="test-token")
+    client = Baserow(token="test-token", read_retries=0)
     original_error = requests.exceptions.ConnectionError("unavailable")
-    client.session.request = Mock(side_effect=original_error)
+    client._session.request = Mock(side_effect=original_error)
 
     with pytest.raises(BaserowConnectionError) as raised:
         client.make_api_request("/test/")
@@ -72,7 +73,7 @@ def test_connection_error_is_translated_and_chained():
 def test_other_request_error_is_translated_and_chained():
     client = Baserow(token="test-token")
     original_error = requests.exceptions.RequestException("request failed")
-    client.session.request = Mock(side_effect=original_error)
+    client._session.request = Mock(side_effect=original_error)
 
     with pytest.raises(BaserowRequestError) as raised:
         client.make_api_request("/test/")
@@ -82,7 +83,7 @@ def test_other_request_error_is_translated_and_chained():
 
 def test_invalid_advertised_json_raises_response_error():
     client = Baserow(token="test-token")
-    client.session.request = Mock(return_value=make_response(body=b"not-json"))
+    client._session.request = Mock(return_value=make_response(body=b"not-json"))
 
     with pytest.raises(BaserowResponseError):
         client.make_api_request("/test/")
@@ -90,7 +91,7 @@ def test_invalid_advertised_json_raises_response_error():
 
 def test_plain_text_response_remains_supported():
     client = Baserow(token="test-token")
-    client.session.request = Mock(
+    client._session.request = Mock(
         return_value=make_response(body=b"plain text", content_type="text/plain")
     )
 
@@ -99,18 +100,22 @@ def test_plain_text_response_remains_supported():
 
 def test_no_content_response_returns_status_code():
     client = Baserow(token="test-token")
-    client.session.request = Mock(return_value=make_response(204, b""))
+    client._session.request = Mock(return_value=make_response(204, b""))
 
     assert client.make_api_request("/test/", method="DELETE") == 204
 
 
 def test_request_headers_are_copied_before_per_request_changes():
     client = Baserow(token="test-token")
+    client._session.request = Mock(return_value=make_response())
+    additional_headers = {"X-Test": "present"}
 
-    combined_headers = client.get_combined_headers(None)
-    combined_headers.pop("Content-Type")
+    client.make_api_request("/test/", headers=additional_headers)
+    sent_headers = client._session.request.call_args.kwargs["headers"]
+    sent_headers.pop("Content-Type")
 
-    assert client.headers["Content-Type"] == "application/json"
+    assert "Content-Type" not in client._session.headers
+    assert additional_headers == {"X-Test": "present"}
 
 
 def test_high_level_row_fetch_preserves_domain_error_and_http_cause():

@@ -141,6 +141,9 @@ Autonumber integer;</p></li>
 <li><p>disposable hosted password probes on 2026-09-02 confirming that string,
 literal <code class="docutils literal notranslate"><span class="pre">true</span></code>, and <code class="docutils literal notranslate"><span class="pre">null</span></code> writes are accepted and that reads expose only
 <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">null</span></code>;</p></li>
+<li><p>a read-only hosted table-discovery probe on 2026-09-02 confirming that the
+database-token <code class="docutils literal notranslate"><span class="pre">all-tables</span></code> endpoint returns a list containing integer
+table and database IDs, string names, and numeric order values;</p></li>
 <li><p>the generated API documentation captured on 2026-09-01, visually checked on
 2026-09-02 for configured filter lists, plus hosted equality and empty-result
 filter probes;</p></li>
@@ -752,14 +755,18 @@ made through the Baserow UI or a separate administrative client. Database
 tokens cannot mutate schema, and no current application requires in-place
 refresh semantics for existing Table and Row objects. The package will not add
 a schema-refresh method until that need and its Row behavior are demonstrated.</p>
-<p>The Client will retain one request boundary for authentication, timeouts,
-connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging
-configuration, header combination, request execution, and response parsing will
-be private implementation details. A documented low-level <code class="docutils literal notranslate"><span class="pre">request</span></code> escape
-hatch will remain public for hosted endpoints not yet modeled by the package;
-it provides transport and error handling, not schema semantics or endpoint
-stability. Mutating requests will not be retried without an idempotency
-guarantee.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Baserow.make_api_request</span></code> is the single request boundary for authentication,
+same-origin URL enforcement, timeouts, safe-read retries, connectivity and HTTP
+failures, JSON parsing, and Baserow error extraction. Header combination,
+request execution, session state, and response parsing are private. The method
+remains a documented low-level escape hatch for hosted database-token endpoints
+not yet modeled by the package; it provides transport and error handling, not
+schema semantics or endpoint stability. GET and HEAD requests retry configured
+transient failures with backoff, while mutating requests are never retried.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Baserow.get_tables</span></code> uses the database-token discovery endpoint and returns
+Tables retaining name, database ID, order, and the complete returned metadata.
+The package emits ordinary logging records without configuring application
+logging or recording request payloads and file values.</p>
 </section>
 </section>
 <section id="evidence-still-required">

@@ -47,11 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Baserow Client Class</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#initialization-options">Initialization Options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#token-management">Token Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initialization">Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-discovery-and-schema-snapshots">Table discovery and schema snapshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#low-level-request-escape-hatch">Low-level request escape hatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#token-handling">Token handling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
@@ -94,72 +94,103 @@
              
   <section id="baserow-client-class">
 <h1>Baserow Client Class<a class="headerlink" href="#baserow-client-class" title="Link to this heading"></a></h1>
-<section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
-<p>The <cite>Baserow</cite> class provides the main entry point to interact with the Baserow API. This class serves as the API client and facilitates all the API calls. For any other classes that require API access, this class is passed as a reference to ensure smooth and coherent operations.</p>
-</section>
-<section id="initialization-options">
-<h2>Initialization Options<a class="headerlink" href="#initialization-options" title="Link to this heading"></a></h2>
-<p>When creating an instance of the <cite>Baserow</cite> class, you can specify several parameters to customize your connection and interactions with the Baserow server.</p>
-<p>Parameters:</p>
-<ul class="simple">
-<li><p><strong>token</strong> (str):
-- Required. The authentication token for Baserow.</p></li>
-<li><p><strong>url</strong> (str, optional):
-- The base URL for the Baserow server. Default is <cite>‘https://api.baserow.io’</cite>.</p></li>
-<li><p><strong>logging_level</strong> (str, optional):
-- The desired logging level. Available options include: <cite>‘INFO’</cite>, <cite>‘ERROR’</cite>, and <cite>‘DEBUG’</cite>. If unspecified, logging will be disabled.</p></li>
-<li><p><strong>log_file</strong> (str, optional):
-- Specify a file path to log the interactions. Useful if you want to persist logs for later analysis. This parameter will be ignored if <cite>logging_level</cite> is not specified.</p></li>
-</ul>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Baserow</span></code> client is the authenticated request boundary for the hosted
+database-token API. It constructs Tables, discovers token-visible Tables,
+uploads files, and translates request and response failures into package
+exceptions.</p>
+<section id="initialization">
+<h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">token</span></code> is required and must be a non-empty database token. <code class="docutils literal notranslate"><span class="pre">url</span></code> defaults
+to <code class="docutils literal notranslate"><span class="pre">https://api.baserow.io</span></code>. <code class="docutils literal notranslate"><span class="pre">timeout</span></code> sets the request timeout in seconds,
+and <code class="docutils literal notranslate"><span class="pre">read_retries</span></code> sets the number of retries for safe reads.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Baserow</span>
 
-<span class="c1"># Default baserow client</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s2">"mytoken"</span><span class="p">)</span>
 
-<span class="c1"># Specify a custom server URL</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
-
-<span class="c1"># Enable logging at DEBUG level</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">'DEBUG'</span><span class="p">)</span>
-
-<span class="c1"># Enable logging to a file</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">'DEBUG'</span><span class="p">,</span> <span class="n">log_file</span><span class="o">=</span><span class="s1">'log.txt'</span><span class="p">)</span>
+<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span>
+    <span class="n">url</span><span class="o">=</span><span class="s2">"https://baserow.example.com"</span><span class="p">,</span>
+    <span class="n">token</span><span class="o">=</span><span class="s2">"mytoken"</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">read_retries</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The default timeout is 10 seconds and the default safe-read retry count is two.
+Retries apply only to <code class="docutils literal notranslate"><span class="pre">GET</span></code> and <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> requests after a timeout, connection
+failure, or a <code class="docutils literal notranslate"><span class="pre">429</span></code>, <code class="docutils literal notranslate"><span class="pre">502</span></code>, <code class="docutils literal notranslate"><span class="pre">503</span></code>, or <code class="docutils literal notranslate"><span class="pre">504</span></code> response. They use
+exponential backoff and honor <code class="docutils literal notranslate"><span class="pre">Retry-After</span></code>. Mutating <code class="docutils literal notranslate"><span class="pre">POST</span></code>, <code class="docutils literal notranslate"><span class="pre">PATCH</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">DELETE</span></code> requests are never retried automatically.</p>
+<p>The package emits ordinary Python logging records but does not configure root
+logging, handlers, levels, or files. Applications retain full control of their
+logging configuration.</p>
+</section>
+<section id="table-discovery-and-schema-snapshots">
+<h2>Table discovery and schema snapshots<a class="headerlink" href="#table-discovery-and-schema-snapshots" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">get_tables</span></code> uses Baserow’s database-token discovery endpoint and returns a
+list of Tables visible to the token:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_tables</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">database_id</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each discovered Table retains the complete returned metadata in its read-only
+<code class="docutils literal notranslate"><span class="pre">metadata</span></code> mapping. <code class="docutils literal notranslate"><span class="pre">get_table(table_id)</span></code> remains useful when an ID is
+already known.</p>
+<p>Every call to <code class="docutils literal notranslate"><span class="pre">get_table</span></code> returns a new Table. A Table loads and caches its
+field schema only when <code class="docutils literal notranslate"><span class="pre">fields</span></code> is first accessed. After a schema change made
+through the Baserow UI or a separate administrative client, construct a new
+Table to obtain a new schema snapshot:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="low-level-request-escape-hatch">
+<h2>Low-level request escape hatch<a class="headerlink" href="#low-level-request-escape-hatch" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">make_api_request</span></code> supports database-token endpoints not yet modeled by the
+package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="s2">"/api/database/example/"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It provides authentication, timeouts, safe-read retries, response parsing, and
+package exceptions. It does not add Field semantics or guarantee that an
+unmodeled Baserow endpoint will remain stable.</p>
+<p>Relative endpoints must start with <code class="docutils literal notranslate"><span class="pre">/</span></code>. Absolute URLs are accepted for
+Baserow pagination, but their scheme, host, and port must match the configured
+Baserow URL. This prevents the database token from being sent to another
+origin. Per-request headers cannot replace the database-token Authorization
+header.</p>
+<p>A per-request timeout may override the client default:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="s2">"/api/database/example/"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="error-handling">
-<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<h2>Error handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
 <p>All package-defined exceptions inherit from
-<a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowAPIError" title="baserowapi.exceptions.BaserowAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">baserowapi.exceptions.BaserowAPIError</span></code></a>. Low-level calls made through
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Baserow.make_api_request()</span></code> use these exceptions:</p>
+<a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowAPIError" title="baserowapi.exceptions.BaserowAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">baserowapi.exceptions.BaserowAPIError</span></code></a>. Low-level requests raise:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowTimeoutError" title="baserowapi.exceptions.BaserowTimeoutError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowTimeoutError</span></code></a> when a request times out.</p></li>
-<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowConnectionError" title="baserowapi.exceptions.BaserowConnectionError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowConnectionError</span></code></a> when a connection cannot be established.</p></li>
-<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowRequestError" title="baserowapi.exceptions.BaserowRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowRequestError</span></code></a> for another request execution failure.</p></li>
-<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowHTTPError" title="baserowapi.exceptions.BaserowHTTPError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code></a> for every non-2xx response, not only a predefined set of status codes.</p></li>
-<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowResponseError" title="baserowapi.exceptions.BaserowResponseError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowResponseError</span></code></a> when a response advertised as JSON cannot be decoded.</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowTimeoutError" title="baserowapi.exceptions.BaserowTimeoutError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowTimeoutError</span></code></a> after the permitted safe
+read retries are exhausted;</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowConnectionError" title="baserowapi.exceptions.BaserowConnectionError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowConnectionError</span></code></a> when a connection
+cannot be established;</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowRequestError" title="baserowapi.exceptions.BaserowRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowRequestError</span></code></a> for another request
+execution failure;</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowHTTPError" title="baserowapi.exceptions.BaserowHTTPError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code></a> for every non-2xx response;</p></li>
+<li><p><a class="reference internal" href="baserowapi.html#baserowapi.exceptions.BaserowResponseError" title="baserowapi.exceptions.BaserowResponseError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaserowResponseError</span></code></a> when advertised JSON or
+a modeled response shape cannot be interpreted.</p></li>
 </ul>
-<p>The original <code class="docutils literal notranslate"><span class="pre">requests</span></code> exception is available through the raised
-exception’s <code class="docutils literal notranslate"><span class="pre">__cause__</span></code>. <code class="docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code> provides <code class="docutils literal notranslate"><span class="pre">status_code</span></code>,
-<code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>, <code class="docutils literal notranslate"><span class="pre">error_code</span></code>, and <code class="docutils literal notranslate"><span class="pre">description</span></code> attributes. The last
-two contain Baserow’s structured error details when the response supplies
-them.</p>
-<p>Higher-level table and row operations retain operation-specific exceptions,
-such as <a class="reference internal" href="baserowapi.html#baserowapi.exceptions.RowFetchError" title="baserowapi.exceptions.RowFetchError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowFetchError</span></code></a> and
-<a class="reference internal" href="baserowapi.html#baserowapi.exceptions.RowUpdateError" title="baserowapi.exceptions.RowUpdateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowUpdateError</span></code></a>. Their <code class="docutils literal notranslate"><span class="pre">__cause__</span></code> contains
-the lower-level failure. Caller validation errors remain distinct and are not
-converted into request errors.</p>
-<p>Successful JSON responses are decoded and returned. A 204 response returns
-the integer <code class="docutils literal notranslate"><span class="pre">204</span></code>, and an empty response returns <code class="docutils literal notranslate"><span class="pre">None</span></code>. A non-JSON
-response is returned as text when its content type does not advertise JSON.</p>
+<p>The original <code class="docutils literal notranslate"><span class="pre">requests</span></code> exception is available through <code class="docutils literal notranslate"><span class="pre">__cause__</span></code>.
+<code class="docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code> provides <code class="docutils literal notranslate"><span class="pre">status_code</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">error_code</span></code>, and <code class="docutils literal notranslate"><span class="pre">description</span></code>. Higher-level Table and Row operations
+retain their operation-specific exceptions and chain the request failure.</p>
+<p>Successful JSON responses are decoded and returned. A 204 response returns the
+integer <code class="docutils literal notranslate"><span class="pre">204</span></code>, an empty response returns <code class="docutils literal notranslate"><span class="pre">None</span></code>, and non-JSON content is
+returned as text when its content type does not advertise JSON.</p>
 </section>
-<section id="token-management">
-<h2>Token Management<a class="headerlink" href="#token-management" title="Link to this heading"></a></h2>
-<p>The Baserow client requires an authentication token (token) during initialization to ensure authorized access. This token is used in the request headers for authentication purposes. Users are advised to manage and store their tokens securely. Avoid hardcoding tokens directly into your codebase, and instead, consider using environment variables, configuration files, or secure vaults. Regularly rotate your tokens, and ensure that old tokens are invalidated to maintain the security of your API interactions.</p>
+<section id="token-handling">
+<h2>Token handling<a class="headerlink" href="#token-handling" title="Link to this heading"></a></h2>
+<p>Store database tokens outside source code, such as in environment variables or
+a credential manager. The client owns the Authorization header and will not
+allow a per-request header mapping to replace it.</p>
 </section>
 </section>
 

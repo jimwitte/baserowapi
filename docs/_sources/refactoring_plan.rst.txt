@@ -274,6 +274,12 @@ Exit criteria
 Phase 7: Consolidate transport and discovery
 --------------------------------------------
 
+Status: complete on branch ``release/0.2.0b1`` and verified against hosted
+``baserow.io`` on 2026-09-02. The Python 3.12 suite passed with 154 offline
+tests and 37 serial hosted tests, including table discovery and both file
+upload paths. The warning-strict Sphinx 9.1.0 build also passed. Commit status
+is intentionally tracked separately from phase completion.
+
 Goal
 ~~~~
 
@@ -324,6 +330,12 @@ Work
 * Run the full offline suite and the serial hosted integration suite.
 * Exercise the generated API documentation's representative field and filter
   forms against the disposable tables.
+* Review the remaining Row operation split: ``Row.update`` delegates through
+  ``Table.update_row``, while ``Row.delete`` and ``Row.move`` construct their
+  endpoints and call the shared Baserow request boundary directly. Decide
+  whether Table delegation would clarify Baserow-specific behavior or merely
+  add forwarding methods for symmetry; document the decision before changing
+  the public API.
 * Update user documentation, docstrings, examples, public API reference, and
   changelog to describe the implemented behavior rather than the plan.
 * Regenerate tracked Sphinx output.

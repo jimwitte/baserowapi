@@ -32,6 +32,10 @@ Properties
 ----------
 
 - ``id``: Table's unique identifier.
+- ``name``: Table name returned by discovery, or ``None`` when constructed by ID.
+- ``database_id``: Parent database ID returned by discovery, when available.
+- ``order``: Table order returned by discovery, when available.
+- ``metadata``: Read-only mapping of the complete discovery metadata.
 - ``primary_field``: The primary field of the table.
 - ``fields``: Ordered, read-only mapping of field names to Field objects.
 - ``writable_fields``: Ordered, read-only subset of fields accepted by writes.
@@ -48,6 +52,9 @@ Methods and Usage
 
     # Initializing a table instance
     table = baserow.get_table(1234567)
+
+    # Or discovering every table visible to the database token
+    discovered_tables = baserow.get_tables()
 
     # Displaying table properties
     print(table.id)

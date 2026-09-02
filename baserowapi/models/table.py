@@ -76,16 +76,28 @@ class Table:
         PasswordField.TYPE: PasswordField,
     }
 
-    def __init__(self, table_id: int, client: "Baserow"):
+    def __init__(
+        self,
+        table_id: int,
+        client: "Baserow",
+        table_data: Optional[Mapping[str, Any]] = None,
+    ):
         """
         Initialize a Table object.
 
         :param table_id: The unique identifier for the table.
         :param client: The Baserow client instance to make API requests.
+        :param table_data: Optional metadata returned by table discovery.
         """
         self.id = table_id
         self.client = client
+        metadata = dict(table_data or {"id": table_id})
+        self.metadata = MappingProxyType(metadata)
+        self.name = metadata.get("name")
+        self.database_id = metadata.get("database_id")
+        self.order = metadata.get("order")
         self._fields = None
+        self._writable_fields = None
         self._primary_field = None
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initialized Table id {self.id}")
@@ -168,7 +180,7 @@ class Table:
         :return: An ordered, read-only mapping of writable fields.
         :rtype: Mapping[str, Field]
         """
-        if not hasattr(self, "_writable_fields") or self._writable_fields is None:
+        if self._writable_fields is None:
             writable_fields = {
                 name: field
                 for name, field in self.fields.items()

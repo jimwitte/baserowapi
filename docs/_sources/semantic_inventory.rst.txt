@@ -36,6 +36,9 @@ Evidence for this inventory was collected from:
 * disposable hosted password probes on 2026-09-02 confirming that string,
   literal ``true``, and ``null`` writes are accepted and that reads expose only
   ``true`` or ``null``;
+* a read-only hosted table-discovery probe on 2026-09-02 confirming that the
+  database-token ``all-tables`` endpoint returns a list containing integer
+  table and database IDs, string names, and numeric order values;
 * the generated API documentation captured on 2026-09-01, visually checked on
   2026-09-02 for configured filter lists, plus hosted equality and empty-result
   filter probes;
@@ -606,14 +609,19 @@ tokens cannot mutate schema, and no current application requires in-place
 refresh semantics for existing Table and Row objects. The package will not add
 a schema-refresh method until that need and its Row behavior are demonstrated.
 
-The Client will retain one request boundary for authentication, timeouts,
-connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging
-configuration, header combination, request execution, and response parsing will
-be private implementation details. A documented low-level ``request`` escape
-hatch will remain public for hosted endpoints not yet modeled by the package;
-it provides transport and error handling, not schema semantics or endpoint
-stability. Mutating requests will not be retried without an idempotency
-guarantee.
+``Baserow.make_api_request`` is the single request boundary for authentication,
+same-origin URL enforcement, timeouts, safe-read retries, connectivity and HTTP
+failures, JSON parsing, and Baserow error extraction. Header combination,
+request execution, session state, and response parsing are private. The method
+remains a documented low-level escape hatch for hosted database-token endpoints
+not yet modeled by the package; it provides transport and error handling, not
+schema semantics or endpoint stability. GET and HEAD requests retry configured
+transient failures with backoff, while mutating requests are never retried.
+
+``Baserow.get_tables`` uses the database-token discovery endpoint and returns
+Tables retaining name, database ID, order, and the complete returned metadata.
+The package emits ordinary logging records without configuring application
+logging or recording request payloads and file values.
 
 Evidence still required
 -----------------------

@@ -35,6 +35,12 @@
     a mapping containing an explicit row ID.
   - Root-package exports are now explicit and limited to the supported client,
     table, row, Field, filter, and Baserow value-record concepts.
+  - `Baserow` now requires a non-empty database token. Removed the
+    `logging_level` and `log_file` constructor parameters and the public
+    `configure_logging`, `get_combined_headers`, `perform_request`, and
+    `parse_response` transport helpers.
+  - Client session and default-header state are now private. Absolute low-level
+    request URLs must match the configured Baserow origin.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -68,6 +74,18 @@
   - Added `FieldValueError` for explicit field conversion failures.
   - Row add and update failures now report the failed batch number and IDs of
     rows completed by earlier non-atomic request chunks.
+- **Client and Discovery:**
+  - Consolidated ordinary calls, pagination, and file uploads behind
+    `Baserow.make_api_request`, with private URL, header, execution, and response
+    helpers.
+  - Added client-level request timeouts and configurable exponential retries for
+    safe reads. `Retry-After` is honored; mutating requests are never retried.
+  - Removed global logging configuration and request-payload logging.
+  - Added `Baserow.get_tables()` using the database-token discovery endpoint.
+    Discovered Tables retain name, database ID, order, and complete read-only
+    metadata.
+  - Kept `get_table()` uncached so a newly constructed Table lazily loads a new
+    hosted schema snapshot after an external schema change.
 - **Row Writes:**
   - Unified singular create, batch create, singular update, batch mapping
     update, and explicit `Row.update(values)` around Field-owned validation and
@@ -93,6 +111,8 @@
     hosted row-write parity coverage against baserow.io.
   - Added offline row-model and public-export coverage, hosted password-state
     coverage, migration guidance, and updated architecture documentation.
+  - Added request-boundary, retry, logging-isolation, discovery-response, and
+    independent Table schema-cache tests, plus hosted table discovery coverage.
 
 
 #### 2026-09-01: 0.1.0b5

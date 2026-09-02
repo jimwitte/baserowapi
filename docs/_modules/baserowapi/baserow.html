@@ -83,13 +83,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.baserow</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span></span><span class="sd">"""Synchronous request client for Baserow's database-token API."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">email.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parsedate_to_datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaserowFile</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.parse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlsplit</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">requests.structures</span><span class="w"> </span><span class="kn">import</span> <span class="n">CaseInsensitiveDict</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaserowConnectionError</span><span class="p">,</span>
     <span class="n">BaserowHTTPError</span><span class="p">,</span>
@@ -97,23 +103,19 @@
     <span class="n">BaserowResponseError</span><span class="p">,</span>
     <span class="n">BaserowTimeoutError</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.values</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaserowFile</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Baserow">
 <a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Baserow</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    A client class for interacting with the Baserow API.</span>
+<span class="w">    </span><span class="sd">"""Client for Baserow's database-token data API."""</span>
 
-<span class="sd">    :ivar url: The base URL for the Baserow API.</span>
-<span class="sd">    :vartype url: str</span>
-<span class="sd">    :ivar token: The authentication token.</span>
-<span class="sd">    :vartype token: str</span>
-<span class="sd">    :ivar ERROR_MESSAGES: A dictionary mapping HTTP error codes to error messages.</span>
-<span class="sd">    :vartype ERROR_MESSAGES: dict</span>
-<span class="sd">    """</span>
-
-    <span class="n">ERROR_MESSAGES</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ERROR_MESSAGES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="mi">400</span><span class="p">:</span> <span class="s2">"Bad request to </span><span class="si">{url}</span><span class="s2">. The request contains invalid values or the JSON could not be parsed."</span><span class="p">,</span>
         <span class="mi">401</span><span class="p">:</span> <span class="s2">"Unauthorized request to </span><span class="si">{url}</span><span class="s2">. Accessing an endpoint without a valid database token."</span><span class="p">,</span>
         <span class="mi">404</span><span class="p">:</span> <span class="s2">"Resource not found at </span><span class="si">{url}</span><span class="s2">. Row or table is not found."</span><span class="p">,</span>
@@ -123,83 +125,114 @@
         <span class="mi">502</span><span class="p">:</span> <span class="s2">"Bad gateway at </span><span class="si">{url}</span><span class="s2">. Baserow is restarting or an unexpected outage is in progress."</span><span class="p">,</span>
         <span class="mi">503</span><span class="p">:</span> <span class="s2">"Service unavailable at </span><span class="si">{url}</span><span class="s2">. The server could not process your request in time."</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="n">_SAFE_RETRY_METHODS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">})</span>
+    <span class="n">_TRANSIENT_READ_STATUSES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">429</span><span class="p">,</span> <span class="mi">502</span><span class="p">,</span> <span class="mi">503</span><span class="p">,</span> <span class="mi">504</span><span class="p">})</span>
+    <span class="n">_RETRY_BACKOFF_SECONDS</span> <span class="o">=</span> <span class="mf">0.5</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"https://api.baserow.io"</span><span class="p">,</span>
         <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">logging_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
-        <span class="n">log_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">read_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initialize a Baserow client.</span>
+<span class="w">        </span><span class="sd">"""Initialize a database-token client.</span>
 
-<span class="sd">        :param url: The base URL for the Baserow API. Defaults to 'https://api.baserow.io'.</span>
-<span class="sd">        :type url: str</span>
-<span class="sd">        :param token: The authentication token. Defaults to None.</span>
-<span class="sd">        :type token: str, optional</span>
-<span class="sd">        :param logging_level: The logging level. Defaults to logging.WARNING.</span>
-<span class="sd">        :type logging_level: int</span>
-<span class="sd">        :param log_file: The path to a log file. Defaults to None.</span>
-<span class="sd">        :type log_file: str, optional</span>
-<span class="sd">        :param batch_size: The default batch size for operations. Defaults to 10.</span>
-<span class="sd">        :type batch_size: int</span>
+<span class="sd">        ``timeout`` is the default for every request. ``read_retries`` applies</span>
+<span class="sd">        only to GET and HEAD requests after transient connectivity, timeout,</span>
+<span class="sd">        rate-limit, or service-availability failures.</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Token </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-            <span class="s2">"Content-Type"</span><span class="p">:</span> <span class="s2">"application/json"</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configure_logging</span><span class="p">(</span><span class="n">logging_level</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"token must be a non-empty database token string."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">url</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"url must be a non-empty HTTP or HTTPS URL."</span><span class="p">)</span>
+
+        <span class="n">normalized_url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+        <span class="n">parsed_url</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">normalized_url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"http"</span><span class="p">,</span> <span class="s2">"https"</span><span class="p">}</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"url must be an absolute HTTP or HTTPS URL."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span> <span class="ow">or</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">fragment</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"url must not contain a query string or fragment."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_timeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">read_retries</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">read_retries</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">read_retries</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"read_retries must be a non-negative integer."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">normalized_url</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
-
-<div class="viewcode-block" id="Baserow.configure_logging">
-<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.configure_logging">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">configure_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Configure logging for the Baserow client.</span>
-
-<span class="sd">        :param level: The logging level.</span>
-<span class="sd">        :type level: int</span>
-<span class="sd">        :param log_file: The path to a log file. If provided, logs will also be written to this file.</span>
-<span class="sd">        :type log_file: str, optional</span>
-<span class="sd">        """</span>
-        <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()]</span>
-        <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
-            <span class="n">handlers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">log_file</span><span class="p">))</span>
-
-        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
-            <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">"</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(name)s</span><span class="s2"> - </span><span class="si">%(levelname)s</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">"</span><span class="p">,</span>
-            <span class="n">handlers</span><span class="o">=</span><span class="n">handlers</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_retries</span> <span class="o">=</span> <span class="n">read_retries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_url_origin</span><span class="p">(</span><span class="n">parsed_url</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_authorization</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authorization</span><span class="p">})</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Provide a string representation of the Baserow client.</span>
-
-<span class="sd">        :return: A string representing the Baserow client with its base URL.</span>
-<span class="sd">        :rtype: str</span>
-<span class="sd">        """</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"Baserow client for base url </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span>
 
 <div class="viewcode-block" id="Baserow.get_table">
 <a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_table">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Table</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Retrieve a table instance based on its ID.</span>
-
-<span class="sd">        :param table_id: The unique identifier of the table.</span>
-<span class="sd">        :type table_id: int</span>
-<span class="sd">        :return: An instance of the Table class.</span>
-<span class="sd">        :rtype: Table</span>
-<span class="sd">        """</span>
+<span class="w">        </span><span class="sd">"""Return a new Table whose field schema is loaded lazily."""</span>
         <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Baserow.get_tables">
+<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_tables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Table</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return every table visible to this database token."""</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="s2">"/api/database/tables/all-tables/"</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="s2">"Baserow returned an invalid table-discovery response."</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">tables</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Table</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">table_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is not an object."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">table_id</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+            <span class="n">database_id</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"database_id"</span><span class="p">)</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"order"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has an invalid table ID."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has an invalid name."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">database_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">database_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has an invalid database ID."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has an invalid order."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Table</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">table_data</span><span class="o">=</span><span class="n">table_data</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tables</span></div>
 
 
     <span class="nd">@staticmethod</span>
@@ -250,47 +283,32 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"GET"</span><span class="p">,</span>
-        <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Make an API request to the specified endpoint.</span>
+<span class="w">        </span><span class="sd">"""Make one authenticated request and return its parsed response.</span>
 
-<span class="sd">        :param endpoint: The API endpoint to make the request to.</span>
-<span class="sd">        :type endpoint: str</span>
-<span class="sd">        :param method: The HTTP method to use, by default "GET".</span>
-<span class="sd">        :type method: str</span>
-<span class="sd">        :param data: The data payload to send with the request, by default None.</span>
-<span class="sd">        :type data: dict, optional</span>
-<span class="sd">        :param headers: Additional headers to send with the request, by default None.</span>
-<span class="sd">        :type headers: dict, optional</span>
-<span class="sd">        :param timeout: The maximum number of seconds to wait for the server response, by default 10.</span>
-<span class="sd">        :type timeout: int</span>
-<span class="sd">        :param files: Files to be sent with the request, by default None.</span>
-<span class="sd">        :type files: dict, optional</span>
-<span class="sd">        :return: The parsed response data.</span>
-<span class="sd">        :rtype: Any</span>
-<span class="sd">        :raises BaserowHTTPError: If Baserow returns a non-successful HTTP response.</span>
-<span class="sd">        :raises BaserowTimeoutError: If the request exceeds its timeout.</span>
-<span class="sd">        :raises BaserowConnectionError: If a connection to Baserow cannot be established.</span>
-<span class="sd">        :raises BaserowRequestError: If another request error prevents completion.</span>
-<span class="sd">        :raises BaserowResponseError: If a JSON response cannot be decoded.</span>
+<span class="sd">        This is the low-level escape hatch for database-token endpoints not yet</span>
+<span class="sd">        modeled by the package. It supplies authentication, timeout and safe</span>
+<span class="sd">        read-retry behavior, package exceptions, and response parsing. It does</span>
+<span class="sd">        not provide schema semantics or guarantee endpoint stability.</span>
 <span class="sd">        """</span>
-        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"http://"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"https://"</span><span class="p">):</span>
-            <span class="n">parsed_base_url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-            <span class="n">parsed_endpoint_url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
-            <span class="n">url</span> <span class="o">=</span> <span class="n">parsed_endpoint_url</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">scheme</span><span class="o">=</span><span class="n">parsed_base_url</span><span class="o">.</span><span class="n">scheme</span><span class="p">)</span><span class="o">.</span><span class="n">geturl</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">+</span> <span class="n">endpoint</span>
-
-        <span class="n">combined_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_combined_headers</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_request</span><span class="p">(</span>
-            <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">combined_headers</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">files</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">method</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"method must be a non-empty string."</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">request_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_timeout</span><span class="p">(</span><span class="n">request_timeout</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_url</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="n">combined_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_headers</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">has_files</span><span class="o">=</span><span class="n">files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_request</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">combined_headers</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">request_timeout</span><span class="p">,</span>
+            <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">200</span> <span class="o">&lt;=</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
@@ -314,38 +332,70 @@
                 <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Baserow.get_combined_headers">
-<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_combined_headers">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_combined_headers</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">additional_headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Combines the default headers with any additional headers provided.</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_timeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"timeout must be a positive number of seconds."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">timeout</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"timeout must be a positive number of seconds."</span><span class="p">)</span>
 
-<span class="sd">        :param additional_headers: Additional headers to combine with the default headers.</span>
-<span class="sd">        :type additional_headers: dict, optional</span>
-<span class="sd">        :return: Combined headers.</span>
-<span class="sd">        :rtype: dict</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">additional_headers</span> <span class="ow">or</span> <span class="p">{})}</span></div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_url_origin</span><span class="p">(</span><span class="n">parsed_url</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">default_port</span> <span class="o">=</span> <span class="mi">443</span> <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s2">"https"</span> <span class="k">else</span> <span class="mi">80</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="n">default_port</span><span class="p">,</span>
+        <span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"endpoint must be a non-empty string."</span><span class="p">)</span>
+        <span class="n">parsed_endpoint</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed_endpoint</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">or</span> <span class="n">parsed_endpoint</span><span class="o">.</span><span class="n">netloc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parsed_endpoint</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"http"</span><span class="p">,</span> <span class="s2">"https"</span><span class="p">}:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"endpoint must use HTTP or HTTPS."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_url_origin</span><span class="p">(</span><span class="n">parsed_endpoint</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"Absolute endpoints must use the configured Baserow origin."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">endpoint</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Relative endpoints must start with '/'."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_combined_headers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">additional_headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">has_files</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">additional_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">additional_headers</span><span class="p">,</span> <span class="n">Mapping</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"headers must be a mapping."</span><span class="p">)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">CaseInsensitiveDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">combined</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_headers</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="n">combined</span><span class="p">[</span><span class="s2">"Authorization"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authorization</span>
+        <span class="k">if</span> <span class="n">has_files</span><span class="p">:</span>
+            <span class="n">combined</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">combined</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">"application/json"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_error_details</span><span class="p">(</span>
         <span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return Baserow's structured error code and description, when present."""</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">error_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-
         <span class="n">error_code</span> <span class="o">=</span> <span class="n">error_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"error"</span><span class="p">)</span>
         <span class="n">description</span> <span class="o">=</span> <span class="n">error_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"description"</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -353,126 +403,121 @@
             <span class="nb">str</span><span class="p">(</span><span class="n">description</span><span class="p">)</span> <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Baserow.perform_request">
-<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.perform_request">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">perform_request</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_perform_request</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-        <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Performs an HTTP request using the given parameters.</span>
+        <span class="n">is_safe_read</span> <span class="o">=</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SAFE_RETRY_METHODS</span>
+        <span class="n">retry_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_retries</span> <span class="k">if</span> <span class="n">is_safe_read</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">retry_number</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="sd">        :param method: The HTTP method to use (e.g., "GET", "POST").</span>
-<span class="sd">        :type method: str</span>
-<span class="sd">        :param url: The complete URL to make the request to.</span>
-<span class="sd">        :type url: str</span>
-<span class="sd">        :param headers: Headers to send with the request.</span>
-<span class="sd">        :type headers: dict</span>
-<span class="sd">        :param data: The data payload to send with the request.</span>
-<span class="sd">        :type data: dict, optional</span>
-<span class="sd">        :param timeout: The maximum number of seconds to wait for the server response.</span>
-<span class="sd">        :type timeout: int</span>
-<span class="sd">        :param files: The files to send with the request, if any. The dictionary keys are</span>
-<span class="sd">                      the form field names, and the values are the file data.</span>
-<span class="sd">        :type files: dict, optional</span>
-<span class="sd">        :return: The server's response to the request.</span>
-<span class="sd">        :rtype: requests.Response</span>
-<span class="sd">        :raises BaserowTimeoutError: If the request times out.</span>
-<span class="sd">        :raises BaserowConnectionError: If a connection cannot be established.</span>
-<span class="sd">        :raises BaserowRequestError: For other request execution failures.</span>
-<span class="sd">        """</span>
-        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Making API request to: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request payload: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Making Baserow </span><span class="si">%s</span><span class="s2"> request to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">request_arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"method"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                    <span class="s2">"url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+                    <span class="s2">"headers"</span><span class="p">:</span> <span class="n">headers</span><span class="p">,</span>
+                    <span class="s2">"timeout"</span><span class="p">:</span> <span class="n">timeout</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">if</span> <span class="n">files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">request_arguments</span><span class="p">[</span><span class="s2">"files"</span><span class="p">]</span> <span class="o">=</span> <span class="n">files</span>
+                    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">request_arguments</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">request_arguments</span><span class="p">[</span><span class="s2">"json"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="o">**</span><span class="n">request_arguments</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Timeout</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">retry_number</span> <span class="o">&lt;</span> <span class="n">retry_limit</span><span class="p">:</span>
+                    <span class="n">retry_number</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_wait_before_retry</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">raise</span> <span class="n">BaserowTimeoutError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> timed out."</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+            <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">retry_number</span> <span class="o">&lt;</span> <span class="n">retry_limit</span><span class="p">:</span>
+                    <span class="n">retry_number</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_wait_before_retry</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">raise</span> <span class="n">BaserowConnectionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Could not connect to Baserow at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+            <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BaserowRequestError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> could not be completed."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
-            <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"API file upload request: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-                <span class="n">headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="k">with</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">upload_session</span><span class="p">:</span>
-                    <span class="n">response</span> <span class="o">=</span> <span class="n">upload_session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-                        <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
-                        <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
-                        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-                        <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
-                        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TRANSIENT_READ_STATUSES</span>
+                <span class="ow">and</span> <span class="n">retry_number</span> <span class="o">&lt;</span> <span class="n">retry_limit</span>
+            <span class="p">):</span>
+                <span class="n">retry_number</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_wait_before_retry</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wait_before_retry</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">],</span> <span class="n">retry_number</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">delay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_delay</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Retrying safe Baserow read after </span><span class="si">%.3f</span><span class="s2"> seconds"</span><span class="p">,</span> <span class="n">delay</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_retry_delay</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">],</span> <span class="n">retry_number</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">retry_after</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Retry-After"</span><span class="p">)</span> <span class="k">if</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">retry_after</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">retry_after</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">retry_time</span> <span class="o">=</span> <span class="n">parsedate_to_datetime</span><span class="p">(</span><span class="n">retry_after</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">retry_time</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">retry_time</span> <span class="o">=</span> <span class="n">retry_time</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="mf">0.0</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">retry_time</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
                     <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
-                <span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">):</span>
+                    <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RETRY_BACKOFF_SECONDS</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">retry_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
 
-        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Timeout</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> timed out."</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">BaserowTimeoutError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> timed out."</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not connect to Baserow at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">BaserowConnectionError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Could not connect to Baserow at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> could not be completed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">BaserowRequestError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> could not be completed."</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-
-        <span class="k">return</span> <span class="n">response</span></div>
-
-
-<div class="viewcode-block" id="Baserow.parse_response">
-<a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.parse_response">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">parse_response</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Parses the response received from an HTTP request.</span>
-
-<span class="sd">        If the response has a status code of 204, it will return the status code.</span>
-<span class="sd">        If the response body is empty and the method is not "DELETE" or the status code is not 204,</span>
-<span class="sd">        a warning is logged.</span>
-<span class="sd">        If the response body contains JSON, it attempts to parse and return the JSON.</span>
-<span class="sd">        Otherwise, the raw response text is returned.</span>
-
-<span class="sd">        :param response: The response object received from an HTTP request.</span>
-<span class="sd">        :type response: requests.Response</span>
-<span class="sd">        :param method: The HTTP method that was used for the request.</span>
-<span class="sd">        :type method: str</span>
-<span class="sd">        :param url: The complete URL the request was made to.</span>
-<span class="sd">        :type url: str</span>
-<span class="sd">        :return: Either the status code, a dictionary parsed from the JSON response, or the raw response text.</span>
-<span class="sd">        :rtype: Union[int, dict, str, None]</span>
-<span class="sd">        :raises BaserowResponseError: If a response advertised as JSON cannot be decoded.</span>
-<span class="sd">        """</span>
-        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_response</span><span class="p">(</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">"DELETE"</span> <span class="ow">or</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">204</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No response body received from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No response body received from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="n">content_type</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="s2">"json"</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Baserow returned an invalid JSON response from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Baserow returned an invalid JSON response from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
                     <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
-                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span></div>
-</div>
 
 </pre></div>
 

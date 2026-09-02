@@ -18,6 +18,9 @@ Basic operations
     baserow = Baserow(url="https://api.baserow.io", token="mytoken")
     table = baserow.get_table(1234567)
 
+    for discovered in baserow.get_tables():
+        print(discovered.id, discovered.name)
+
     print(table.field_names)
     print(table.fields["Name"])
 

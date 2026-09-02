@@ -104,6 +104,9 @@
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"https://api.baserow.io"</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s2">"mytoken"</span><span class="p">)</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
 
+<span class="k">for</span> <span class="n">discovered</span> <span class="ow">in</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_tables</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">discovered</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">discovered</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">field_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">"Name"</span><span class="p">])</span>
 

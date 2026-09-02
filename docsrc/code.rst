@@ -9,7 +9,8 @@ Baserow Class
 -------------
 
 ``Baserow`` is the client and request boundary. It owns authentication,
-transport errors, table construction, and file upload operations.
+safe read retries, transport errors, table construction and discovery, and file
+upload operations. It does not configure application logging.
 
 Table Class
 -----------
@@ -17,7 +18,8 @@ Table Class
 ``Table`` owns schema metadata and row operations. ``fields`` and
 ``writable_fields`` are ordered, read-only mappings from field name to Field.
 Specific Field classes expose Baserow metadata and own decoding, validation,
-and API encoding. Recreate the Table to retrieve changed hosted schema.
+and API encoding. Discovered Tables retain name, database, order, and raw
+metadata. Recreate the Table to retrieve changed hosted schema.
 
 Row Class
 ---------

@@ -1,73 +1,119 @@
 Baserow Client Class
 ====================
 
-Introduction
-------------
-The `Baserow` class provides the main entry point to interact with the Baserow API. This class serves as the API client and facilitates all the API calls. For any other classes that require API access, this class is passed as a reference to ensure smooth and coherent operations.
+The ``Baserow`` client is the authenticated request boundary for the hosted
+database-token API. It constructs Tables, discovers token-visible Tables,
+uploads files, and translates request and response failures into package
+exceptions.
 
-Initialization Options
-----------------------
-When creating an instance of the `Baserow` class, you can specify several parameters to customize your connection and interactions with the Baserow server.
+Initialization
+--------------
 
-Parameters:
+``token`` is required and must be a non-empty database token. ``url`` defaults
+to ``https://api.baserow.io``. ``timeout`` sets the request timeout in seconds,
+and ``read_retries`` sets the number of retries for safe reads.
 
-- **token** (str): 
-  - Required. The authentication token for Baserow.
-- **url** (str, optional): 
-  - The base URL for the Baserow server. Default is `'https://api.baserow.io'`.
-- **logging_level** (str, optional): 
-  - The desired logging level. Available options include: `'INFO'`, `'ERROR'`, and `'DEBUG'`. If unspecified, logging will be disabled.
-- **log_file** (str, optional): 
-  - Specify a file path to log the interactions. Useful if you want to persist logs for later analysis. This parameter will be ignored if `logging_level` is not specified.
-
-Examples
---------
 .. code-block:: python
 
     from baserowapi import Baserow
 
-    # Default baserow client
-    baserow = Baserow(token='mytoken')
+    baserow = Baserow(token="mytoken")
 
-    # Specify a custom server URL
-    baserow = Baserow(url='https://baserow.example.com', token='mytoken')
+    baserow = Baserow(
+        url="https://baserow.example.com",
+        token="mytoken",
+        timeout=20,
+        read_retries=2,
+    )
 
-    # Enable logging at DEBUG level
-    baserow = Baserow(url='https://baserow.example.com', token='mytoken', logging_level='DEBUG')
+The default timeout is 10 seconds and the default safe-read retry count is two.
+Retries apply only to ``GET`` and ``HEAD`` requests after a timeout, connection
+failure, or a ``429``, ``502``, ``503``, or ``504`` response. They use
+exponential backoff and honor ``Retry-After``. Mutating ``POST``, ``PATCH``, and
+``DELETE`` requests are never retried automatically.
 
-    # Enable logging to a file
-    baserow = Baserow(url='https://baserow.example.com', token='mytoken', logging_level='DEBUG', log_file='log.txt')
+The package emits ordinary Python logging records but does not configure root
+logging, handlers, levels, or files. Applications retain full control of their
+logging configuration.
 
+Table discovery and schema snapshots
+------------------------------------
 
-Error Handling
----------------
+``get_tables`` uses Baserow's database-token discovery endpoint and returns a
+list of Tables visible to the token:
+
+.. code-block:: python
+
+    for table in baserow.get_tables():
+        print(table.id, table.name, table.database_id, table.order)
+
+Each discovered Table retains the complete returned metadata in its read-only
+``metadata`` mapping. ``get_table(table_id)`` remains useful when an ID is
+already known.
+
+Every call to ``get_table`` returns a new Table. A Table loads and caches its
+field schema only when ``fields`` is first accessed. After a schema change made
+through the Baserow UI or a separate administrative client, construct a new
+Table to obtain a new schema snapshot:
+
+.. code-block:: python
+
+    table = baserow.get_table(table.id)
+
+Low-level request escape hatch
+------------------------------
+
+``make_api_request`` supports database-token endpoints not yet modeled by the
+package:
+
+.. code-block:: python
+
+    response = baserow.make_api_request("/api/database/example/")
+
+It provides authentication, timeouts, safe-read retries, response parsing, and
+package exceptions. It does not add Field semantics or guarantee that an
+unmodeled Baserow endpoint will remain stable.
+
+Relative endpoints must start with ``/``. Absolute URLs are accepted for
+Baserow pagination, but their scheme, host, and port must match the configured
+Baserow URL. This prevents the database token from being sent to another
+origin. Per-request headers cannot replace the database-token Authorization
+header.
+
+A per-request timeout may override the client default:
+
+.. code-block:: python
+
+    response = baserow.make_api_request("/api/database/example/", timeout=30)
+
+Error handling
+--------------
 
 All package-defined exceptions inherit from
-:class:`baserowapi.exceptions.BaserowAPIError`. Low-level calls made through
-:meth:`Baserow.make_api_request` use these exceptions:
+:class:`baserowapi.exceptions.BaserowAPIError`. Low-level requests raise:
 
-* :class:`~baserowapi.exceptions.BaserowTimeoutError` when a request times out.
-* :class:`~baserowapi.exceptions.BaserowConnectionError` when a connection cannot be established.
-* :class:`~baserowapi.exceptions.BaserowRequestError` for another request execution failure.
-* :class:`~baserowapi.exceptions.BaserowHTTPError` for every non-2xx response, not only a predefined set of status codes.
-* :class:`~baserowapi.exceptions.BaserowResponseError` when a response advertised as JSON cannot be decoded.
+* :class:`~baserowapi.exceptions.BaserowTimeoutError` after the permitted safe
+  read retries are exhausted;
+* :class:`~baserowapi.exceptions.BaserowConnectionError` when a connection
+  cannot be established;
+* :class:`~baserowapi.exceptions.BaserowRequestError` for another request
+  execution failure;
+* :class:`~baserowapi.exceptions.BaserowHTTPError` for every non-2xx response;
+* :class:`~baserowapi.exceptions.BaserowResponseError` when advertised JSON or
+  a modeled response shape cannot be interpreted.
 
-The original ``requests`` exception is available through the raised
-exception's ``__cause__``. ``BaserowHTTPError`` provides ``status_code``,
-``method``, ``url``, ``error_code``, and ``description`` attributes. The last
-two contain Baserow's structured error details when the response supplies
-them.
+The original ``requests`` exception is available through ``__cause__``.
+``BaserowHTTPError`` provides ``status_code``, ``method``, ``url``,
+``error_code``, and ``description``. Higher-level Table and Row operations
+retain their operation-specific exceptions and chain the request failure.
 
-Higher-level table and row operations retain operation-specific exceptions,
-such as :class:`~baserowapi.exceptions.RowFetchError` and
-:class:`~baserowapi.exceptions.RowUpdateError`. Their ``__cause__`` contains
-the lower-level failure. Caller validation errors remain distinct and are not
-converted into request errors.
+Successful JSON responses are decoded and returned. A 204 response returns the
+integer ``204``, an empty response returns ``None``, and non-JSON content is
+returned as text when its content type does not advertise JSON.
 
-Successful JSON responses are decoded and returned. A 204 response returns
-the integer ``204``, and an empty response returns ``None``. A non-JSON
-response is returned as text when its content type does not advertise JSON.
+Token handling
+--------------
 
-Token Management
------------------
-The Baserow client requires an authentication token (token) during initialization to ensure authorized access. This token is used in the request headers for authentication purposes. Users are advised to manage and store their tokens securely. Avoid hardcoding tokens directly into your codebase, and instead, consider using environment variables, configuration files, or secure vaults. Regularly rotate your tokens, and ensure that old tokens are invalidated to maintain the security of your API interactions.
+Store database tokens outside source code, such as in environment variables or
+a credential manager. The client owns the Authorization header and will not
+allow a per-request header mapping to replace it.

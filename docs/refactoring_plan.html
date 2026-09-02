@@ -410,6 +410,11 @@ migration documentation.</p></li>
 </section>
 <section id="phase-7-consolidate-transport-and-discovery">
 <h2>Phase 7: Consolidate transport and discovery<a class="headerlink" href="#phase-7-consolidate-transport-and-discovery" title="Link to this heading"></a></h2>
+<p>Status: complete on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code> and verified against hosted
+<code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> on 2026-09-02. The Python 3.12 suite passed with 154 offline
+tests and 37 serial hosted tests, including table discovery and both file
+upload paths. The warning-strict Sphinx 9.1.0 build also passed. Commit status
+is intentionally tracked separately from phase completion.</p>
 <section id="id16">
 <h3>Goal<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
 <p>Keep one reliable Baserow request boundary while making incidental transport
@@ -460,6 +465,12 @@ Table loads current hosted schema when its fields are first accessed.</p></li>
 <li><p>Run the full offline suite and the serial hosted integration suite.</p></li>
 <li><p>Exercise the generated API documentation’s representative field and filter
 forms against the disposable tables.</p></li>
+<li><p>Review the remaining Row operation split: <code class="docutils literal notranslate"><span class="pre">Row.update</span></code> delegates through
+<code class="docutils literal notranslate"><span class="pre">Table.update_row</span></code>, while <code class="docutils literal notranslate"><span class="pre">Row.delete</span></code> and <code class="docutils literal notranslate"><span class="pre">Row.move</span></code> construct their
+endpoints and call the shared Baserow request boundary directly. Decide
+whether Table delegation would clarify Baserow-specific behavior or merely
+add forwarding methods for symmetry; document the decision before changing
+the public API.</p></li>
 <li><p>Update user documentation, docstrings, examples, public API reference, and
 changelog to describe the implemented behavior rather than the plan.</p></li>
 <li><p>Regenerate tracked Sphinx output.</p></li>

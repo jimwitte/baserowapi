@@ -119,6 +119,10 @@ mutating requests.</p>
 <h2>Properties<a class="headerlink" href="#properties" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: Table’s unique identifier.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Table name returned by discovery, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when constructed by ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">database_id</span></code>: Parent database ID returned by discovery, when available.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order</span></code>: Table order returned by discovery, when available.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code>: Read-only mapping of the complete discovery metadata.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">primary_field</span></code>: The primary field of the table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fields</span></code>: Ordered, read-only mapping of field names to Field objects.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">writable_fields</span></code>: Ordered, read-only subset of fields accepted by writes.</p></li>
@@ -133,6 +137,9 @@ mutating requests.</p>
 
 <span class="c1"># Initializing a table instance</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
+
+<span class="c1"># Or discovering every table visible to the database token</span>
+<span class="n">discovered_tables</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_tables</span><span class="p">()</span>
 
 <span class="c1"># Displaying table properties</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>

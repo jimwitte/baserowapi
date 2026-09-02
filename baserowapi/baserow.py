@@ -1,10 +1,16 @@
-import requests
+"""Synchronous request client for Baserow's database-token API."""
+
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import logging
 from pathlib import Path
-from typing import IO, Union, Dict, Optional, Any
-from baserowapi.models.table import Table
-from baserowapi.models.values import BaserowFile
-import urllib.parse
+import time
+from typing import IO, Any, Mapping, Optional, Union
+from urllib.parse import urlsplit
+
+import requests
+from requests.structures import CaseInsensitiveDict
+
 from baserowapi.exceptions import (
     BaserowConnectionError,
     BaserowHTTPError,
@@ -12,21 +18,17 @@ from baserowapi.exceptions import (
     BaserowResponseError,
     BaserowTimeoutError,
 )
+from baserowapi.models.table import Table
+from baserowapi.models.values import BaserowFile
+
+
+logger = logging.getLogger(__name__)
 
 
 class Baserow:
-    """
-    A client class for interacting with the Baserow API.
+    """Client for Baserow's database-token data API."""
 
-    :ivar url: The base URL for the Baserow API.
-    :vartype url: str
-    :ivar token: The authentication token.
-    :vartype token: str
-    :ivar ERROR_MESSAGES: A dictionary mapping HTTP error codes to error messages.
-    :vartype ERROR_MESSAGES: dict
-    """
-
-    ERROR_MESSAGES: Dict[int, str] = {
+    ERROR_MESSAGES: dict[int, str] = {
         400: "Bad request to {url}. The request contains invalid values or the JSON could not be parsed.",
         401: "Unauthorized request to {url}. Accessing an endpoint without a valid database token.",
         404: "Resource not found at {url}. Row or table is not found.",
@@ -36,78 +38,109 @@ class Baserow:
         502: "Bad gateway at {url}. Baserow is restarting or an unexpected outage is in progress.",
         503: "Service unavailable at {url}. The server could not process your request in time.",
     }
+    _SAFE_RETRY_METHODS = frozenset({"GET", "HEAD"})
+    _TRANSIENT_READ_STATUSES = frozenset({429, 502, 503, 504})
+    _RETRY_BACKOFF_SECONDS = 0.5
 
     def __init__(
         self,
         url: str = "https://api.baserow.io",
         token: Optional[str] = None,
-        logging_level: int = logging.WARNING,
-        log_file: Optional[str] = None,
         batch_size: int = 10,
+        timeout: float = 10,
+        read_retries: int = 2,
     ) -> None:
-        """
-        Initialize a Baserow client.
+        """Initialize a database-token client.
 
-        :param url: The base URL for the Baserow API. Defaults to 'https://api.baserow.io'.
-        :type url: str
-        :param token: The authentication token. Defaults to None.
-        :type token: str, optional
-        :param logging_level: The logging level. Defaults to logging.WARNING.
-        :type logging_level: int
-        :param log_file: The path to a log file. Defaults to None.
-        :type log_file: str, optional
-        :param batch_size: The default batch size for operations. Defaults to 10.
-        :type batch_size: int
+        ``timeout`` is the default for every request. ``read_retries`` applies
+        only to GET and HEAD requests after transient connectivity, timeout,
+        rate-limit, or service-availability failures.
         """
-        self.url = url
-        self.token = token
-        self.headers: Dict[str, str] = {
-            "Authorization": f"Token {self.token}",
-            "Content-Type": "application/json",
-        }
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
-        self.configure_logging(logging_level, log_file)
+        if not isinstance(token, str) or not token.strip():
+            raise ValueError("token must be a non-empty database token string.")
+        if not isinstance(url, str) or not url.strip():
+            raise ValueError("url must be a non-empty HTTP or HTTPS URL.")
+
+        normalized_url = url.rstrip("/")
+        parsed_url = urlsplit(normalized_url)
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
+            raise ValueError("url must be an absolute HTTP or HTTPS URL.")
+        if parsed_url.query or parsed_url.fragment:
+            raise ValueError("url must not contain a query string or fragment.")
+
+        self._validate_timeout(timeout)
+        if (
+            isinstance(read_retries, bool)
+            or not isinstance(read_retries, int)
+            or read_retries < 0
+        ):
+            raise ValueError("read_retries must be a non-negative integer.")
+
+        self.url = normalized_url
         self.batch_size = batch_size
-
-    def configure_logging(self, level: int, log_file: Optional[str]) -> None:
-        """
-        Configure logging for the Baserow client.
-
-        :param level: The logging level.
-        :type level: int
-        :param log_file: The path to a log file. If provided, logs will also be written to this file.
-        :type log_file: str, optional
-        """
-        handlers = [logging.StreamHandler()]
-        if log_file:
-            handlers.append(logging.FileHandler(log_file))
-
-        logging.basicConfig(
-            level=level,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=handlers,
-        )
+        self.timeout = timeout
+        self.read_retries = read_retries
+        self._origin = self._url_origin(parsed_url)
+        self._authorization = f"Token {token}"
+        self._session = requests.Session()
+        self._session.headers.update({"Authorization": self._authorization})
 
     def __repr__(self) -> str:
-        """
-        Provide a string representation of the Baserow client.
-
-        :return: A string representing the Baserow client with its base URL.
-        :rtype: str
-        """
         return f"Baserow client for base url {self.url}"
 
     def get_table(self, table_id: int) -> Table:
-        """
-        Retrieve a table instance based on its ID.
-
-        :param table_id: The unique identifier of the table.
-        :type table_id: int
-        :return: An instance of the Table class.
-        :rtype: Table
-        """
+        """Return a new Table whose field schema is loaded lazily."""
         return Table(table_id, self)
+
+    def get_tables(self) -> list[Table]:
+        """Return every table visible to this database token."""
+        endpoint = "/api/database/tables/all-tables/"
+        response = self.make_api_request(endpoint)
+        if not isinstance(response, list):
+            raise BaserowResponseError(
+                "Baserow returned an invalid table-discovery response.",
+                method="GET",
+                url=endpoint,
+            )
+
+        tables: list[Table] = []
+        for index, table_data in enumerate(response):
+            if not isinstance(table_data, dict):
+                raise BaserowResponseError(
+                    f"Table-discovery item {index} is not an object.",
+                    method="GET",
+                    url=endpoint,
+                )
+            table_id = table_data.get("id")
+            name = table_data.get("name")
+            database_id = table_data.get("database_id")
+            order = table_data.get("order")
+            if isinstance(table_id, bool) or not isinstance(table_id, int):
+                raise BaserowResponseError(
+                    f"Table-discovery item {index} has an invalid table ID.",
+                    method="GET",
+                    url=endpoint,
+                )
+            if not isinstance(name, str):
+                raise BaserowResponseError(
+                    f"Table-discovery item {index} has an invalid name.",
+                    method="GET",
+                    url=endpoint,
+                )
+            if isinstance(database_id, bool) or not isinstance(database_id, int):
+                raise BaserowResponseError(
+                    f"Table-discovery item {index} has an invalid database ID.",
+                    method="GET",
+                    url=endpoint,
+                )
+            if isinstance(order, bool) or not isinstance(order, (int, float)):
+                raise BaserowResponseError(
+                    f"Table-discovery item {index} has an invalid order.",
+                    method="GET",
+                    url=endpoint,
+                )
+            tables.append(Table(table_id, self, table_data=table_data))
+        return tables
 
     @staticmethod
     def _uploaded_file_from_response(
@@ -149,47 +182,32 @@ class Baserow:
         self,
         endpoint: str,
         method: str = "GET",
-        data: Optional[Dict] = None,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: int = 10,
-        files: Optional[Dict[str, IO[bytes]]] = None,
+        data: Any = None,
+        headers: Optional[Mapping[str, str]] = None,
+        timeout: Optional[float] = None,
+        files: Optional[Mapping[str, IO[bytes]]] = None,
     ) -> Any:
+        """Make one authenticated request and return its parsed response.
+
+        This is the low-level escape hatch for database-token endpoints not yet
+        modeled by the package. It supplies authentication, timeout and safe
+        read-retry behavior, package exceptions, and response parsing. It does
+        not provide schema semantics or guarantee endpoint stability.
         """
-        Make an API request to the specified endpoint.
-
-        :param endpoint: The API endpoint to make the request to.
-        :type endpoint: str
-        :param method: The HTTP method to use, by default "GET".
-        :type method: str
-        :param data: The data payload to send with the request, by default None.
-        :type data: dict, optional
-        :param headers: Additional headers to send with the request, by default None.
-        :type headers: dict, optional
-        :param timeout: The maximum number of seconds to wait for the server response, by default 10.
-        :type timeout: int
-        :param files: Files to be sent with the request, by default None.
-        :type files: dict, optional
-        :return: The parsed response data.
-        :rtype: Any
-        :raises BaserowHTTPError: If Baserow returns a non-successful HTTP response.
-        :raises BaserowTimeoutError: If the request exceeds its timeout.
-        :raises BaserowConnectionError: If a connection to Baserow cannot be established.
-        :raises BaserowRequestError: If another request error prevents completion.
-        :raises BaserowResponseError: If a JSON response cannot be decoded.
-        """
-        logger = logging.getLogger(__name__)
-
-        if endpoint.startswith("http://") or endpoint.startswith("https://"):
-            parsed_base_url = urllib.parse.urlparse(self.url)
-            parsed_endpoint_url = urllib.parse.urlparse(endpoint)
-            url = parsed_endpoint_url._replace(scheme=parsed_base_url.scheme).geturl()
-        else:
-            url = self.url + endpoint
-
-        combined_headers = self.get_combined_headers(headers)
-
-        response = self.perform_request(
-            method, url, combined_headers, data, timeout, files
+        if not isinstance(method, str) or not method.strip():
+            raise ValueError("method must be a non-empty string.")
+        method = method.upper()
+        request_timeout = self.timeout if timeout is None else timeout
+        self._validate_timeout(request_timeout)
+        url = self._build_url(endpoint)
+        combined_headers = self._combined_headers(headers, has_files=files is not None)
+        response = self._perform_request(
+            method=method,
+            url=url,
+            headers=combined_headers,
+            data=data,
+            timeout=request_timeout,
+            files=files,
         )
 
         if not 200 <= response.status_code < 300:
@@ -213,34 +231,69 @@ class Baserow:
                 description=description,
             )
 
-        return self.parse_response(response, method, url)
+        return self._parse_response(response, method, url)
 
-    def get_combined_headers(
-        self, additional_headers: Optional[Dict[str, str]]
-    ) -> Dict[str, str]:
-        """
-        Combines the default headers with any additional headers provided.
+    @staticmethod
+    def _validate_timeout(timeout: float) -> None:
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
+            raise ValueError("timeout must be a positive number of seconds.")
+        if timeout <= 0:
+            raise ValueError("timeout must be a positive number of seconds.")
 
-        :param additional_headers: Additional headers to combine with the default headers.
-        :type additional_headers: dict, optional
-        :return: Combined headers.
-        :rtype: dict
-        """
-        return {**self.headers, **(additional_headers or {})}
+    @staticmethod
+    def _url_origin(parsed_url) -> tuple[str, str, int]:
+        default_port = 443 if parsed_url.scheme == "https" else 80
+        return (
+            parsed_url.scheme.lower(),
+            parsed_url.hostname.lower(),
+            parsed_url.port or default_port,
+        )
+
+    def _build_url(self, endpoint: str) -> str:
+        if not isinstance(endpoint, str) or not endpoint:
+            raise ValueError("endpoint must be a non-empty string.")
+        parsed_endpoint = urlsplit(endpoint)
+        if parsed_endpoint.scheme or parsed_endpoint.netloc:
+            if parsed_endpoint.scheme not in {"http", "https"}:
+                raise ValueError("endpoint must use HTTP or HTTPS.")
+            if self._url_origin(parsed_endpoint) != self._origin:
+                raise ValueError(
+                    "Absolute endpoints must use the configured Baserow origin."
+                )
+            return endpoint
+        if not endpoint.startswith("/"):
+            raise ValueError("Relative endpoints must start with '/'.")
+        return f"{self.url}{endpoint}"
+
+    def _combined_headers(
+        self,
+        additional_headers: Optional[Mapping[str, str]],
+        *,
+        has_files: bool,
+    ) -> dict[str, str]:
+        if additional_headers is not None and not isinstance(
+            additional_headers, Mapping
+        ):
+            raise TypeError("headers must be a mapping.")
+        combined = CaseInsensitiveDict(self._session.headers)
+        combined.update(additional_headers or {})
+        combined["Authorization"] = self._authorization
+        if has_files:
+            combined.pop("Content-Type", None)
+        else:
+            combined.setdefault("Content-Type", "application/json")
+        return dict(combined)
 
     @staticmethod
     def _get_error_details(
         response: requests.Response,
     ) -> tuple[Optional[str], Optional[str]]:
-        """Return Baserow's structured error code and description, when present."""
         try:
             error_data = response.json()
         except ValueError:
             return None, None
-
         if not isinstance(error_data, dict):
             return None, None
-
         error_code = error_data.get("error")
         description = error_data.get("description")
         return (
@@ -248,117 +301,118 @@ class Baserow:
             str(description) if description is not None else None,
         )
 
-    def perform_request(
+    def _perform_request(
         self,
+        *,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        data: Optional[Dict] = None,
-        timeout: int = 10,
-        files: Optional[Dict[str, Union[str, IO[bytes]]]] = None,
+        headers: dict[str, str],
+        data: Any,
+        timeout: float,
+        files: Optional[Mapping[str, IO[bytes]]],
     ) -> requests.Response:
-        """
-        Performs an HTTP request using the given parameters.
+        is_safe_read = method in self._SAFE_RETRY_METHODS
+        retry_limit = self.read_retries if is_safe_read else 0
+        retry_number = 0
 
-        :param method: The HTTP method to use (e.g., "GET", "POST").
-        :type method: str
-        :param url: The complete URL to make the request to.
-        :type url: str
-        :param headers: Headers to send with the request.
-        :type headers: dict
-        :param data: The data payload to send with the request.
-        :type data: dict, optional
-        :param timeout: The maximum number of seconds to wait for the server response.
-        :type timeout: int
-        :param files: The files to send with the request, if any. The dictionary keys are
-                      the form field names, and the values are the file data.
-        :type files: dict, optional
-        :return: The server's response to the request.
-        :rtype: requests.Response
-        :raises BaserowTimeoutError: If the request times out.
-        :raises BaserowConnectionError: If a connection cannot be established.
-        :raises BaserowRequestError: For other request execution failures.
-        """
-        logger = logging.getLogger(__name__)
-        try:
-            logger.debug(f"Making API request to: {url}")
-            logger.debug(f"Request method: {method}")
-            logger.debug(f"Request payload: {data}")
+        while True:
+            logger.debug("Making Baserow %s request to %s", method, url)
+            try:
+                request_arguments: dict[str, Any] = {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "timeout": timeout,
+                }
+                if files is not None:
+                    request_arguments["files"] = files
+                    if data is not None:
+                        request_arguments["data"] = data
+                else:
+                    request_arguments["json"] = data
+                response = self._session.request(**request_arguments)
+            except requests.exceptions.Timeout as error:
+                if retry_number < retry_limit:
+                    retry_number += 1
+                    self._wait_before_retry(None, retry_number)
+                    continue
+                raise BaserowTimeoutError(
+                    f"Request to {url} timed out.", method=method, url=url
+                ) from error
+            except requests.exceptions.ConnectionError as error:
+                if retry_number < retry_limit:
+                    retry_number += 1
+                    self._wait_before_retry(None, retry_number)
+                    continue
+                raise BaserowConnectionError(
+                    f"Could not connect to Baserow at {url}.",
+                    method=method,
+                    url=url,
+                ) from error
+            except requests.exceptions.RequestException as error:
+                raise BaserowRequestError(
+                    f"Request to {url} could not be completed.",
+                    method=method,
+                    url=url,
+                ) from error
 
-            if files:
-                logger.debug(f"API file upload request: {files}")
-                headers.pop("Content-Type", None)
-                with requests.Session() as upload_session:
-                    response = upload_session.request(
-                        method=method,
-                        url=url,
-                        headers=headers,
-                        files=files,
-                        timeout=timeout,
+            if (
+                response.status_code in self._TRANSIENT_READ_STATUSES
+                and retry_number < retry_limit
+            ):
+                retry_number += 1
+                self._wait_before_retry(response, retry_number)
+                continue
+            return response
+
+    def _wait_before_retry(
+        self, response: Optional[requests.Response], retry_number: int
+    ) -> None:
+        delay = self._retry_delay(response, retry_number)
+        if response is not None:
+            response.close()
+        logger.debug("Retrying safe Baserow read after %.3f seconds", delay)
+        time.sleep(delay)
+
+    def _retry_delay(
+        self, response: Optional[requests.Response], retry_number: int
+    ) -> float:
+        retry_after = (
+            response.headers.get("Retry-After") if response is not None else None
+        )
+        if retry_after:
+            try:
+                return max(0.0, float(retry_after))
+            except ValueError:
+                try:
+                    retry_time = parsedate_to_datetime(retry_after)
+                    if retry_time.tzinfo is None:
+                        retry_time = retry_time.replace(tzinfo=timezone.utc)
+                    return max(
+                        0.0,
+                        (retry_time - datetime.now(timezone.utc)).total_seconds(),
                     )
-            else:
-                response = self.session.request(
-                    method=method, url=url, headers=headers, json=data, timeout=timeout
-                )
+                except (TypeError, ValueError, OverflowError):
+                    pass
+        return self._RETRY_BACKOFF_SECONDS * (2 ** (retry_number - 1))
 
-        except requests.exceptions.Timeout as e:
-            logger.error(f"Request to {url} timed out.")
-            raise BaserowTimeoutError(
-                f"Request to {url} timed out.", method=method, url=url
-            ) from e
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Could not connect to Baserow at {url}.")
-            raise BaserowConnectionError(
-                f"Could not connect to Baserow at {url}.", method=method, url=url
-            ) from e
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request to {url} could not be completed: {e}")
-            raise BaserowRequestError(
-                f"Request to {url} could not be completed.", method=method, url=url
-            ) from e
-
-        return response
-
-    def parse_response(
-        self, response: requests.Response, method: str, url: str
-    ) -> Union[int, Dict[str, Any], str, None]:
-        """
-        Parses the response received from an HTTP request.
-
-        If the response has a status code of 204, it will return the status code.
-        If the response body is empty and the method is not "DELETE" or the status code is not 204,
-        a warning is logged.
-        If the response body contains JSON, it attempts to parse and return the JSON.
-        Otherwise, the raw response text is returned.
-
-        :param response: The response object received from an HTTP request.
-        :type response: requests.Response
-        :param method: The HTTP method that was used for the request.
-        :type method: str
-        :param url: The complete URL the request was made to.
-        :type url: str
-        :return: Either the status code, a dictionary parsed from the JSON response, or the raw response text.
-        :rtype: Union[int, dict, str, None]
-        :raises BaserowResponseError: If a response advertised as JSON cannot be decoded.
-        """
-        logger = logging.getLogger(__name__)
+    @staticmethod
+    def _parse_response(
+        response: requests.Response, method: str, url: str
+    ) -> Any:
         if response.status_code == 204:
             return response.status_code
-
         if not response.text:
-            if method != "DELETE" or response.status_code != 204:
-                logger.warning(f"No response body received from {url}")
+            logger.warning("No response body received from %s", url)
             return None
-
         try:
             return response.json()
-        except ValueError as e:
+        except ValueError as error:
             content_type = response.headers.get("Content-Type", "").lower()
             if "json" in content_type:
-                logger.error("Baserow returned an invalid JSON response from %s", url)
                 raise BaserowResponseError(
                     f"Baserow returned an invalid JSON response from {url}.",
                     method=method,
                     url=url,
-                ) from e
+                ) from error
             return response.text
