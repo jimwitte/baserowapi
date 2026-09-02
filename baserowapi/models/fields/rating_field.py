@@ -31,7 +31,7 @@ class RatingField(Field):
 
         # Extract max_value, color, and style attributes
         self.max_value = field_data.get("max_value")
-        if not isinstance(self.max_value, int):
+        if isinstance(self.max_value, bool) or not isinstance(self.max_value, int):
             self.logger.error(
                 f"Expected an integer for max_value but got {type(self.max_value)}"
             )
@@ -75,7 +75,7 @@ class RatingField(Field):
         :type value: int
         :raises FieldValidationError: If the value doesn't match the expected type or constraints.
         """
-        if not isinstance(value, int):
+        if isinstance(value, bool) or not isinstance(value, int):
             self.logger.error(
                 f"Expected an integer value for RatingField but got {type(value)}"
             )

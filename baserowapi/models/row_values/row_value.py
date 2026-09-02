@@ -59,7 +59,7 @@ class RowValue:
 
         :return: User-friendly formatted value.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: Any) -> None:
@@ -90,7 +90,7 @@ class RowValue:
 
         :return: Formatted value for API submission.
         """
-        return self.field.format_for_api(self._raw_value)
+        return self.field.encode_value(self._raw_value)
 
     @property
     def is_read_only(self) -> bool:

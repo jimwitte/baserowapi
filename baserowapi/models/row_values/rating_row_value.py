@@ -45,7 +45,7 @@ class RatingRowValue(RowValue):
 
         :return: The numerical value.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: Union[int, float]) -> None:

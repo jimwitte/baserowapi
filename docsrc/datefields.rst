@@ -1,77 +1,89 @@
 Working with Date Fields in Baserow API
 =======================================
 
-The Baserow API provides a convenient way to work with date fields. When working with dates, you might need to retrieve them, format them according to certain settings, or even modify them. This guide provides a comprehensive overview of how to achieve these tasks.
+Baserow date fields expose both wire values and display metadata. Ordinary row
+access preserves the wire representation: date-only values remain ISO date
+strings and datetime values remain ISO timestamp strings. Conversion to Python
+objects and display formatting are explicit operations on the field.
 
-Setting Up
-----------
+Accessing field settings
+------------------------
 
-Start by initializing the Baserow client and getting a table instance:
-
-.. code-block:: python
-
-    from baserowapi import Baserow
-
-    # Initialize the Baserow client
-    baserow = Baserow(url='https://baserow.example.com', token='mytoken')
-    table = baserow.get_table(1234567)
-
-Accessing Date Field Settings
------------------------------
-
-Every date field in Baserow has associated properties, which can be accessed from the field object:
+The field metadata distinguishes date-only values from datetimes and describes
+Baserow's display configuration:
 
 .. code-block:: python
 
-    print(table.fields['myDate'].date_format)
+    field = table.fields["Due date"]
+    print(field.date_include_time)
+    print(field.date_format)
+    print(field.date_time_format)
+    print(field.date_show_tzinfo)
+    print(field.date_force_timezone)
 
-Fetching and Formatting Dates
------------------------------
+Reading and parsing values
+--------------------------
 
-Baserow stores date values as UTC strings. You can retrieve these values directly or as Python datetime objects:
-
-.. code-block:: python
-
-    # Retrieve the date as a string
-    myRow = table.get_row(1)
-    print(myRow['myDate'])
-
-    # Note that the value returned by the API is not formatted according to the field settings.
-    '2024-08-15' # if table.fields['myDate'].date_include_time == false
-    '2024-08-15T18:00:00Z' # if table.fields['myDate'].date_include_time == true
-
-    # Convert the date into a Python datetime object
-    print(myRow.values['myDate'].as_datetime())
-
-    # Fetch the date as a formatted string based on the field's settings
-    print(myRow.values['myDate'].formatted_date)
-
-Updating Date Values
---------------------
-
-Dates can be updated using strings. 
+Row access returns the Baserow value unchanged:
 
 .. code-block:: python
 
-    # Update the date value using a UTC string
-    myRow['myDate'] = '2023-10-02T18:38:45Z'
+    row = table.get_row(1)
+    raw_value = row["Due date"]
+    # "2026-09-01" for a date-only field
+    # "2026-09-01T12:30:00Z" for a datetime field
 
-    # Update the date value using a bare date string
-    myRow['myDate'] = '2023-10-02'
+Use ``parse_value`` when a Python object is useful. It returns ``date`` for a
+date-only field and a timezone-aware ``datetime`` for a datetime field:
 
-    # Update the date value 
+.. code-block:: python
 
-    # Manipulate the date using Python's datetime library
-    import datetime
-    from datetime import timedelta
+    parsed_value = field.parse_value(raw_value)
 
-    field_date = myRow.values['myDate'].as_datetime()
+``RowValue.as_datetime()`` remains available for compatibility. For a date-only
+field it returns midnight as a naive ``datetime``; new code should prefer the
+field helper when the distinction between ``date`` and ``datetime`` matters.
 
-    # Add one day to the date
-    new_date = field_date + timedelta(days=1)
-    print(new_date)
+Formatting for display
+----------------------
 
-    # Update the row with the new date value
-    myRow['myDate'] = new_date
-    myRow.update()
+``format_value`` applies the field's date format, time format, timezone display,
+and forced-timezone metadata:
 
+.. code-block:: python
+
+    display_value = field.format_value(raw_value)
+
+    # An explicit display timezone overrides date_force_timezone.
+    local_display = field.format_value(
+        raw_value,
+        target_timezone="America/Chicago",
+    )
+
+If neither the caller nor the field specifies a display timezone, the helper
+retains the timestamp's supplied offset. It does not use the executing
+computer's local timezone implicitly. ``RowValue.formatted_date`` delegates to
+the same field helper for compatibility.
+
+Writing date values
+-------------------
+
+Date-only fields accept ``None``, a Python ``date``, or a complete ISO date
+string in ``YYYY-MM-DD`` form. Datetime fields accept ``None``, a timezone-aware
+Python ``datetime``, or a complete ISO timestamp with an explicit offset or
+``Z`` suffix.
+
+.. code-block:: python
+
+    from datetime import date, datetime, timezone
+
+    row.update({"Due date": date(2026, 9, 1)})
+    row.update({"Meeting": "2026-09-01T12:30:00Z"})
+    row.update(
+        {"Meeting": datetime(2026, 9, 1, 12, 30, tzinfo=timezone.utc)}
+    )
+
+The client rejects incomplete or ambiguous values rather than guessing. It does
+not expand two-digit years, normalize slash-separated dates, strip a time from a
+date-only value, add midnight to a datetime field, assign a timezone to a naive
+``datetime``, or append ``Z`` to an offset-free timestamp.

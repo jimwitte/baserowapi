@@ -22,6 +22,9 @@ Evidence for this inventory was collected from:
 * package implementation and integration tests at release ``0.1.0b5``;
 * a read-only schema request to the configured hosted ``baserow.io`` test table
   on 2026-09-01;
+* disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
+  number precision beyond the configured decimal places, and a datetime with a
+  non-UTC ISO offset;
 * the maintainer's generated API documentation for that database, captured on
   2026-09-01 and kept as an ignored local test reference; and
 * Baserow's current `Database API documentation
@@ -73,9 +76,11 @@ than the behavior of any individual field class.
    * - Read row
      - ``Row`` chooses a ``RowValue`` subclass using a second type map, then
        ``row[name]`` returns ``RowValue.value``.
-     - Specialized classes decode selects, links, lookups, dates, and passwords.
-       Most scalar classes return the raw value.
-     - One field semantic authority should decode every read value.
+     - Scalar and unknown RowValues delegate to ``Field.decode_value``.
+       Structured selects, links, lookups, and passwords still decode in their
+       RowValue subclasses.
+     - Phase 2 established field-owned scalar decoding; later phases must move
+       the remaining structured types.
    * - Create rows
      - ``Table.add_rows`` checks only that field names are writable. It sends
        caller values directly to the batch endpoint.
@@ -98,18 +103,20 @@ than the behavior of any individual field class.
      - Choose either explicit advisory validation or tested strict validation;
        keep only the encoding that the row query path uses.
    * - Unknown type
-     - Field and value mappings independently fall back to generic classes and
-       log warnings.
+     - Field and value mappings independently fall back to generic classes
+       without routine warnings.
      - Raw values remain readable; writable unknown fields can be sent without
        semantic validation.
-     - Preserve the fallback, expose the original type, and treat unknown types
-       as expected forward compatibility rather than exceptional logging.
+     - The fallback preserves the original type, metadata, and raw value as
+       expected forward compatibility.
 
 The two independent dispatch tables, ``Table.FIELD_TYPE_CLASS_MAP`` and
 ``ROW_VALUE_TYPE_MAPPING``, duplicate the list of supported Baserow types. A new
 field currently requires coordinated changes to both maps and usually two
-classes. Field-level ``decode``, ``validate``, and ``encode`` operations would
-put this knowledge in one place.
+classes. Phase 2 added ``decode_value``, ``validate_value``, and ``encode_value``
+to Field and retained ``format_for_api`` as a compatibility alias. The duplicate
+dispatch remains until later phases move structured decoding and simplify the
+public row model.
 
 Field-by-field inventory
 ------------------------
@@ -147,34 +154,39 @@ the field encoders described in the write column.
      - ``bool``.
      - Exactly ``bool``; ``None`` is rejected locally.
      - Partial
-     - Dedicated RowValue behavior duplicates the field validator. Empty-value
-       behavior needs a deliberate nullable policy and tests.
+     - RowValue delegates to the field validator. Hosted ``baserow.io`` rejected
+       a ``null`` write on 2026-09-01, confirming the non-null write policy.
    * - ``number``
      - Decimal-place and negative-number settings; numeric filters.
      - Hosted tests currently receive a decimal string such as ``"42.00"``.
      - ``int``, ``float``, numeric ``str``, or ``None``; value is returned
        unchanged after validation.
      - Partial
-     - No canonical Python numeric type is defined. Float/string validation can
-       lose decimal precision. Local filters omit ``starts_with``.
+     - Reads remain lossless strings. Validation uses ``Decimal`` internally to
+       avoid float conversion and enforces hosted precision and negativity
+       settings without exposing ``Decimal``. Local filters omit ``starts_with``.
    * - ``rating``
      - Maximum value, color, style, and bounded integer validation.
      - Numeric value.
      - Integer from zero through ``max_value``; ``None`` is rejected.
      - Partial
-     - Field validation is meaningful. RowValue only repeats it. Local filters
-       omit inclusive comparisons present in generated documentation.
+     - RowValue delegates to field validation. Hosted ``baserow.io`` rejected a
+       ``null`` write on 2026-09-01. Local filters omit inclusive comparisons
+       present in generated documentation.
    * - ``date``
      - Date-only versus datetime, display format, 12/24-hour display, timezone
        display, and forced timezone metadata.
-     - ISO date or datetime ``str``; helper converts it to ``datetime``.
-     - Permissive date strings; date-only fields strip time and datetime fields
-       append midnight or ``Z``. RowValue also accepts ``datetime``.
+     - ISO date or datetime ``str``; explicit field helpers convert to ``date``
+       or timezone-aware ``datetime`` and format using field metadata.
+     - Strict ISO strings, the corresponding Python ``date`` or aware
+       ``datetime``, or ``None``. Encoding never invents missing date, time, or
+       timezone information.
      - Partial
-     - This is essential Baserow knowledge, but permissive two-digit years,
-       slash normalization, local-machine display timezone, and unconditional
-       ``Z`` handling are ambiguous. New ``date_is*`` filters are missing while
-       deprecated operators dominate the local list.
+     - Phase 2 removed two-digit-year guessing, slash normalization, implicit
+       midnight, local-machine display timezone, and unjustified ``Z`` handling.
+       Hosted ``baserow.io`` accepted a non-UTC ISO offset and returned canonical
+       UTC ``Z`` form on 2026-09-01. New ``date_is*`` filters remain missing
+       while deprecated operators dominate the local list.
    * - ``created_on``
      - Computed timestamp and date display metadata.
      - ISO date or datetime ``str`` with date helpers.
@@ -364,9 +376,10 @@ implementation keys without further evidence.
 Test coverage inventory
 -----------------------
 
-All current tests use hosted ``baserow.io``. A passing create test proves that
-the server accepts the supplied payload; it does not prove that the local field
-encoder was used because ``add_rows`` bypasses that encoder.
+The suite now combines credential-free characterization tests with hosted
+``baserow.io`` integration tests. A passing create test proves that the server
+accepts the supplied payload; it does not prove that the local field encoder was
+used because ``add_rows`` still bypasses that encoder.
 
 .. list-table::
    :header-rows: 1
@@ -391,11 +404,11 @@ encoder was used because ``add_rows`` bypasses that encoder.
      - Created on, last modified, formula, count, lookup, UUID, and Autonumber.
      - Actual returned shapes, result-dependent formula/lookup behavior,
        read-only enforcement, decoding, formatting, and filters.
-   * - No direct field-semantic test
-     - Field and RowValue mappings, Generic fallback contract, local validators,
-       filter compatibility, and create/update encoding parity.
-     - These need focused offline tests around captured metadata and values,
-       supplemented by a smaller live compatibility matrix.
+   * - Direct scalar field semantics
+     - Text-like pass-through, boolean, rating, number, date/datetime, and the
+       Generic fallback.
+     - Structured field decoding, filter compatibility, and create/update
+       encoding parity remain for later phases.
 
 What should remain central
 --------------------------

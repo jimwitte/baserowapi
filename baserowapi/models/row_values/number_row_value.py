@@ -45,7 +45,7 @@ class NumberRowValue(RowValue):
 
         :return: The raw value as a string.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: str) -> None:
@@ -57,8 +57,7 @@ class NumberRowValue(RowValue):
         :raises RowValueOperationError: If the value is not valid as per the associated NumberField's validation.
         """
         try:
-            numeric_value = float(new_value)
-            self.field.validate_value(numeric_value)
+            self.field.validate_value(new_value)
             self._raw_value = new_value
             self.logger.debug(f"Set new value {new_value} for field {self.field.name}")
         except Exception as e:

@@ -44,7 +44,7 @@ class PhoneNumberRowValue(RowValue):
 
         :return: The raw value.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: Any) -> None:

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
+from baserowapi.exceptions import FieldValidationError
 from baserowapi.models.fields import GenericField
 
 
@@ -68,14 +69,11 @@ def test_current_date_helpers_parse_iso_values(characterized_row):
     )
 
 
-def test_current_date_encoder_performs_implicit_normalization(characterized_table):
-    # This captures behavior the settled design intentionally replaces in Phase 2.
-    assert characterized_table.fields["Date Only"].format_for_api("26/9/1") == (
-        "2026-09-01"
-    )
-    assert characterized_table.fields["Date Time"].format_for_api("2026-09-01") == (
-        "2026-09-01T00:00:00Z"
-    )
+def test_date_encoder_does_not_guess_missing_information(characterized_table):
+    with pytest.raises(FieldValidationError):
+        characterized_table.fields["Date Only"].format_for_api("26/9/1")
+    with pytest.raises(FieldValidationError):
+        characterized_table.fields["Date Time"].format_for_api("2026-09-01")
 
 
 def test_current_row_dictionary_contains_decoded_values_only(characterized_row):

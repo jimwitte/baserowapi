@@ -3,6 +3,8 @@
   "order": "1.00000000000000000000",
   "Name": "Example",
   "Number": "42.00",
+  "Active": true,
+  "Rating": 4,
   "Date Only": "2026-09-01",
   "Date Time": "2026-09-01T12:30:00Z",
   "Status": {"id": 101, "value": "Open", "color": "green"},

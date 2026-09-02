@@ -116,6 +116,10 @@ class FieldValidationError(FieldError):
     """Raised when a field value fails validation."""
 
 
+class FieldValueError(FieldError):
+    """Raised when an explicit field value conversion cannot be completed."""
+
+
 class FieldDataRetrievalError(FieldError):
     """Raised when data required by a field cannot be retrieved."""
 

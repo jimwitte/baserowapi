@@ -21,6 +21,27 @@
     "number_negative": true
   },
   {
+    "id": 17,
+    "table_id": 10,
+    "name": "Active",
+    "order": 16,
+    "type": "boolean",
+    "primary": false,
+    "read_only": false
+  },
+  {
+    "id": 18,
+    "table_id": 10,
+    "name": "Rating",
+    "order": 17,
+    "type": "rating",
+    "primary": false,
+    "read_only": false,
+    "max_value": 5,
+    "color": "dark-orange",
+    "style": "star"
+  },
+  {
     "id": 3,
     "table_id": 10,
     "name": "Date Only",

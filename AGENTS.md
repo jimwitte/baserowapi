@@ -53,12 +53,14 @@ lossless and simple: retain raw metadata, use ordinary collections, and avoid
 shared hierarchies, registries, HTTP behavior, or wrappers added only for
 symmetry. Do not wrap scalar values merely to make the object model uniform.
 
-The intended semantic authority is the field definition: decoding, validation,
-API encoding, read-only behavior, filters, and computed-result metadata should
-eventually have one implementation used by create, single-update, and batch
-update paths. Until that refactor occurs, follow the current requirement to
-update both field and RowValue mappings. Always retain a raw generic fallback
-for hosted Baserow field types the package does not yet recognize.
+The field definition owns scalar decoding, validation, and API encoding through
+``decode_value``, ``validate_value``, and ``encode_value``;
+``format_for_api`` remains a compatibility alias. Structured RowValue classes
+still own some select, linked-row, lookup, file, and password behavior pending
+later refactoring phases. Until those phases occur, follow the current
+requirement to update both field and RowValue mappings. Always retain the quiet,
+raw generic fallback for hosted Baserow field types the package does not yet
+recognize.
 
 `docsrc/semantic_inventory.rst` records implementation evidence, current
 coverage, settled semantic decisions, and remaining evidence gaps. Treat settled

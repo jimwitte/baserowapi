@@ -72,20 +72,28 @@ class Field:
         """
         pass
 
-    def format_for_api(self, value: Any) -> Any:
+    def decode_value(self, raw_value: Any) -> Any:
+        """Decode a raw Baserow response value for ordinary row access.
+
+        Unknown and scalar values are lossless pass-through values unless a
+        field subclass defines a Baserow-specific structured representation.
         """
-        Format the value for API submission by validating it and returning it as-is.
+        return raw_value
+
+    def encode_value(self, value: Any) -> Any:
+        """Validate and encode a caller value for the Baserow API."""
+        self.validate_value(value)
+        return value
+
+    def format_for_api(self, value: Any) -> Any:
+        """Compatibility alias for :meth:`encode_value`.
 
         :param value: The value to be formatted for the API.
         :type value: Any
         :return: The formatted value.
         :rtype: Any
-        :raises ValueError: If the value is invalid.
         """
-        # Validate the value using the subclass's validate_value method
-        self.validate_value(value)
-        # Return the value as-is if it passes validation
-        return value
+        return self.encode_value(value)
 
     @property
     def id(self) -> Union[int, None]:

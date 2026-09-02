@@ -108,7 +108,7 @@ class SingleSelectField(Field):
                     f"The provided value '{value}' doesn't match any select option."
                 )
 
-    def format_for_api(self, value: Union[dict, int, str]) -> Union[int, str]:
+    def encode_value(self, value: Union[dict, int, str]) -> Union[int, str]:
         """
         Formats the single select value for API submission.
 

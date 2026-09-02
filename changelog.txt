@@ -1,6 +1,30 @@
 ### Changelog
 
 
+#### Unreleased: 0.2.0b1
+
+- **Breaking Changes:**
+  - Date-only writes now require complete ISO dates or Python `date` objects.
+  - Datetime writes now require complete ISO timestamps with an explicit offset
+    or timezone-aware Python `datetime` objects. The client no longer guesses
+    two-digit years, normalizes slash-separated dates, assumes midnight or UTC,
+    strips time values, or uses the executing machine's timezone implicitly.
+- **Field Semantics:**
+  - Added field-owned `decode_value`, `validate_value`, and `encode_value`
+    operations. `format_for_api` remains as a compatibility alias.
+  - Preserved Baserow decimal strings and ISO date strings on ordinary reads.
+  - Added explicit date parsing and metadata-driven display helpers.
+  - Number validation now checks precision and negativity with internal
+    `Decimal` arithmetic without exposing `Decimal` as a row value.
+  - Unknown hosted field types retain their API type, metadata, and raw values
+    without emitting routine warnings.
+- **Exceptions:**
+  - Added `FieldValueError` for explicit field conversion failures.
+- **Testing and Documentation:**
+  - Added credential-free scalar field tests and recorded hosted compatibility
+    probes for nullability, numeric precision, and timezone-offset writes.
+
+
 #### 2026-09-01: 0.1.0b5
 
 - **Breaking Changes:**

@@ -82,7 +82,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.number_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span><span class="p">,</span> <span class="n">InvalidOperation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldValidationError</span>
@@ -176,42 +177,32 @@
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Expected a number value for NumberField but got a string that cannot be converted: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Expected a number value for NumberField but got a string that cannot be converted: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
-                <span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Expected a number value for NumberField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Expected a number value for NumberField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"Expected an integer, float, numeric string, or None for "</span>
+                <span class="sa">f</span><span class="s2">"NumberField but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
 
-        <span class="c1"># If the number has more decimal places than allowed, raise an error</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_decimal_places</span>
-        <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Value for NumberField exceeds allowed decimal places of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">number_decimal_places</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">decimal_value</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">InvalidOperation</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Value for NumberField exceeds allowed decimal places of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">number_decimal_places</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"Expected a numeric value for NumberField but got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">decimal_value</span><span class="o">.</span><span class="n">is_finite</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span><span class="s2">"NumberField values must be finite numbers."</span><span class="p">)</span>
+
+        <span class="n">decimal_places</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">decimal_value</span><span class="o">.</span><span class="n">as_tuple</span><span class="p">()</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">decimal_places</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_decimal_places</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Value for NumberField exceeds the configured "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">number_decimal_places</span><span class="si">}</span><span class="s2"> decimal places."</span>
             <span class="p">)</span>
 
-        <span class="c1"># If negative numbers are not allowed and value is negative, raise an error</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_negative</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Negative values are not allowed for this NumberField"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_negative</span> <span class="ow">and</span> <span class="n">decimal_value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">FieldValidationError</span><span class="p">(</span>
-                <span class="s2">"Negative values are not allowed for this NumberField"</span>
+                <span class="s2">"Negative values are not allowed for this NumberField."</span>
             <span class="p">)</span></div>
 </div>
 

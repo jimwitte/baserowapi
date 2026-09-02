@@ -50,10 +50,10 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Date Fields in Baserow API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up">Setting Up</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#accessing-date-field-settings">Accessing Date Field Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fetching-and-formatting-dates">Fetching and Formatting Dates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#updating-date-values">Updating Date Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-field-settings">Accessing field settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-and-parsing-values">Reading and parsing values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#formatting-for-display">Formatting for display</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-date-values">Writing date values</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields in Baserow API</a></li>
@@ -92,70 +92,78 @@
              
   <section id="working-with-date-fields-in-baserow-api">
 <h1>Working with Date Fields in Baserow API<a class="headerlink" href="#working-with-date-fields-in-baserow-api" title="Link to this heading"></a></h1>
-<p>The Baserow API provides a convenient way to work with date fields. When working with dates, you might need to retrieve them, format them according to certain settings, or even modify them. This guide provides a comprehensive overview of how to achieve these tasks.</p>
-<section id="setting-up">
-<h2>Setting Up<a class="headerlink" href="#setting-up" title="Link to this heading"></a></h2>
-<p>Start by initializing the Baserow client and getting a table instance:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Baserow</span>
-
-<span class="c1"># Initialize the Baserow client</span>
-<span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://baserow.example.com'</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
-<span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
+<p>Baserow date fields expose both wire values and display metadata. Ordinary row
+access preserves the wire representation: date-only values remain ISO date
+strings and datetime values remain ISO timestamp strings. Conversion to Python
+objects and display formatting are explicit operations on the field.</p>
+<section id="accessing-field-settings">
+<h2>Accessing field settings<a class="headerlink" href="#accessing-field-settings" title="Link to this heading"></a></h2>
+<p>The field metadata distinguishes date-only values from datetimes and describes
+Baserow’s display configuration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">field</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">"Due date"</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">date_include_time</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">date_format</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">date_time_format</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">date_show_tzinfo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">date_force_timezone</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="accessing-date-field-settings">
-<h2>Accessing Date Field Settings<a class="headerlink" href="#accessing-date-field-settings" title="Link to this heading"></a></h2>
-<p>Every date field in Baserow has associated properties, which can be accessed from the field object:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span><span class="o">.</span><span class="n">date_format</span><span class="p">)</span>
+<section id="reading-and-parsing-values">
+<h2>Reading and parsing values<a class="headerlink" href="#reading-and-parsing-values" title="Link to this heading"></a></h2>
+<p>Row access returns the Baserow value unchanged:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">raw_value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"Due date"</span><span class="p">]</span>
+<span class="c1"># "2026-09-01" for a date-only field</span>
+<span class="c1"># "2026-09-01T12:30:00Z" for a datetime field</span>
 </pre></div>
 </div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">parse_value</span></code> when a Python object is useful. It returns <code class="docutils literal notranslate"><span class="pre">date</span></code> for a
+date-only field and a timezone-aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code> for a datetime field:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">parsed_value</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">parse_value</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">RowValue.as_datetime()</span></code> remains available for compatibility. For a date-only
+field it returns midnight as a naive <code class="docutils literal notranslate"><span class="pre">datetime</span></code>; new code should prefer the
+field helper when the distinction between <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">datetime</span></code> matters.</p>
 </section>
-<section id="fetching-and-formatting-dates">
-<h2>Fetching and Formatting Dates<a class="headerlink" href="#fetching-and-formatting-dates" title="Link to this heading"></a></h2>
-<p>Baserow stores date values as UTC strings. You can retrieve these values directly or as Python datetime objects:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve the date as a string</span>
-<span class="n">myRow</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myRow</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">])</span>
+<section id="formatting-for-display">
+<h2>Formatting for display<a class="headerlink" href="#formatting-for-display" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">format_value</span></code> applies the field’s date format, time format, timezone display,
+and forced-timezone metadata:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">display_value</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">format_value</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
 
-<span class="c1"># Note that the value returned by the API is not formatted according to the field settings.</span>
-<span class="s1">'2024-08-15'</span> <span class="c1"># if table.fields['myDate'].date_include_time == false</span>
-<span class="s1">'2024-08-15T18:00:00Z'</span> <span class="c1"># if table.fields['myDate'].date_include_time == true</span>
-
-<span class="c1"># Convert the date into a Python datetime object</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myRow</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span><span class="o">.</span><span class="n">as_datetime</span><span class="p">())</span>
-
-<span class="c1"># Fetch the date as a formatted string based on the field's settings</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myRow</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span><span class="o">.</span><span class="n">formatted_date</span><span class="p">)</span>
+<span class="c1"># An explicit display timezone overrides date_force_timezone.</span>
+<span class="n">local_display</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">format_value</span><span class="p">(</span>
+    <span class="n">raw_value</span><span class="p">,</span>
+    <span class="n">target_timezone</span><span class="o">=</span><span class="s2">"America/Chicago"</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
+<p>If neither the caller nor the field specifies a display timezone, the helper
+retains the timestamp’s supplied offset. It does not use the executing
+computer’s local timezone implicitly. <code class="docutils literal notranslate"><span class="pre">RowValue.formatted_date</span></code> delegates to
+the same field helper for compatibility.</p>
 </section>
-<section id="updating-date-values">
-<h2>Updating Date Values<a class="headerlink" href="#updating-date-values" title="Link to this heading"></a></h2>
-<p>Dates can be updated using strings.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update the date value using a UTC string</span>
-<span class="n">myRow</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'2023-10-02T18:38:45Z'</span>
+<section id="writing-date-values">
+<h2>Writing date values<a class="headerlink" href="#writing-date-values" title="Link to this heading"></a></h2>
+<p>Date-only fields accept <code class="docutils literal notranslate"><span class="pre">None</span></code>, a Python <code class="docutils literal notranslate"><span class="pre">date</span></code>, or a complete ISO date
+string in <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code> form. Datetime fields accept <code class="docutils literal notranslate"><span class="pre">None</span></code>, a timezone-aware
+Python <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, or a complete ISO timestamp with an explicit offset or
+<code class="docutils literal notranslate"><span class="pre">Z</span></code> suffix.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 
-<span class="c1"># Update the date value using a bare date string</span>
-<span class="n">myRow</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'2023-10-02'</span>
-
-<span class="c1"># Update the date value</span>
-
-<span class="c1"># Manipulate the date using Python's datetime library</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
-
-<span class="n">field_date</span> <span class="o">=</span> <span class="n">myRow</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span><span class="o">.</span><span class="n">as_datetime</span><span class="p">()</span>
-
-<span class="c1"># Add one day to the date</span>
-<span class="n">new_date</span> <span class="o">=</span> <span class="n">field_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">new_date</span><span class="p">)</span>
-
-<span class="c1"># Update the row with the new date value</span>
-<span class="n">myRow</span><span class="p">[</span><span class="s1">'myDate'</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_date</span>
-<span class="n">myRow</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Due date"</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">)})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Meeting"</span><span class="p">:</span> <span class="s2">"2026-09-01T12:30:00Z"</span><span class="p">})</span>
+<span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"Meeting"</span><span class="p">:</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
+<p>The client rejects incomplete or ambiguous values rather than guessing. It does
+not expand two-digit years, normalize slash-separated dates, strip a time from a
+date-only value, add midnight to a datetime field, assign a timezone to a naive
+<code class="docutils literal notranslate"><span class="pre">datetime</span></code>, or append <code class="docutils literal notranslate"><span class="pre">Z</span></code> to an offset-free timestamp.</p>
 </section>
 </section>
 

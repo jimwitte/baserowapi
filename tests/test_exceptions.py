@@ -10,6 +10,7 @@ from baserowapi.exceptions import (
     FieldDataRetrievalError,
     FieldError,
     FieldValidationError,
+    FieldValueError,
     FilterError,
     InvalidFieldNameError,
     InvalidOperatorError,
@@ -37,6 +38,7 @@ def test_package_exceptions_share_a_common_base():
         BaserowTimeoutError,
         FieldDataRetrievalError,
         FieldValidationError,
+        FieldValueError,
         InvalidFieldNameError,
         InvalidOperatorError,
         InvalidRowValueError,
@@ -76,7 +78,11 @@ def test_domain_exception_groups_are_consistent():
     )
     assert all(
         issubclass(exception_class, FieldError)
-        for exception_class in (FieldDataRetrievalError, FieldValidationError)
+        for exception_class in (
+            FieldDataRetrievalError,
+            FieldValidationError,
+            FieldValueError,
+        )
     )
     assert all(
         issubclass(exception_class, RowValueError)

@@ -26,10 +26,6 @@ class GenericRowValue(RowValue):
                 f"The provided field is not an instance of the GenericField class. Received: {type(field).__name__}"
             )
 
-        self.logger.warning(
-            f"Initialized a generic row value for field '{self.field.name}' of unsupported type."
-        )
-
     @property
     def value(self) -> Any:
         """
@@ -37,7 +33,7 @@ class GenericRowValue(RowValue):
 
         :return: The raw value.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: Any) -> None:

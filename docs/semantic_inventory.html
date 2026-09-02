@@ -126,6 +126,9 @@ not belong in the public contract unless they support one of those behaviors.</p
 <li><p>package implementation and integration tests at release <code class="docutils literal notranslate"><span class="pre">0.1.0b5</span></code>;</p></li>
 <li><p>a read-only schema request to the configured hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> test table
 on 2026-09-01;</p></li>
+<li><p>disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
+number precision beyond the configured decimal places, and a datetime with a
+non-UTC ISO offset;</p></li>
 <li><p>the maintainer’s generated API documentation for that database, captured on
 2026-09-01 and kept as an ignored local test reference; and</p></li>
 <li><p>Baserow’s current <a class="reference external" href="https://baserow.io/user-docs/database-api">Database API documentation</a>, <a class="reference external" href="https://baserow.io/user-docs/baserow-field-overview">field overview</a>, and <a class="reference external" href="https://baserow.io/user-docs/personal-api-tokens">database token
@@ -177,9 +180,11 @@ than the behavior of any individual field class.</p>
 <tr class="row-even"><td><p>Read row</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Row</span></code> chooses a <code class="docutils literal notranslate"><span class="pre">RowValue</span></code> subclass using a second type map, then
 <code class="docutils literal notranslate"><span class="pre">row[name]</span></code> returns <code class="docutils literal notranslate"><span class="pre">RowValue.value</span></code>.</p></td>
-<td><p>Specialized classes decode selects, links, lookups, dates, and passwords.
-Most scalar classes return the raw value.</p></td>
-<td><p>One field semantic authority should decode every read value.</p></td>
+<td><p>Scalar and unknown RowValues delegate to <code class="docutils literal notranslate"><span class="pre">Field.decode_value</span></code>.
+Structured selects, links, lookups, and passwords still decode in their
+RowValue subclasses.</p></td>
+<td><p>Phase 2 established field-owned scalar decoding; later phases must move
+the remaining structured types.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Create rows</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> checks only that field names are writable. It sends
@@ -207,20 +212,22 @@ not called; <code class="docutils literal notranslate"><span class="pre">Filter.
 keep only the encoding that the row query path uses.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Unknown type</p></td>
-<td><p>Field and value mappings independently fall back to generic classes and
-log warnings.</p></td>
+<td><p>Field and value mappings independently fall back to generic classes
+without routine warnings.</p></td>
 <td><p>Raw values remain readable; writable unknown fields can be sent without
 semantic validation.</p></td>
-<td><p>Preserve the fallback, expose the original type, and treat unknown types
-as expected forward compatibility rather than exceptional logging.</p></td>
+<td><p>The fallback preserves the original type, metadata, and raw value as
+expected forward compatibility.</p></td>
 </tr>
 </tbody>
 </table>
 <p>The two independent dispatch tables, <code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ROW_VALUE_TYPE_MAPPING</span></code>, duplicate the list of supported Baserow types. A new
 field currently requires coordinated changes to both maps and usually two
-classes. Field-level <code class="docutils literal notranslate"><span class="pre">decode</span></code>, <code class="docutils literal notranslate"><span class="pre">validate</span></code>, and <code class="docutils literal notranslate"><span class="pre">encode</span></code> operations would
-put this knowledge in one place.</p>
+classes. Phase 2 added <code class="docutils literal notranslate"><span class="pre">decode_value</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">encode_value</span></code>
+to Field and retained <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> as a compatibility alias. The duplicate
+dispatch remains until later phases move structured decoding and simplify the
+public row model.</p>
 </section>
 <section id="field-by-field-inventory">
 <h2>Field-by-field inventory<a class="headerlink" href="#field-by-field-inventory" title="Link to this heading"></a></h2>
@@ -267,8 +274,8 @@ Local filters omit <code class="docutils literal notranslate"><span class="pre">
 <td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></td>
 <td><p>Exactly <code class="docutils literal notranslate"><span class="pre">bool</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected locally.</p></td>
 <td><p>Partial</p></td>
-<td><p>Dedicated RowValue behavior duplicates the field validator. Empty-value
-behavior needs a deliberate nullable policy and tests.</p></td>
+<td><p>RowValue delegates to the field validator. Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected
+a <code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01, confirming the non-null write policy.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">number</span></code></p></td>
 <td><p>Decimal-place and negative-number settings; numeric filters.</p></td>
@@ -276,28 +283,33 @@ behavior needs a deliberate nullable policy and tests.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, numeric <code class="docutils literal notranslate"><span class="pre">str</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>; value is returned
 unchanged after validation.</p></td>
 <td><p>Partial</p></td>
-<td><p>No canonical Python numeric type is defined. Float/string validation can
-lose decimal precision. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+<td><p>Reads remain lossless strings. Validation uses <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> internally to
+avoid float conversion and enforces hosted precision and negativity
+settings without exposing <code class="docutils literal notranslate"><span class="pre">Decimal</span></code>. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rating</span></code></p></td>
 <td><p>Maximum value, color, style, and bounded integer validation.</p></td>
 <td><p>Numeric value.</p></td>
 <td><p>Integer from zero through <code class="docutils literal notranslate"><span class="pre">max_value</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected.</p></td>
 <td><p>Partial</p></td>
-<td><p>Field validation is meaningful. RowValue only repeats it. Local filters
-omit inclusive comparisons present in generated documentation.</p></td>
+<td><p>RowValue delegates to field validation. Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected a
+<code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01. Local filters omit inclusive comparisons
+present in generated documentation.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">date</span></code></p></td>
 <td><p>Date-only versus datetime, display format, 12/24-hour display, timezone
 display, and forced timezone metadata.</p></td>
-<td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code>; helper converts it to <code class="docutils literal notranslate"><span class="pre">datetime</span></code>.</p></td>
-<td><p>Permissive date strings; date-only fields strip time and datetime fields
-append midnight or <code class="docutils literal notranslate"><span class="pre">Z</span></code>. RowValue also accepts <code class="docutils literal notranslate"><span class="pre">datetime</span></code>.</p></td>
+<td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code>; explicit field helpers convert to <code class="docutils literal notranslate"><span class="pre">date</span></code>
+or timezone-aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code> and format using field metadata.</p></td>
+<td><p>Strict ISO strings, the corresponding Python <code class="docutils literal notranslate"><span class="pre">date</span></code> or aware
+<code class="docutils literal notranslate"><span class="pre">datetime</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>. Encoding never invents missing date, time, or
+timezone information.</p></td>
 <td><p>Partial</p></td>
-<td><p>This is essential Baserow knowledge, but permissive two-digit years,
-slash normalization, local-machine display timezone, and unconditional
-<code class="docutils literal notranslate"><span class="pre">Z</span></code> handling are ambiguous. New <code class="docutils literal notranslate"><span class="pre">date_is*</span></code> filters are missing while
-deprecated operators dominate the local list.</p></td>
+<td><p>Phase 2 removed two-digit-year guessing, slash normalization, implicit
+midnight, local-machine display timezone, and unjustified <code class="docutils literal notranslate"><span class="pre">Z</span></code> handling.
+Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> accepted a non-UTC ISO offset and returned canonical
+UTC <code class="docutils literal notranslate"><span class="pre">Z</span></code> form on 2026-09-01. New <code class="docutils literal notranslate"><span class="pre">date_is*</span></code> filters remain missing
+while deprecated operators dominate the local list.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">created_on</span></code></p></td>
 <td><p>Computed timestamp and date display metadata.</p></td>
@@ -519,9 +531,10 @@ belongs in a data client rather than an administrative client.</p></td>
 </section>
 <section id="test-coverage-inventory">
 <h2>Test coverage inventory<a class="headerlink" href="#test-coverage-inventory" title="Link to this heading"></a></h2>
-<p>All current tests use hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code>. A passing create test proves that
-the server accepts the supplied payload; it does not prove that the local field
-encoder was used because <code class="docutils literal notranslate"><span class="pre">add_rows</span></code> bypasses that encoder.</p>
+<p>The suite now combines credential-free characterization tests with hosted
+<code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> integration tests. A passing create test proves that the server
+accepts the supplied payload; it does not prove that the local field encoder was
+used because <code class="docutils literal notranslate"><span class="pre">add_rows</span></code> still bypasses that encoder.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 25.0%" />
@@ -554,11 +567,11 @@ complete-set replacement.</p></td>
 <td><p>Actual returned shapes, result-dependent formula/lookup behavior,
 read-only enforcement, decoding, formatting, and filters.</p></td>
 </tr>
-<tr class="row-odd"><td><p>No direct field-semantic test</p></td>
-<td><p>Field and RowValue mappings, Generic fallback contract, local validators,
-filter compatibility, and create/update encoding parity.</p></td>
-<td><p>These need focused offline tests around captured metadata and values,
-supplemented by a smaller live compatibility matrix.</p></td>
+<tr class="row-odd"><td><p>Direct scalar field semantics</p></td>
+<td><p>Text-like pass-through, boolean, rating, number, date/datetime, and the
+Generic fallback.</p></td>
+<td><p>Structured field decoding, filter compatibility, and create/update
+encoding parity remain for later phases.</p></td>
 </tr>
 </tbody>
 </table>

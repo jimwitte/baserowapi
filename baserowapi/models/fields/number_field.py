@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Union
 import logging
 from baserowapi.models.fields.field import Field
@@ -88,40 +89,30 @@ class NumberField(Field):
         if value is None:
             return
 
-        if isinstance(value, str):
-            try:
-                value = float(value)
-            except ValueError:
-                self.logger.error(
-                    f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
-                )
-                raise FieldValidationError(
-                    f"Expected a number value for NumberField but got a string that cannot be converted: {value}"
-                )
-
-        if not isinstance(value, (int, float)):
-            self.logger.error(
-                f"Expected a number value for NumberField but got {type(value)}"
-            )
+        if isinstance(value, bool) or not isinstance(value, (int, float, str)):
             raise FieldValidationError(
-                f"Expected a number value for NumberField but got {type(value)}"
+                f"Expected an integer, float, numeric string, or None for "
+                f"NumberField but got {type(value).__name__}."
             )
 
-        # If the number has more decimal places than allowed, raise an error
-        if (
-            isinstance(value, float)
-            and len(str(value).split(".")[-1]) > self.number_decimal_places
-        ):
-            self.logger.error(
-                f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
-            )
+        try:
+            decimal_value = Decimal(str(value))
+        except (InvalidOperation, ValueError) as error:
             raise FieldValidationError(
-                f"Value for NumberField exceeds allowed decimal places of {self.number_decimal_places}"
+                f"Expected a numeric value for NumberField but got {value!r}."
+            ) from error
+
+        if not decimal_value.is_finite():
+            raise FieldValidationError("NumberField values must be finite numbers.")
+
+        decimal_places = max(0, -decimal_value.as_tuple().exponent)
+        if decimal_places > self.number_decimal_places:
+            raise FieldValidationError(
+                f"Value for NumberField exceeds the configured "
+                f"{self.number_decimal_places} decimal places."
             )
 
-        # If negative numbers are not allowed and value is negative, raise an error
-        if not self.number_negative and value < 0:
-            self.logger.error("Negative values are not allowed for this NumberField")
+        if not self.number_negative and decimal_value < 0:
             raise FieldValidationError(
-                "Negative values are not allowed for this NumberField"
+                "Negative values are not allowed for this NumberField."
             )

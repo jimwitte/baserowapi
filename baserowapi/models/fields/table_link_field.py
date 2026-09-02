@@ -54,7 +54,7 @@ class TableLinkField(Field):
         """
         return self._COMPATIBLE_FILTERS
 
-    def format_for_api(
+    def encode_value(
         self, value: Union[int, str, List[Union[int, str]]]
     ) -> List[Union[int, str]]:
         """

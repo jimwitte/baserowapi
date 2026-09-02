@@ -116,7 +116,7 @@ class MultipleSelectField(Field):
                     f"The provided value '{value}' doesn't match any select option."
                 )
 
-    def format_for_api(self, values: List[Union[Dict[str, Any], int, str]]) -> List[Union[int, str]]:
+    def encode_value(self, values: List[Union[Dict[str, Any], int, str]]) -> List[Union[int, str]]:
         """
         Formats the multiple select values for API submission.
 

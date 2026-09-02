@@ -93,7 +93,7 @@ def test_current_batch_mapping_update_validates_but_does_not_encode(
     characterized_table.client.make_api_request.return_value = {
         "items": [characterized_row_response]
     }
-    submitted = {"id": 1001, "Date Time": "2026-09-01"}
+    submitted = {"id": 1001, "Date Time": "2026-09-01T00:00:00+00:00"}
 
     characterized_table.update_rows([submitted])
 
@@ -102,12 +102,12 @@ def test_current_batch_mapping_update_validates_but_does_not_encode(
     }
 
 
-def test_current_single_row_update_encodes_the_same_date_input(
+def test_single_row_update_encodes_an_explicit_iso_datetime(
     characterized_row, characterized_row_response
 ):
     characterized_row.client.make_api_request.return_value = characterized_row_response
 
-    characterized_row.update({"Date Time": "2026-09-01"})
+    characterized_row.update({"Date Time": "2026-09-01T00:00:00+00:00"})
 
     assert characterized_row.client.make_api_request.call_args.kwargs["data"] == {
         "Date Time": "2026-09-01T00:00:00Z"

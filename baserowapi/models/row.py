@@ -194,9 +194,6 @@ class Row:
         """
         row_value_class = ROW_VALUE_TYPE_MAPPING.get(field_type)
         if not row_value_class:
-            self.logger.warning(
-                f"Field type '{field_type}' not supported, using GenericRowValue."
-            )
             row_value_class = (
                 GenericRowValue  # Use GenericRowValue for unsupported types
             )

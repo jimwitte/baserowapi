@@ -1,175 +1,159 @@
-from typing import Any, Dict, Optional
-from datetime import datetime
+from datetime import date, datetime, timezone, tzinfo
+import re
+from typing import Any, Dict, Optional, Union
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from baserowapi.exceptions import FieldValidationError, FieldValueError
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError
+
+
+DateValue = Union[str, date, datetime, None]
 
 
 class BaseDateField(Field):
-    """
-    Represents a base date field in Baserow.
-
-    :ivar TYPE: The type of the field, which is 'base_date'.
-    :vartype TYPE: str
-    """
+    """Common Baserow semantics for date and datetime fields."""
 
     TYPE = "base_date"
+    _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    _DATETIME_PATTERN = re.compile(
+        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+    )
+    _DATE_DISPLAY_FORMATS = {
+        "US": "%m-%d-%Y",
+        "EU": "%d-%m-%Y",
+        "ISO": "%Y-%m-%d",
+    }
+    _TIME_DISPLAY_FORMATS = {"12": "%I:%M:%S %p", "24": "%H:%M:%S"}
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initialize a BaseDateField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
         super().__init__(name, field_data, client)
 
-        # Common attributes for date fields
         self.date_format: str = field_data.get("date_format", "EU")
         self.date_include_time: bool = field_data.get("date_include_time", True)
         self.date_time_format: str = field_data.get("date_time_format", "24")
         self.date_show_tzinfo: bool = field_data.get("date_show_tzinfo", False)
         self.date_force_timezone: Optional[str] = field_data.get(
-            "date_force_timezone", None
+            "date_force_timezone"
         )
 
-        # Validate the extracted attributes
-        if self.date_format not in ["US", "EU", "ISO"]:
-            self.logger.error(
-                f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
-            )
+        if self.date_format not in self._DATE_DISPLAY_FORMATS:
             raise FieldValidationError(
-                f"Invalid date_format: {self.date_format}. Expected one of ['US', 'EU', 'ISO']."
+                f"Invalid date_format {self.date_format!r}; expected US, EU, or ISO."
             )
-
-        if self.date_time_format not in ["12", "24"]:
-            self.logger.error(
-                f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
-            )
+        if self.date_time_format not in self._TIME_DISPLAY_FORMATS:
             raise FieldValidationError(
-                f"Invalid date_time_format: {self.date_time_format}. Expected one of ['12', '24']."
+                f"Invalid date_time_format {self.date_time_format!r}; expected 12 or 24."
             )
 
-    def validate_value(self, value: Optional[str]) -> None:
-        """
-        Validate the date or datetime value based on the field's attributes.
-
-        This function allows various date formats, including:
-        - Full ISO date strings (with or without 'Z'): '2024-08-15T18:00:00Z' or '2024-08-15T18:00:00'
-        - Bare date: '2024-08-15'
-        - Slash separators instead of dashes: '2024/08/15'
-        - Two-digit years: '24-08-15'
-        - Single-digit day or month: '2024-8-9'
-
-        :param value: The date or datetime value to be validated.
-        :type value: str, optional
-        :raises FieldValidationError: If the value doesn't match the expected format.
-        """
+    def _parse_value(self, value: DateValue, error_type):
         if value is None:
-            return
-
-        # Normalize the separators to hyphens
-        normalized_value = value.replace("/", "-")
-
-        # Split the date part and ensure correct format
-        date_parts = normalized_value.split("T")[0].split("-")
-
-        # Handle two-digit years (assume 21st century)
-        if len(date_parts[0]) == 2:
-            date_parts[0] = f"20{date_parts[0]}"
-
-        # Add leading zeros to single-digit months and days
-        date_parts[1] = date_parts[1].zfill(2)  # Month
-        date_parts[2] = date_parts[2].zfill(2)  # Day
-
-        # Reconstruct the normalized date
-        normalized_date = "-".join(date_parts)
-
-        # Reconstruct the normalized value
-        if "T" in normalized_value:
-            # Include time part if present
-            normalized_value = (
-                normalized_date
-                + normalized_value[
-                    len(date_parts[0]) + len(date_parts[1]) + len(date_parts[2]) + 2 :
-                ]
-            )
-        else:
-            # Use date-only format
-            normalized_value = normalized_date
-
-        # Try validating full ISO format with or without 'Z'
-        try:
-            datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S.%fZ")
-            return
-        except ValueError:
-            pass
-
-        try:
-            datetime.strptime(normalized_value, "%Y-%m-%dT%H:%M:%S")
-            return
-        except ValueError:
-            pass
-
-        # Validate date-only format
-        try:
-            datetime.strptime(normalized_date, "%Y-%m-%d")
-            return
-        except ValueError:
-            pass
-
-        # Raise error if no valid format matches
-        self.logger.error(f"Invalid date format for {self.TYPE}: {value}")
-        raise FieldValidationError(f"Invalid date format for {self.TYPE}: {value}")
-
-    def format_for_api(self, value: str) -> str:
-        """
-        Formats the date or datetime value for API submission based on the field's attributes.
-
-        :param value: The date or datetime value to be formatted.
-        :type value: str
-        :return: A string formatted according to the API's requirements.
-        :rtype: str
-        :raises FieldValidationError: If the value is not valid or cannot be formatted correctly.
-        """
-        if value is None:
-            return value
-        
-        # Normalize the separators to hyphens
-        normalized_value = value.replace("/", "-")
-
-        # Split the date part and ensure correct format
-        date_parts = normalized_value.split("T")[0].split("-")
-
-        # Handle two-digit years (assume 21st century)
-        if len(date_parts[0]) == 2:
-            date_parts[0] = f"20{date_parts[0]}"
-
-        # Add leading zeros to single-digit months and days
-        date_parts[1] = date_parts[1].zfill(2)  # Month
-        date_parts[2] = date_parts[2].zfill(2)  # Day
-
-        # Reconstruct the normalized date
-        normalized_date = "-".join(date_parts)
+            return None
 
         if self.date_include_time:
-            # If time is required but not provided, add T00:00:00Z
-            if "T" not in normalized_value:
-                normalized_value = f"{normalized_date}T00:00:00Z"
+            if isinstance(value, datetime):
+                parsed = value
+            elif isinstance(value, str) and self._DATETIME_PATTERN.fullmatch(value):
+                iso_value = value[:-1] + "+00:00" if value.endswith("Z") else value
+                try:
+                    parsed = datetime.fromisoformat(iso_value)
+                except ValueError as error:
+                    raise error_type(
+                        f"Invalid ISO datetime for field {self.name!r}: {value!r}."
+                    ) from error
             else:
-                # If the time is already included, ensure it ends with 'Z'
-                time_part = normalized_value.split("T")[1]
-                if not time_part.endswith("Z"):
-                    time_part += "Z"
-                normalized_value = f"{normalized_date}T{time_part}"
-        else:
-            # If time is not required, strip the time part if present
-            normalized_value = normalized_date
+                raise error_type(
+                    f"Field {self.name!r} requires an ISO datetime with an explicit "
+                    "UTC offset or Z suffix."
+                )
 
-        # Validate the final normalized value
-        self.validate_value(normalized_value)
+            if parsed.tzinfo is None or parsed.utcoffset() is None:
+                raise error_type(
+                    f"Field {self.name!r} requires a timezone-aware datetime."
+                )
+            return parsed
 
-        return normalized_value
+        if isinstance(value, datetime):
+            raise error_type(
+                f"Field {self.name!r} is date-only and does not accept a datetime."
+            )
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str) and self._DATE_PATTERN.fullmatch(value):
+            try:
+                return date.fromisoformat(value)
+            except ValueError as error:
+                raise error_type(
+                    f"Invalid ISO date for field {self.name!r}: {value!r}."
+                ) from error
+        raise error_type(
+            f"Field {self.name!r} requires an ISO date in YYYY-MM-DD form."
+        )
+
+    def validate_value(self, value: DateValue) -> None:
+        """Validate a strict Baserow ISO date or datetime write value."""
+        self._parse_value(value, FieldValidationError)
+
+    def encode_value(self, value: DateValue) -> Optional[str]:
+        """Encode a strict date value without guessing missing information."""
+        parsed = self._parse_value(value, FieldValidationError)
+        if parsed is None:
+            return None
+        if isinstance(parsed, datetime):
+            encoded = parsed.isoformat()
+            if parsed.utcoffset() == timezone.utc.utcoffset(parsed):
+                encoded = encoded.removesuffix("+00:00") + "Z"
+            return encoded
+        return parsed.isoformat()
+
+    def parse_value(self, value: DateValue) -> Union[date, datetime, None]:
+        """Explicitly parse a Baserow ISO value into a Python date or datetime."""
+        return self._parse_value(value, FieldValueError)
+
+    def _display_timezone(
+        self, target_timezone: Optional[Union[str, tzinfo]]
+    ) -> Optional[tzinfo]:
+        timezone_value = target_timezone or self.date_force_timezone
+        if timezone_value is None:
+            return None
+        if isinstance(timezone_value, str):
+            try:
+                return ZoneInfo(timezone_value)
+            except ZoneInfoNotFoundError as error:
+                raise FieldValueError(
+                    f"Unknown timezone {timezone_value!r} for field {self.name!r}."
+                ) from error
+        if isinstance(timezone_value, tzinfo):
+            return timezone_value
+        raise FieldValueError("Display timezone must be a timezone name or tzinfo object.")
+
+    def format_value(
+        self,
+        value: DateValue,
+        *,
+        target_timezone: Optional[Union[str, tzinfo]] = None,
+    ) -> Optional[str]:
+        """Format a value using Baserow's date display metadata.
+
+        Datetimes retain their supplied offset unless the field forces a
+        timezone or the caller supplies ``target_timezone``.
+        """
+        parsed = self.parse_value(value)
+        if parsed is None:
+            return None
+
+        date_format = self._DATE_DISPLAY_FORMATS[self.date_format]
+        if not isinstance(parsed, datetime):
+            return parsed.strftime(date_format)
+
+        display_timezone = self._display_timezone(target_timezone)
+        if display_timezone is not None:
+            parsed = parsed.astimezone(display_timezone)
+
+        formatted = (
+            f"{parsed.strftime(date_format)} "
+            f"{parsed.strftime(self._TIME_DISPLAY_FORMATS[self.date_time_format])}"
+        )
+        if self.date_show_tzinfo:
+            timezone_name = parsed.tzname() or parsed.strftime("%z")
+            formatted = f"{formatted} {timezone_name}"
+        return formatted

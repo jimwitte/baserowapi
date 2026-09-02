@@ -45,7 +45,7 @@ class BooleanRowValue(RowValue):
 
         :return: The boolean value of the raw_value or None.
         """
-        return self._raw_value
+        return self.field.decode_value(self._raw_value)
 
     @value.setter
     def value(self, new_value: Optional[bool]) -> None:

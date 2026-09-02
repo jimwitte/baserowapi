@@ -40,6 +40,9 @@ Constraints
 Phase 1: Establish offline characterization tests
 -------------------------------------------------
 
+Status: complete on branch ``release/0.2.0b1``. The offline baseline and the
+unchanged hosted suite were verified on 2026-09-01.
+
 Goal
 ~~~~
 
@@ -70,6 +73,10 @@ Exit criteria
 
 Phase 2: Introduce the Field semantic interface
 ------------------------------------------------
+
+Status: implemented on branch ``release/0.2.0b1`` and verified against hosted
+``baserow.io`` on 2026-09-01. Commit status is intentionally tracked separately
+from phase completion.
 
 Goal
 ~~~~

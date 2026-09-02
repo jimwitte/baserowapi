@@ -280,9 +280,6 @@
 <span class="sd">        """</span>
         <span class="n">row_value_class</span> <span class="o">=</span> <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">row_value_class</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Field type '</span><span class="si">{</span><span class="n">field_type</span><span class="si">}</span><span class="s2">' not supported, using GenericRowValue."</span>
-            <span class="p">)</span>
             <span class="n">row_value_class</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">GenericRowValue</span>  <span class="c1"># Use GenericRowValue for unsupported types</span>
             <span class="p">)</span>
