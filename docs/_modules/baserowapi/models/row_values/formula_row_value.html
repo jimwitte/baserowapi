@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
@@ -82,54 +83,36 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.row_values.formula_row_value</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidRowValueError</span><span class="p">,</span> <span class="n">ReadOnlyValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormulaField</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row_values.row_value</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowValue</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidRowValueError</span><span class="p">,</span> <span class="n">ReadOnlyValueError</span>
 
 
 <div class="viewcode-block" id="FormulaRowValue">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.row_values.FormulaRowValue">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FormulaRowValue</span><span class="p">(</span><span class="n">RowValue</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a RowValue designed for a FormulaField.</span>
-
-<span class="sd">    :param field: The associated FormulaField object.</span>
-<span class="sd">    :param raw_value: The raw value as fetched/returned from the API. Defaults to None.</span>
-<span class="sd">    :param client: The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</span>
-<span class="sd">    :raises InvalidRowValueError: If the provided field is not an instance of the FormulaField class.</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Compatibility facade for field-owned formula-result semantics."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">field</span><span class="p">:</span> <span class="s2">"FormulaField"</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="n">FormulaField</span><span class="p">,</span>
         <span class="n">raw_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">raw_value</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">FormulaField</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidRowValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"The provided field is not an instance of the FormulaField class. Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"Expected FormulaField, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the value in a user-friendly format. This method returns the raw value.</span>
-
-<span class="sd">        :return: The raw value of the FormulaRowValue.</span>
-<span class="sd">        :rtype: Any</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">decode_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_value</span><span class="p">)</span>
 
     <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Set a new value. As FormulaRowValue is read-only, this method raises an error.</span>
-
-<span class="sd">        :param new_value: The new value to be set.</span>
-<span class="sd">        :raises ReadOnlyValueError: As the FormulaRowValue is read-only, setting a value will always raise this error.</span>
-<span class="sd">        """</span>
         <span class="k">raise</span> <span class="n">ReadOnlyValueError</span><span class="p">(</span><span class="s2">"Cannot set value for a read-only FormulaRowValue."</span><span class="p">)</span></div>
 
 </pre></div>

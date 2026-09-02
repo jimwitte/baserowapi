@@ -14,8 +14,11 @@ class SingleSelectField(Field):
         "contains_not",
         "contains_word",
         "doesnt_contain_word",
+        "starts_with",
         "single_select_equal",
         "single_select_not_equal",
+        "single_select_is_any_of",
+        "single_select_is_none_of",
         "empty",
         "not_empty",
     ]

@@ -17,6 +17,8 @@
     raw-dictionary `options_details` property was removed.
   - Removed file upload and download behavior from `FileRowValue`. Uploads are
     now client operations and row assignment is explicit.
+  - Removed the detached `FilterValidator` and unused `Filter.query_string`
+    encoding. Row queries continue to use Baserow's JSON filter tree.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -32,6 +34,15 @@
     missing or duplicate matches without narrowing ordinary Baserow writes.
   - Select, link-row, and file encoders accept the documented ID, label,
     returned-object, comma-separated, and empty forms supported by each field.
+  - Added dedicated read-only `UUIDField` and `AutonumberField` support while
+    preserving hosted string and integer read representations.
+  - Count fields now reuse number-result semantics. Formula button objects and
+    unknown computed result shapes remain raw and lossless.
+- **Filters:**
+  - Added advisory `FilterCompatibility` results for supported, unsupported,
+    and unknown field/operator combinations.
+  - Updated configured field compatibility lists from the generated Baserow API
+    documentation. Unknown operators still pass through to hosted Baserow.
 - **Files:**
   - Added `Baserow.upload_file()` and `Baserow.upload_file_via_url()`, returning
     unattached `BaserowFile` records.
@@ -44,6 +55,8 @@
     probes for nullability, numeric precision, and timezone-offset writes.
   - Added offline structured-value tests and live select, linked-row, and file
     assignment coverage against hosted baserow.io.
+  - Added read-only write-path coverage and hosted Formula, Count, Lookup, UUID,
+    Autonumber, and filter compatibility tests.
 
 
 #### 2026-09-01: 0.1.0b5

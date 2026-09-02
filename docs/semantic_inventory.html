@@ -10,7 +10,7 @@
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=18948dd3"></script>
@@ -20,17 +20,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Semantic refactoring plan" href="refactoring_plan.html" />
-    <link rel="prev" title="Working with Filters in Baserow API" href="filters.html" /> 
+    <link rel="prev" title="Working with Filters" href="filters.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -50,10 +50,11 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Field semantic inventory</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#purpose-and-status">Purpose and status</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#support-levels">Support levels</a></li>
@@ -105,7 +106,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="field-semantic-inventory">
 <h1>Field semantic inventory<a class="headerlink" href="#field-semantic-inventory" title="Link to this heading"></a></h1>
 <section id="purpose-and-status">
@@ -134,6 +135,12 @@ IDs, labels, returned objects, comma-separated forms, empty forms, and nulls;</p
 <li><p>hosted upload and explicit row-assignment tests on 2026-09-01, including the
 distinct user-file <code class="docutils literal notranslate"><span class="pre">original_name</span></code> and attached-file <code class="docutils literal notranslate"><span class="pre">visible_name</span></code>
 payloads;</p></li>
+<li><p>a disposable hosted row probe on 2026-09-02 confirming a raw Formula button
+object, Count decimal string, empty text Lookup list, UUID string, and
+Autonumber integer;</p></li>
+<li><p>the generated API documentation captured on 2026-09-01, visually checked on
+2026-09-02 for configured filter lists, plus hosted equality and empty-result
+filter probes;</p></li>
 <li><p>the maintainer’s generated API documentation for that database, captured on
 2026-09-01 and kept as an ignored local test reference; and</p></li>
 <li><p>Baserow’s current <a class="reference external" href="https://baserow.io/user-docs/database-api">Database API documentation</a>, <a class="reference external" href="https://baserow.io/user-docs/baserow-field-overview">field overview</a>, and <a class="reference external" href="https://baserow.io/user-docs/personal-api-tokens">database token
@@ -209,11 +216,12 @@ no mapping formats each writable <code class="docutils literal notranslate"><spa
 <td><p>Encode each supplied field value before constructing the batch payload.</p></td>
 </tr>
 <tr class="row-even"><td><p>Filter rows</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Table</span></code> sends a JSON filter tree. <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> is public but is
-not called; <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code> is a separate unused encoding.</p></td>
-<td><p>Operators are effectively passed through to the hosted service.</p></td>
-<td><p>Choose either explicit advisory validation or tested strict validation;
-keep only the encoding that the row query path uses.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Table</span></code> sends the sole JSON filter-tree encoding. Fields expose
+three-state advisory compatibility.</p></td>
+<td><p>Supported, unsupported, and locally unknown operators are distinguished;
+no compatibility result blocks a normal query.</p></td>
+<td><p>Keep structural Filter validation and allow unknown operators to reach
+the unpinned hosted service.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Unknown type</p></td>
 <td><p>Field and value mappings independently fall back to generic classes
@@ -401,31 +409,31 @@ filters omit <code class="docutils literal notranslate"><span class="pre">files_
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">formula</span></code></p></td>
 <td><p>Formula text, result type, array result type, error, and read-only status.</p></td>
-<td><p>Raw server value.</p></td>
+<td><p>Raw server value; the configured button is a <code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">url</span></code> object.</p></td>
 <td><p>Read-only.</p></td>
 <td><p>Partial</p></td>
-<td><p>Result metadata is essential because formulas can return strings,
-numbers, dates, arrays, buttons, and other shapes. The configured field
-reports <code class="docutils literal notranslate"><span class="pre">formula_type=&quot;button&quot;</span></code>. The package does not decode by result
-type and declares no filters.</p></td>
+<td><p>The configured <code class="docutils literal notranslate"><span class="pre">formula_type=&quot;button&quot;</span></code> result remains lossless and
+raw because no equivalent writable field exists. Other observed scalar
+formula types preserve the corresponding ordinary scalar representation.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">count</span></code></p></td>
 <td><p>Link-through metadata, numeric formula result, and read-only status.</p></td>
-<td><p>Raw server value.</p></td>
+<td><p>Baserow decimal string through number-result semantics.</p></td>
 <td><p>Read-only.</p></td>
 <td><p>Partial</p></td>
-<td><p>It should reuse canonical number-result semantics. Local filters omit
-<code class="docutils literal notranslate"><span class="pre">starts_with</span></code> and inclusive comparisons.</p></td>
+<td><p>It reuses <code class="docutils literal notranslate"><span class="pre">NumberField</span></code> behavior and the complete configured filter
+list while remaining unconditionally read-only.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lookup</span></code></p></td>
 <td><p>Link field, target field, array result metadata, row IDs, values, and
 read-only status.</p></td>
 <td><p>List of <code class="docutils literal notranslate"><span class="pre">LookupEntry</span></code> records retaining row ID, raw entry, and an
-intentionally raw inner value pending result-type semantics.</p></td>
+text inner value; unknown inner result shapes remain raw.</p></td>
 <td><p>Read-only.</p></td>
 <td><p>Partial</p></td>
-<td><p>Row identity is now preserved. Phase 4 must use <code class="docutils literal notranslate"><span class="pre">formula_type</span></code> and
-<code class="docutils literal notranslate"><span class="pre">array_formula_type</span></code> to decode the inner result and filters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">formula_type</span></code> and <code class="docutils literal notranslate"><span class="pre">array_formula_type</span></code> are exposed. The configured
+text result uses ordinary text semantics; unobserved target result
+families remain raw rather than being guessed.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_collaborators</span></code></p></td>
 <td><p>Notification metadata, collaborator object shape, and collaborator
@@ -449,20 +457,20 @@ state and would report a raw <code class="docutils literal notranslate"><span cl
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">uuid</span></code></p></td>
 <td><p>Read-only unique persistent identifier.</p></td>
-<td><p>Raw UUID value through generic fallback.</p></td>
-<td><p>Excluded from writes because hosted metadata says read-only.</p></td>
-<td><p>Fallback</p></td>
-<td><p>The 2026-09-01 hosted schema confirms API type <code class="docutils literal notranslate"><span class="pre">uuid</span></code>. Dedicated
-support should define UUID representation and equality filters without a
-parallel RowValue subclass.</p></td>
+<td><p>UUID string, with an explicit <code class="docutils literal notranslate"><span class="pre">parse_value</span></code> helper returning
+<code class="docutils literal notranslate"><span class="pre">uuid.UUID</span></code>.</p></td>
+<td><p>Unconditionally read-only.</p></td>
+<td><p>Strong</p></td>
+<td><p>Dedicated metadata, equality-filter knowledge, and lossless string reads
+match the hosted field observed on 2026-09-02.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">autonumber</span></code></p></td>
 <td><p>Read-only monotonically assigned row number.</p></td>
-<td><p>Raw numeric value through generic fallback.</p></td>
-<td><p>Excluded from writes because hosted metadata says read-only.</p></td>
-<td><p>Fallback</p></td>
-<td><p>The hosted schema confirms API type <code class="docutils literal notranslate"><span class="pre">autonumber</span></code>. It should reuse a
-read-only numeric semantic family and expose its filters.</p></td>
+<td><p>Hosted integer value without conversion.</p></td>
+<td><p>Unconditionally read-only.</p></td>
+<td><p>Strong</p></td>
+<td><p>Dedicated metadata and configured comparison-filter knowledge preserve
+the hosted integer representation observed on 2026-09-02.</p></td>
 </tr>
 <tr class="row-even"><td><p>Other unknown API type</p></td>
 <td><p>Original type string and arbitrary metadata are retained.</p></td>
@@ -566,15 +574,15 @@ explicit assignment, and linked-row discovery/update by ID.</p></td>
 limits, and concurrent complete-set replacement remain unverified.</p></td>
 </tr>
 <tr class="row-even"><td><p>Presence only</p></td>
-<td><p>Created on, last modified, formula, count, lookup, UUID, and Autonumber.</p></td>
-<td><p>Actual returned shapes, result-dependent formula/lookup behavior,
-read-only enforcement, decoding, formatting, and filters.</p></td>
+<td><p>Created on and last modified.</p></td>
+<td><p>Their hosted shapes and filter behavior still need focused assertions.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Direct scalar field semantics</p></td>
 <td><p>Text-like pass-through, boolean, rating, number, date/datetime, generic
-fallback, and identity-bearing structured fields.</p></td>
-<td><p>Computed result semantics, filter compatibility, and create/update
-encoding parity remain for later phases.</p></td>
+fallback, identity-bearing structured fields, Count, UUID, Autonumber,
+and the evidenced Formula/Lookup results.</p></td>
+<td><p>Unobserved computed result families and create/update encoding parity
+remain for later evidence and Phase 5.</p></td>
 </tr>
 </tbody>
 </table>
@@ -715,16 +723,14 @@ the public concept is clarified.</p>
 </section>
 <section id="filters">
 <h3>Filters<a class="headerlink" href="#filters" title="Link to this heading"></a></h3>
-<p>Normal filter validation will cover stable query structure, not enforce the
-current static compatibility lists. Operator names and values pass through to
-Baserow. Known field/operator compatibility remains advisory and must
-distinguish <code class="docutils literal notranslate"><span class="pre">unknown</span></code> from <code class="docutils literal notranslate"><span class="pre">unsupported</span></code>. An optional strict helper may
-reject operators known to be incompatible.</p>
-<p>The JSON filter-tree representation used by row queries will be authoritative.
-The detached <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> and unused legacy <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code> will
-be removed or replaced rather than maintained as competing paths. Recursive
-groups will be supported only to the extent verified in current Baserow
-documentation and hosted behavior.</p>
+<p>Normal filter validation covers stable query structure and does not enforce the
+compatibility lists. Operator names and values pass through to Baserow.
+<code class="docutils literal notranslate"><span class="pre">FilterCompatibility</span></code> reports <code class="docutils literal notranslate"><span class="pre">supported</span></code>, <code class="docutils literal notranslate"><span class="pre">unsupported</span></code>, or <code class="docutils literal notranslate"><span class="pre">unknown</span></code>
+as advisory package knowledge.</p>
+<p>The JSON filter-tree representation used by row queries is authoritative. The
+detached <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> and unused legacy <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code> have been
+removed. Recursive groups will be supported only to the extent verified in
+current Baserow documentation and hosted behavior.</p>
 </section>
 <section id="rows-containers-and-transport">
 <h3>Rows, containers, and transport<a class="headerlink" href="#rows-containers-and-transport" title="Link to this heading"></a></h3>
@@ -776,7 +782,7 @@ compatibility by verification date.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="filters.html" class="btn btn-neutral float-left" title="Working with Filters in Baserow API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="filters.html" class="btn btn-neutral float-left" title="Working with Filters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="refactoring_plan.html" class="btn btn-neutral float-right" title="Semantic refactoring plan" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -789,7 +795,7 @@ compatibility by verification date.</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -800,7 +806,7 @@ compatibility by verification date.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

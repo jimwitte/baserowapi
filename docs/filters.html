@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with Filters in Baserow API &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Working with Filters &mdash; Baserow API Package 0.1.0b5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
@@ -50,13 +50,13 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Filters in Baserow API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#filter-basics">Filter Basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#field-type-and-filter-operators">Field Type and Filter Operators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#working-with-filters-examples">Working with Filters: Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Filters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-knowledge">Compatibility Knowledge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-0-1">Migration from 0.1</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
@@ -79,7 +79,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Working with Filters in Baserow API</li>
+      <li class="breadcrumb-item active">Working with Filters</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/filters.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,56 +89,57 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
 
-  <section id="working-with-filters-in-baserow-api">
-<h1>Working with Filters in Baserow API<a class="headerlink" href="#working-with-filters-in-baserow-api" title="Link to this heading"></a></h1>
-<p>When querying rows using Baserow API, filters play a pivotal role in refining your search. The <cite>.get_rows()</cite> function of the table class supports the use of Filter objects to fine-tune your queries.</p>
-<section id="filter-basics">
-<h2>Filter Basics<a class="headerlink" href="#filter-basics" title="Link to this heading"></a></h2>
-<p>A filter is composed of three elements:</p>
-<ul class="simple">
-<li><p>Field: The field name you’re looking to filter on.</p></li>
-<li><p>Value: The value you’re comparing against.</p></li>
-<li><p>Operator: Specifies the type of comparison (e.g., equal, contains_not, etc.). If omitted, ‘equal’ is the default.</p></li>
-</ul>
-</section>
-<section id="field-type-and-filter-operators">
-<h2>Field Type and Filter Operators<a class="headerlink" href="#field-type-and-filter-operators" title="Link to this heading"></a></h2>
-<p>Each field type in Baserow supports specific filter operators. It’s crucial to use compatible filter operators for accurate results:</p>
-<ul class="simple">
-<li><p>You can determine the list of compatible operators for a field by querying the <cite>compatible_filters</cite> property of the field.</p></li>
-<li><p>Additionally, the official Baserow API documentation provides a comprehensive list of these compatible filters.</p></li>
-</ul>
-</section>
-<section id="working-with-filters-examples">
-<h2>Working with Filters: Examples<a class="headerlink" href="#working-with-filters-examples" title="Link to this heading"></a></h2>
-<p>Here are some Python code examples to help you get started with filters:</p>
+  <section id="working-with-filters">
+<h1>Working with Filters<a class="headerlink" href="#working-with-filters" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">Table.get_rows()</span></code> sends Baserow’s JSON filter-tree representation. A
+<code class="docutils literal notranslate"><span class="pre">Filter</span></code> contains a non-empty field name and operator plus the value Baserow
+should compare. Operator names and values are sent to the hosted service without
+a static client-side compatibility gate.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Baserow</span><span class="p">,</span> <span class="n">Filter</span>
 
-<span class="c1"># Initialize the Baserow client</span>
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">'mytoken'</span><span class="p">)</span>
-
-<span class="c1"># Create a table instance</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">baserow</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="mi">1234567</span><span class="p">)</span>
 
-<span class="c1"># Discover valid filter operators for the 'Name' field</span>
-<span class="n">valid_operators</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'Name'</span><span class="p">]</span><span class="o">.</span><span class="n">compatible_filters</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Valid operators for 'Name' field: </span><span class="si">{</span><span class="n">valid_operators</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-<span class="c1"># Create a filter where the 'Name' field equals 'Grace'</span>
-<span class="n">name_equal_grace</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">"Name"</span><span class="p">,</span> <span class="s2">"Grace"</span><span class="p">)</span>
-
-<span class="c1"># Fetch rows that match the filter</span>
-<span class="n">rows_with_name_grace</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">name_equal_grace</span><span class="p">])</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_with_name_grace</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
-
-<span class="c1"># Create and use a filter where the 'Name' field does not contain the letter 'A'</span>
-<span class="n">name_contains_not_A</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="s2">"Name"</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s1">'contains_not'</span><span class="p">)</span>
-<span class="n">rows_not_containing_A</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">name_contains_not_A</span><span class="p">])</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_not_containing_A</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="n">Filter</span><span class="p">(</span><span class="s1">'Name'</span><span class="p">,</span> <span class="s1">'Grace'</span><span class="p">,</span> <span class="s1">'equal'</span><span class="p">)],</span>
+    <span class="n">filter_type</span><span class="o">=</span><span class="s1">'AND'</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
+<section id="compatibility-knowledge">
+<h2>Compatibility Knowledge<a class="headerlink" href="#compatibility-knowledge" title="Link to this heading"></a></h2>
+<p>Field metadata does not include a complete, stable compatibility matrix, and
+hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> is not version-pinned. Each Field therefore reports the
+package’s current knowledge as advisory information:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilterCompatibility</span>
+
+<span class="n">status</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'Name'</span><span class="p">]</span><span class="o">.</span><span class="n">filter_compatibility</span><span class="p">(</span><span class="s1">'starts_with'</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="n">FilterCompatibility</span><span class="o">.</span><span class="n">SUPPORTED</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'documented for this field'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The possible results are:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">SUPPORTED</span></code></dt><dd><p>The operator is documented for this field in the package’s verified
+compatibility data.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">UNSUPPORTED</span></code></dt><dd><p>The operator is known to Baserow but is not documented for this field.
+This is advisory and does not block a query.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">UNKNOWN</span></code></dt><dd><p>The operator or field type is not known locally. The query may still be
+accepted by a newer hosted service.</p>
+</dd>
+</dl>
+<p>Unknown operators remain valid <code class="docutils literal notranslate"><span class="pre">Filter</span></code> inputs and are sent to Baserow. This
+forward-compatible path is intentional. Baserow remains authoritative for the
+result of a live query.</p>
+</section>
+<section id="migration-from-0-1">
+<h2>Migration from 0.1<a class="headerlink" href="#migration-from-0-1" title="Link to this heading"></a></h2>
+<p>The detached <code class="docutils literal notranslate"><span class="pre">FilterValidator</span></code> and the unused <code class="docutils literal notranslate"><span class="pre">Filter.query_string</span></code>
+property were removed in <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code>. Use <code class="docutils literal notranslate"><span class="pre">field.filter_compatibility()</span></code> for
+advisory discovery and pass <code class="docutils literal notranslate"><span class="pre">Filter</span></code> objects to <code class="docutils literal notranslate"><span class="pre">Table.get_rows()</span></code> for the
+single supported JSON-tree encoding.</p>
 </section>
 </section>
 

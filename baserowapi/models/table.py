@@ -9,6 +9,7 @@ from baserowapi.exceptions import (
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
 from baserowapi.models.fields import (
+    AutonumberField,
     FieldList,
     TextField,
     LongTextField,
@@ -19,6 +20,7 @@ from baserowapi.models.fields import (
     LastModifiedField,
     CreatedOnField,
     UrlField,
+    UUIDField,
     EmailField,
     FileField,
     SingleSelectField,
@@ -46,6 +48,7 @@ class Table:
     """
 
     FIELD_TYPE_CLASS_MAP: Dict[str, type] = {
+        AutonumberField.TYPE: AutonumberField,
         TextField.TYPE: TextField,
         LongTextField.TYPE: LongTextField,
         BooleanField.TYPE: BooleanField,
@@ -55,6 +58,7 @@ class Table:
         LastModifiedField.TYPE: LastModifiedField,
         CreatedOnField.TYPE: CreatedOnField,
         UrlField.TYPE: UrlField,
+        UUIDField.TYPE: UUIDField,
         EmailField.TYPE: EmailField,
         FileField.TYPE: FileField,
         SingleSelectField.TYPE: SingleSelectField,

@@ -155,6 +155,13 @@ Exit criteria
 Phase 4: Implement computed, unknown, and filter semantics
 ----------------------------------------------------------
 
+Status: complete on branch ``release/0.2.0b1``. The full offline and serial
+hosted suites passed on 2026-09-02. Focused hosted checks covered the configured
+Formula button, Count, text Lookup, UUID, Autonumber, and representative
+filters. Unobserved computed result families and field categories remain raw
+through the generic fallback rather than being inferred. Commit status is
+intentionally tracked separately from phase completion.
+
 Goal
 ~~~~
 

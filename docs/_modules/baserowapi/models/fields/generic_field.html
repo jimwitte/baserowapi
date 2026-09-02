@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
@@ -84,6 +85,7 @@
   <h1>Source code for baserowapi.models.fields.generic_field</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.filter</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilterCompatibility</span>
 
 
 <div class="viewcode-block" id="GenericField">
@@ -106,6 +108,14 @@
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.GenericField.validate_value">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="GenericField.filter_compatibility">
+<a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.GenericField.filter_compatibility">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter_compatibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FilterCompatibility</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Unknown field types have no authoritative local filter knowledge."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">filter_compatibility</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FilterCompatibility</span><span class="o">.</span><span class="n">UNKNOWN</span></div>
 </div>
 
 </pre></div>

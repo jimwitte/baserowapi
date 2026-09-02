@@ -22,7 +22,7 @@
       "mime_type": "image/png"
     }
   ],
-  "Formula": "Example",
+  "Formula": {"label": "Baserow Home", "url": "https://baserow.io"},
   "Count": "1",
   "Lookup": [{"id": 501, "value": "Acme"}],
   "Collaborators": [

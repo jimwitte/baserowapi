@@ -1,3 +1,4 @@
+from .autonumber_field import AutonumberField
 from .boolean_field import BooleanField
 from .count_field import CountField
 from .created_on_field import CreatedOnField
@@ -20,8 +21,10 @@ from .single_select_field import SingleSelectField
 from .table_link_field import TableLinkField
 from .text_field import TextField
 from .url_field import UrlField
+from .uuid_field import UUIDField
 
 __all__ = [
+    "AutonumberField",
     "BooleanField",
     "CountField",
     "CreatedOnField",
@@ -44,4 +47,5 @@ __all__ = [
     "TableLinkField",
     "TextField",
     "UrlField",
+    "UUIDField",
 ]

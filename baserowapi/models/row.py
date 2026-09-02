@@ -14,10 +14,12 @@ from baserowapi.exceptions import (
 )
 from baserowapi.models.row_values.row_value import RowValue
 from baserowapi.models.row_values import (
+    AutonumberRowValue,
     RowValueList,
     TextRowValue,
     LongTextRowValue,
     UrlRowValue,
+    UUIDRowValue,
     EmailRowValue,
     PhoneNumberRowValue,
     BooleanRowValue,
@@ -40,9 +42,11 @@ from baserowapi.models.row_values import (
 
 
 ROW_VALUE_TYPE_MAPPING: Dict[str, Type[RowValue]] = {
+    "autonumber": AutonumberRowValue,
     "text": TextRowValue,
     "long_text": LongTextRowValue,
     "url": UrlRowValue,
+    "uuid": UUIDRowValue,
     "email": EmailRowValue,
     "phone_number": PhoneNumberRowValue,
     "boolean": BooleanRowValue,

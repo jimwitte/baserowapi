@@ -1,3 +1,4 @@
+from .autonumber_row_value import AutonumberRowValue
 from .boolean_row_value import BooleanRowValue
 from .count_row_value import CountRowValue
 from .created_on_row_value import CreatedOnRowValue
@@ -20,8 +21,10 @@ from .single_select_row_value import SingleSelectRowValue
 from .table_link_row_value import TableLinkRowValue
 from .text_row_value import TextRowValue
 from .url_row_value import UrlRowValue
+from .uuid_row_value import UUIDRowValue
 
 __all__ = [
+    "AutonumberRowValue",
     "BooleanRowValue",
     "CountRowValue",
     "CreatedOnRowValue",
@@ -44,4 +47,5 @@ __all__ = [
     "TableLinkRowValue",
     "TextRowValue",
     "UrlRowValue",
+    "UUIDRowValue",
 ]

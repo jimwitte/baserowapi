@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../code.html">Code Structure</a></li>
@@ -98,10 +99,12 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row_values.row_value</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowValue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row_values</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AutonumberRowValue</span><span class="p">,</span>
     <span class="n">RowValueList</span><span class="p">,</span>
     <span class="n">TextRowValue</span><span class="p">,</span>
     <span class="n">LongTextRowValue</span><span class="p">,</span>
     <span class="n">UrlRowValue</span><span class="p">,</span>
+    <span class="n">UUIDRowValue</span><span class="p">,</span>
     <span class="n">EmailRowValue</span><span class="p">,</span>
     <span class="n">PhoneNumberRowValue</span><span class="p">,</span>
     <span class="n">BooleanRowValue</span><span class="p">,</span>
@@ -124,9 +127,11 @@
 
 
 <span class="n">ROW_VALUE_TYPE_MAPPING</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">RowValue</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"autonumber"</span><span class="p">:</span> <span class="n">AutonumberRowValue</span><span class="p">,</span>
     <span class="s2">"text"</span><span class="p">:</span> <span class="n">TextRowValue</span><span class="p">,</span>
     <span class="s2">"long_text"</span><span class="p">:</span> <span class="n">LongTextRowValue</span><span class="p">,</span>
     <span class="s2">"url"</span><span class="p">:</span> <span class="n">UrlRowValue</span><span class="p">,</span>
+    <span class="s2">"uuid"</span><span class="p">:</span> <span class="n">UUIDRowValue</span><span class="p">,</span>
     <span class="s2">"email"</span><span class="p">:</span> <span class="n">EmailRowValue</span><span class="p">,</span>
     <span class="s2">"phone_number"</span><span class="p">:</span> <span class="n">PhoneNumberRowValue</span><span class="p">,</span>
     <span class="s2">"boolean"</span><span class="p">:</span> <span class="n">BooleanRowValue</span><span class="p">,</span>

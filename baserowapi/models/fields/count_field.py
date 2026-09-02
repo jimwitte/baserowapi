@@ -1,14 +1,10 @@
-from typing import Any, Dict, List, Optional
-from baserowapi.models.fields.field import Field
+from typing import Any, Optional
+
+from baserowapi.models.fields.number_field import NumberField
 
 
-class CountField(Field):
-    """
-    Represents a field connected to a link to table field which returns the number of relations.
-
-    :ivar TYPE: The type of the field, which is 'count'.
-    :vartype TYPE: str
-    """
+class CountField(NumberField):
+    """A read-only Baserow relation count with number-result semantics."""
 
     TYPE = "count"
     _COMPATIBLE_FILTERS = [
@@ -16,62 +12,27 @@ class CountField(Field):
         "not_equal",
         "contains",
         "contains_not",
+        "starts_with",
         "higher_than",
+        "higher_than_or_equal",
         "lower_than",
+        "lower_than_or_equal",
         "is_even_and_whole",
         "empty",
         "not_empty",
     ]
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initializes a CountField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
+    def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
         super().__init__(name, field_data, client)
 
     @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this CountField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
-
-    @property
     def is_read_only(self) -> bool:
-        """
-        Determine if the field is read-only.
-
-        :return: Always True for CountField.
-        :rtype: bool
-        """
         return True
 
     @property
-    def through_field_id(self) -> Optional[str]:
-        """
-        Retrieve the through_field_id of the field from field_data.
-
-        :return: The id of the linking field.
-        :rtype: Optional[str]
-        """
-        return self.field_data.get("through_field_id", None)
+    def through_field_id(self) -> Optional[int]:
+        return self.field_data.get("through_field_id")
 
     @property
-    def table_id(self) -> Optional[int]:
-        """
-        Retrieve the table_id of the field from field_data.
-
-        :return: The table_id of the field.
-        :rtype: Optional[int]
-        """
-        return self.field_data.get("table_id", None)
+    def formula_type(self) -> Optional[str]:
+        return self.field_data.get("formula_type")

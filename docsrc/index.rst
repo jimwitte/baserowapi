@@ -11,6 +11,7 @@ Baserowapi: API wrapper for Baserow
    table
    row
    datefields
+   computedfields
    filefields
    linkedfields
    selectfields

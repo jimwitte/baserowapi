@@ -13,6 +13,13 @@ class LastModifiedField(BaseDateField):
 
     TYPE = "last_modified"
     _COMPATIBLE_FILTERS = [
+        "date_is",
+        "date_is_not",
+        "date_is_before",
+        "date_is_on_or_before",
+        "date_is_after",
+        "date_is_on_or_after",
+        "date_is_within",
         "date_equal",
         "date_not_equal",
         "date_equals_today",

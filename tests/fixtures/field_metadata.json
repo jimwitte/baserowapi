@@ -124,8 +124,8 @@
     "type": "formula",
     "primary": false,
     "read_only": true,
-    "formula": "field('Name')",
-    "formula_type": "text",
+    "formula": "button('https://baserow.io', 'Baserow Home')",
+    "formula_type": "button",
     "array_formula_type": null,
     "error": null
   },

@@ -19,6 +19,7 @@ class NumberField(Field):
         "not_equal",
         "contains",
         "contains_not",
+        "starts_with",
         "higher_than",
         "higher_than_or_equal",
         "lower_than",

@@ -19,6 +19,7 @@ class TextField(BaseTextClass):
         "contains_not",
         "contains_word",
         "doesnt_contain_word",
+        "starts_with",
         "length_is_lower_than",
         "empty",
         "not_empty",

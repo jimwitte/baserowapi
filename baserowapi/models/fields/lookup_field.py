@@ -19,16 +19,25 @@ class LookupField(Field):
         "has_value_contains_word",
         "has_not_value_contains_word",
         "has_value_length_is_lower_than",
+        "empty",
+        "not_empty",
     ]
-
-    def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
-        super().__init__(name, field_data, client)
-        if not self.is_read_only:
-            raise ValueError("LookupField should be read-only.")
 
     @property
     def compatible_filters(self) -> list[str]:
         return self._COMPATIBLE_FILTERS
+
+    @property
+    def is_read_only(self) -> bool:
+        return True
+
+    @property
+    def formula_type(self) -> Optional[str]:
+        return self.field_data.get("formula_type")
+
+    @property
+    def array_formula_type(self) -> Optional[str]:
+        return self.field_data.get("array_formula_type")
 
     @property
     def through_field_id(self) -> Optional[int]:

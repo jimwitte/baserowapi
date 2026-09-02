@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../code.html">Code Structure</a></li>
@@ -93,6 +94,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.filter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Filter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row</span><span class="w"> </span><span class="kn">import</span> <span class="n">Row</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AutonumberField</span><span class="p">,</span>
     <span class="n">FieldList</span><span class="p">,</span>
     <span class="n">TextField</span><span class="p">,</span>
     <span class="n">LongTextField</span><span class="p">,</span>
@@ -103,6 +105,7 @@
     <span class="n">LastModifiedField</span><span class="p">,</span>
     <span class="n">CreatedOnField</span><span class="p">,</span>
     <span class="n">UrlField</span><span class="p">,</span>
+    <span class="n">UUIDField</span><span class="p">,</span>
     <span class="n">EmailField</span><span class="p">,</span>
     <span class="n">FileField</span><span class="p">,</span>
     <span class="n">SingleSelectField</span><span class="p">,</span>
@@ -132,6 +135,7 @@
 <span class="sd">    """</span>
 
     <span class="n">FIELD_TYPE_CLASS_MAP</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">AutonumberField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">AutonumberField</span><span class="p">,</span>
         <span class="n">TextField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">TextField</span><span class="p">,</span>
         <span class="n">LongTextField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">LongTextField</span><span class="p">,</span>
         <span class="n">BooleanField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">BooleanField</span><span class="p">,</span>
@@ -141,6 +145,7 @@
         <span class="n">LastModifiedField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">LastModifiedField</span><span class="p">,</span>
         <span class="n">CreatedOnField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">CreatedOnField</span><span class="p">,</span>
         <span class="n">UrlField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">UrlField</span><span class="p">,</span>
+        <span class="n">UUIDField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">UUIDField</span><span class="p">,</span>
         <span class="n">EmailField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">EmailField</span><span class="p">,</span>
         <span class="n">FileField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">FileField</span><span class="p">,</span>
         <span class="n">SingleSelectField</span><span class="o">.</span><span class="n">TYPE</span><span class="p">:</span> <span class="n">SingleSelectField</span><span class="p">,</span>

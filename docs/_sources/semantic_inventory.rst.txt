@@ -30,6 +30,12 @@ Evidence for this inventory was collected from:
 * hosted upload and explicit row-assignment tests on 2026-09-01, including the
   distinct user-file ``original_name`` and attached-file ``visible_name``
   payloads;
+* a disposable hosted row probe on 2026-09-02 confirming a raw Formula button
+  object, Count decimal string, empty text Lookup list, UUID string, and
+  Autonumber integer;
+* the generated API documentation captured on 2026-09-01, visually checked on
+  2026-09-02 for configured filter lists, plus hosted equality and empty-result
+  filter probes;
 * the maintainer's generated API documentation for that database, captured on
   2026-09-01 and kept as an ignored local test reference; and
 * Baserow's current `Database API documentation
@@ -101,11 +107,12 @@ than the behavior of any individual field class.
      - Validation and wire encoding can disagree with single-row updates.
      - Encode each supplied field value before constructing the batch payload.
    * - Filter rows
-     - ``Table`` sends a JSON filter tree. ``FilterValidator`` is public but is
-       not called; ``Filter.query_string`` is a separate unused encoding.
-     - Operators are effectively passed through to the hosted service.
-     - Choose either explicit advisory validation or tested strict validation;
-       keep only the encoding that the row query path uses.
+     - ``Table`` sends the sole JSON filter-tree encoding. Fields expose
+       three-state advisory compatibility.
+     - Supported, unsupported, and locally unknown operators are distinguished;
+       no compatibility result blocks a normal query.
+     - Keep structural Filter validation and allow unknown operators to reach
+       the unpinned hosted service.
    * - Unknown type
      - Field and value mappings independently fall back to generic classes
        without routine warnings.
@@ -268,29 +275,29 @@ the field encoders described in the write column.
        filters omit ``files_lower_than``.
    * - ``formula``
      - Formula text, result type, array result type, error, and read-only status.
-     - Raw server value.
+     - Raw server value; the configured button is a ``label``/``url`` object.
      - Read-only.
      - Partial
-     - Result metadata is essential because formulas can return strings,
-       numbers, dates, arrays, buttons, and other shapes. The configured field
-       reports ``formula_type="button"``. The package does not decode by result
-       type and declares no filters.
+     - The configured ``formula_type="button"`` result remains lossless and
+       raw because no equivalent writable field exists. Other observed scalar
+       formula types preserve the corresponding ordinary scalar representation.
    * - ``count``
      - Link-through metadata, numeric formula result, and read-only status.
-     - Raw server value.
+     - Baserow decimal string through number-result semantics.
      - Read-only.
      - Partial
-     - It should reuse canonical number-result semantics. Local filters omit
-       ``starts_with`` and inclusive comparisons.
+     - It reuses ``NumberField`` behavior and the complete configured filter
+       list while remaining unconditionally read-only.
    * - ``lookup``
      - Link field, target field, array result metadata, row IDs, values, and
        read-only status.
      - List of ``LookupEntry`` records retaining row ID, raw entry, and an
-       intentionally raw inner value pending result-type semantics.
+       text inner value; unknown inner result shapes remain raw.
      - Read-only.
      - Partial
-     - Row identity is now preserved. Phase 4 must use ``formula_type`` and
-       ``array_formula_type`` to decode the inner result and filters.
+     - ``formula_type`` and ``array_formula_type`` are exposed. The configured
+       text result uses ordinary text semantics; unobserved target result
+       families remain raw rather than being guessed.
    * - ``multiple_collaborators``
      - Notification metadata, collaborator object shape, and collaborator
        filters.
@@ -311,19 +318,19 @@ the field encoders described in the write column.
        state and would report a raw ``False`` as set.
    * - ``uuid``
      - Read-only unique persistent identifier.
-     - Raw UUID value through generic fallback.
-     - Excluded from writes because hosted metadata says read-only.
-     - Fallback
-     - The 2026-09-01 hosted schema confirms API type ``uuid``. Dedicated
-       support should define UUID representation and equality filters without a
-       parallel RowValue subclass.
+     - UUID string, with an explicit ``parse_value`` helper returning
+       ``uuid.UUID``.
+     - Unconditionally read-only.
+     - Strong
+     - Dedicated metadata, equality-filter knowledge, and lossless string reads
+       match the hosted field observed on 2026-09-02.
    * - ``autonumber``
      - Read-only monotonically assigned row number.
-     - Raw numeric value through generic fallback.
-     - Excluded from writes because hosted metadata says read-only.
-     - Fallback
-     - The hosted schema confirms API type ``autonumber``. It should reuse a
-       read-only numeric semantic family and expose its filters.
+     - Hosted integer value without conversion.
+     - Unconditionally read-only.
+     - Strong
+     - Dedicated metadata and configured comparison-filter knowledge preserve
+       the hosted integer representation observed on 2026-09-02.
    * - Other unknown API type
      - Original type string and arbitrary metadata are retained.
      - Raw server value.
@@ -404,14 +411,14 @@ used because ``add_rows`` still bypasses that encoder.
      - Forced-timezone display, duplicate hosted primary labels, selection-view
        limits, and concurrent complete-set replacement remain unverified.
    * - Presence only
-     - Created on, last modified, formula, count, lookup, UUID, and Autonumber.
-     - Actual returned shapes, result-dependent formula/lookup behavior,
-       read-only enforcement, decoding, formatting, and filters.
+     - Created on and last modified.
+     - Their hosted shapes and filter behavior still need focused assertions.
    * - Direct scalar field semantics
      - Text-like pass-through, boolean, rating, number, date/datetime, generic
-       fallback, and identity-bearing structured fields.
-     - Computed result semantics, filter compatibility, and create/update
-       encoding parity remain for later phases.
+       fallback, identity-bearing structured fields, Count, UUID, Autonumber,
+       and the evidenced Formula/Lookup results.
+     - Unobserved computed result families and create/update encoding parity
+       remain for later evidence and Phase 5.
 
 What should remain central
 --------------------------
@@ -565,17 +572,15 @@ the public concept is clarified.
 Filters
 ~~~~~~~
 
-Normal filter validation will cover stable query structure, not enforce the
-current static compatibility lists. Operator names and values pass through to
-Baserow. Known field/operator compatibility remains advisory and must
-distinguish ``unknown`` from ``unsupported``. An optional strict helper may
-reject operators known to be incompatible.
+Normal filter validation covers stable query structure and does not enforce the
+compatibility lists. Operator names and values pass through to Baserow.
+``FilterCompatibility`` reports ``supported``, ``unsupported``, or ``unknown``
+as advisory package knowledge.
 
-The JSON filter-tree representation used by row queries will be authoritative.
-The detached ``FilterValidator`` and unused legacy ``Filter.query_string`` will
-be removed or replaced rather than maintained as competing paths. Recursive
-groups will be supported only to the extent verified in current Baserow
-documentation and hosted behavior.
+The JSON filter-tree representation used by row queries is authoritative. The
+detached ``FilterValidator`` and unused legacy ``Filter.query_string`` have been
+removed. Recursive groups will be supported only to the extent verified in
+current Baserow documentation and hosted behavior.
 
 Rows, containers, and transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

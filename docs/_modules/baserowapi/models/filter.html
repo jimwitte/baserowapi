@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../code.html">Code Structure</a></li>
@@ -82,60 +83,112 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.filter</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.parse</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidFieldNameError</span><span class="p">,</span> <span class="n">InvalidOperatorError</span>
+
+
+<div class="viewcode-block" id="FilterCompatibility">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.filter.FilterCompatibility">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FilterCompatibility</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The package's advisory knowledge of a field/operator combination."""</span>
+
+    <span class="n">SUPPORTED</span> <span class="o">=</span> <span class="s2">"supported"</span>
+    <span class="n">UNSUPPORTED</span> <span class="o">=</span> <span class="s2">"unsupported"</span>
+    <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s2">"unknown"</span></div>
+
+
+
+<span class="c1"># Operators observed in generated API documentation for the configured hosted</span>
+<span class="c1"># database. An operator outside this set is new to this package, not invalid.</span>
+<span class="n">KNOWN_FILTER_OPERATORS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"boolean"</span><span class="p">,</span>
+        <span class="s2">"contains"</span><span class="p">,</span>
+        <span class="s2">"contains_not"</span><span class="p">,</span>
+        <span class="s2">"contains_word"</span><span class="p">,</span>
+        <span class="s2">"date_after"</span><span class="p">,</span>
+        <span class="s2">"date_after_days_ago"</span><span class="p">,</span>
+        <span class="s2">"date_after_or_equal"</span><span class="p">,</span>
+        <span class="s2">"date_after_today"</span><span class="p">,</span>
+        <span class="s2">"date_before"</span><span class="p">,</span>
+        <span class="s2">"date_before_or_equal"</span><span class="p">,</span>
+        <span class="s2">"date_before_today"</span><span class="p">,</span>
+        <span class="s2">"date_equal"</span><span class="p">,</span>
+        <span class="s2">"date_equals_day_of_month"</span><span class="p">,</span>
+        <span class="s2">"date_equals_days_ago"</span><span class="p">,</span>
+        <span class="s2">"date_equals_month"</span><span class="p">,</span>
+        <span class="s2">"date_equals_months_ago"</span><span class="p">,</span>
+        <span class="s2">"date_equals_today"</span><span class="p">,</span>
+        <span class="s2">"date_equals_week"</span><span class="p">,</span>
+        <span class="s2">"date_equals_year"</span><span class="p">,</span>
+        <span class="s2">"date_equals_years_ago"</span><span class="p">,</span>
+        <span class="s2">"date_is"</span><span class="p">,</span>
+        <span class="s2">"date_is_after"</span><span class="p">,</span>
+        <span class="s2">"date_is_before"</span><span class="p">,</span>
+        <span class="s2">"date_is_not"</span><span class="p">,</span>
+        <span class="s2">"date_is_on_or_after"</span><span class="p">,</span>
+        <span class="s2">"date_is_on_or_before"</span><span class="p">,</span>
+        <span class="s2">"date_is_within"</span><span class="p">,</span>
+        <span class="s2">"date_not_equal"</span><span class="p">,</span>
+        <span class="s2">"date_within_days"</span><span class="p">,</span>
+        <span class="s2">"date_within_months"</span><span class="p">,</span>
+        <span class="s2">"date_within_weeks"</span><span class="p">,</span>
+        <span class="s2">"doesnt_contain_word"</span><span class="p">,</span>
+        <span class="s2">"empty"</span><span class="p">,</span>
+        <span class="s2">"equal"</span><span class="p">,</span>
+        <span class="s2">"filename_contains"</span><span class="p">,</span>
+        <span class="s2">"files_lower_than"</span><span class="p">,</span>
+        <span class="s2">"has_empty_value"</span><span class="p">,</span>
+        <span class="s2">"has_file_type"</span><span class="p">,</span>
+        <span class="s2">"has_not_empty_value"</span><span class="p">,</span>
+        <span class="s2">"has_not_value_contains"</span><span class="p">,</span>
+        <span class="s2">"has_not_value_contains_word"</span><span class="p">,</span>
+        <span class="s2">"has_not_value_equal"</span><span class="p">,</span>
+        <span class="s2">"has_value_contains"</span><span class="p">,</span>
+        <span class="s2">"has_value_contains_word"</span><span class="p">,</span>
+        <span class="s2">"has_value_equal"</span><span class="p">,</span>
+        <span class="s2">"has_value_length_is_lower_than"</span><span class="p">,</span>
+        <span class="s2">"higher_than"</span><span class="p">,</span>
+        <span class="s2">"higher_than_or_equal"</span><span class="p">,</span>
+        <span class="s2">"is_even_and_whole"</span><span class="p">,</span>
+        <span class="s2">"length_is_lower_than"</span><span class="p">,</span>
+        <span class="s2">"link_row_contains"</span><span class="p">,</span>
+        <span class="s2">"link_row_has"</span><span class="p">,</span>
+        <span class="s2">"link_row_has_not"</span><span class="p">,</span>
+        <span class="s2">"link_row_not_contains"</span><span class="p">,</span>
+        <span class="s2">"lower_than"</span><span class="p">,</span>
+        <span class="s2">"lower_than_or_equal"</span><span class="p">,</span>
+        <span class="s2">"multiple_collaborators_has"</span><span class="p">,</span>
+        <span class="s2">"multiple_collaborators_has_not"</span><span class="p">,</span>
+        <span class="s2">"multiple_select_has"</span><span class="p">,</span>
+        <span class="s2">"multiple_select_has_not"</span><span class="p">,</span>
+        <span class="s2">"not_empty"</span><span class="p">,</span>
+        <span class="s2">"not_equal"</span><span class="p">,</span>
+        <span class="s2">"single_select_equal"</span><span class="p">,</span>
+        <span class="s2">"single_select_is_any_of"</span><span class="p">,</span>
+        <span class="s2">"single_select_is_none_of"</span><span class="p">,</span>
+        <span class="s2">"single_select_not_equal"</span><span class="p">,</span>
+        <span class="s2">"starts_with"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="Filter">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.filter.Filter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Filter</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Represents a filter expression used to filter results when fetching rows from a table.</span>
+<span class="w">    </span><span class="sd">"""One structurally valid Baserow row filter."""</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">    - field_name (str): The name of the field to apply the filter on.</span>
-<span class="sd">    - value (str, int, etc.): The value to compare against using the operator.</span>
-<span class="sd">    - operator (str): The comparison operator. Default is "equal".</span>
-
-<span class="sd">    Properties:</span>
-<span class="sd">    - query_string (str): Computes the API's required GET parameter string.</span>
-<span class="sd">    """</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"equal"</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initializes the Filter object with the given field name, value, and operator.</span>
-
-<span class="sd">        :param field_name: The name of the field.</span>
-<span class="sd">        :param value: The value for comparison.</span>
-<span class="sd">        :param operator: The comparison operator. Default is "equal".</span>
-<span class="sd">        """</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"equal"</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">field_name</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"field_name must be a non-empty string."</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidFieldNameError</span><span class="p">(</span><span class="s2">"field_name must be a non-empty string."</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">operator</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"operator must be a non-empty string."</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidOperatorError</span><span class="p">(</span><span class="s2">"operator must be a non-empty string."</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">field_name</span> <span class="o">=</span> <span class="n">field_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">query_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Returns the filter as a query string formatted for use as a GET parameter in an API call.</span>
-
-<span class="sd">        Format: filter__&lt;encoded_field_name&gt;__&lt;operator&gt;=&lt;encoded_value&gt;</span>
-<span class="sd">        """</span>
-        <span class="c1"># Encoding the field name and value for URL compatibility</span>
-        <span class="n">encoded_field_name</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_name</span><span class="p">)</span>
-        <span class="n">encoded_value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"filter__</span><span class="si">{</span><span class="n">encoded_field_name</span><span class="si">}</span><span class="s2">__</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">encoded_value</span><span class="si">}</span><span class="s2">"</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span></div>
 
 </pre></div>
 

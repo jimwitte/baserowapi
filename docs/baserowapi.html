@@ -49,10 +49,11 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
@@ -502,7 +503,7 @@ the form field names, and the values are the file data.</p></li>
 <p>Represents a table in Baserow with functionalities to manipulate and query rows, fields, etc.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="baserowapi.models.table.Table.FIELD_TYPE_CLASS_MAP">
-<span class="sig-name descname"><span class="pre">FIELD_TYPE_CLASS_MAP</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">type</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'boolean':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.boolean_field.BooleanField'&gt;,</span> <span class="pre">'count':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.count_field.CountField'&gt;,</span> <span class="pre">'created_on':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.created_on_field.CreatedOnField'&gt;,</span> <span class="pre">'date':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.date_field.DateField'&gt;,</span> <span class="pre">'email':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.email_field.EmailField'&gt;,</span> <span class="pre">'file':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.file_field.FileField'&gt;,</span> <span class="pre">'formula':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.formula_field.FormulaField'&gt;,</span> <span class="pre">'generic':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.generic_field.GenericField'&gt;,</span> <span class="pre">'last_modified':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.last_modified_field.LastModifiedField'&gt;,</span> <span class="pre">'link_row':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.table_link_field.TableLinkField'&gt;,</span> <span class="pre">'long_text':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.long_text_field.LongTextField'&gt;,</span> <span class="pre">'lookup':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.lookup_field.LookupField'&gt;,</span> <span class="pre">'multiple_collaborators':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.multiple_collaborators_field.MultipleCollaboratorsField'&gt;,</span> <span class="pre">'multiple_select':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.multiple_select_field.MultipleSelectField'&gt;,</span> <span class="pre">'number':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.number_field.NumberField'&gt;,</span> <span class="pre">'password':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.password_field.PasswordField'&gt;,</span> <span class="pre">'phone_number':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.phone_number_field.PhoneNumberField'&gt;,</span> <span class="pre">'rating':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.rating_field.RatingField'&gt;,</span> <span class="pre">'single_select':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.single_select_field.SingleSelectField'&gt;,</span> <span class="pre">'text':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.text_field.TextField'&gt;,</span> <span class="pre">'url':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.url_field.UrlField'&gt;}</span></span><a class="headerlink" href="#baserowapi.models.table.Table.FIELD_TYPE_CLASS_MAP" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">FIELD_TYPE_CLASS_MAP</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">type</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'autonumber':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.autonumber_field.AutonumberField'&gt;,</span> <span class="pre">'boolean':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.boolean_field.BooleanField'&gt;,</span> <span class="pre">'count':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.count_field.CountField'&gt;,</span> <span class="pre">'created_on':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.created_on_field.CreatedOnField'&gt;,</span> <span class="pre">'date':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.date_field.DateField'&gt;,</span> <span class="pre">'email':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.email_field.EmailField'&gt;,</span> <span class="pre">'file':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.file_field.FileField'&gt;,</span> <span class="pre">'formula':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.formula_field.FormulaField'&gt;,</span> <span class="pre">'generic':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.generic_field.GenericField'&gt;,</span> <span class="pre">'last_modified':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.last_modified_field.LastModifiedField'&gt;,</span> <span class="pre">'link_row':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.table_link_field.TableLinkField'&gt;,</span> <span class="pre">'long_text':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.long_text_field.LongTextField'&gt;,</span> <span class="pre">'lookup':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.lookup_field.LookupField'&gt;,</span> <span class="pre">'multiple_collaborators':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.multiple_collaborators_field.MultipleCollaboratorsField'&gt;,</span> <span class="pre">'multiple_select':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.multiple_select_field.MultipleSelectField'&gt;,</span> <span class="pre">'number':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.number_field.NumberField'&gt;,</span> <span class="pre">'password':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.password_field.PasswordField'&gt;,</span> <span class="pre">'phone_number':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.phone_number_field.PhoneNumberField'&gt;,</span> <span class="pre">'rating':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.rating_field.RatingField'&gt;,</span> <span class="pre">'single_select':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.single_select_field.SingleSelectField'&gt;,</span> <span class="pre">'text':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.text_field.TextField'&gt;,</span> <span class="pre">'url':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.url_field.UrlField'&gt;,</span> <span class="pre">'uuid':</span> <span class="pre">&lt;class</span> <span class="pre">'baserowapi.models.fields.uuid_field.UUIDField'&gt;}</span></span><a class="headerlink" href="#baserowapi.models.table.Table.FIELD_TYPE_CLASS_MAP" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -770,6 +771,37 @@ filters them to include only those fields where <cite>is_read_only</cite> is Fal
 <h2>Fields<a class="headerlink" href="#fields" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">AutonumberField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/autonumber_field.html#AutonumberField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></p>
+<p>A read-only Baserow-assigned row number.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">TYPE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'autonumber'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compatible_filters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_read_only</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd><p>Determine if the field is read-only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the field is read-only, otherwise False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">BooleanField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/boolean_field.html#BooleanField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></p>
 <p>Represents a boolean field in Baserow.</p>
@@ -815,14 +847,9 @@ filters them to include only those fields where <cite>is_read_only</cite> is Fal
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">CountField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/count_field.html#CountField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></p>
-<p>Represents a field connected to a link to table field which returns the number of relations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>TYPE</strong> (<em>str</em>) – The type of the field, which is ‘count’.</p>
-</dd>
-</dl>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">CountField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/count_field.html#CountField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NumberField</span></code></p>
+<p>A read-only Baserow relation count with number-result semantics.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">TYPE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'count'</span></span></dt>
@@ -830,17 +857,8 @@ filters them to include only those fields where <cite>is_read_only</cite> is Fal
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compatible_filters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></dt>
-<dd><p>Get the list of compatible filters for this CountField.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The list of compatible filters.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>List[str]</p>
-</dd>
-</dl>
-</dd></dl>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">formula_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py">
@@ -848,7 +866,7 @@ filters them to include only those fields where <cite>is_read_only</cite> is Fal
 <dd><p>Determine if the field is read-only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Always True for CountField.</p>
+<dd class="field-odd"><p>True if the field is read-only, otherwise False.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -858,31 +876,8 @@ filters them to include only those fields where <cite>is_read_only</cite> is Fal
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">table_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
-<dd><p>Retrieve the table_id of the field from field_data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The table_id of the field.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Optional[int]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">through_field_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
-<dd><p>Retrieve the through_field_id of the field from field_data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The id of the linking field.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Optional[str]</p>
-</dd>
-</dl>
-</dd></dl>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">through_field_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1169,6 +1164,12 @@ field subclass defines a Baserow-specific structured representation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">filter_compatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">FilterCompatibility</span></span></span><a class="reference internal" href="_modules/baserowapi/models/fields/generic_field.html#GenericField.filter_compatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Unknown field types have no authoritative local filter knowledge.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">validate_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/baserowapi/models/fields/generic_field.html#GenericField.validate_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Validate the value against the field’s criteria.</p>
 <p>Child classes can override for custom rules.</p>
@@ -1287,12 +1288,17 @@ field subclass defines a Baserow-specific structured representation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">LookupField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/lookup_field.html#LookupField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">LookupField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/lookup_field.html#LookupField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></p>
 <p>Baserow lookup metadata and identity-preserving result decoding.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">TYPE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lookup'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">array_formula_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -1306,6 +1312,25 @@ field subclass defines a Baserow-specific structured representation.</p>
 <dd><p>Decode a raw Baserow response value for ordinary row access.</p>
 <p>Unknown and scalar values are lossless pass-through values unless a
 field subclass defines a Baserow-specific structured representation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">formula_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_read_only</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd><p>Determine if the field is read-only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the field is read-only, otherwise False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -1801,6 +1826,43 @@ field subclass defines a Baserow-specific structured representation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">UUIDField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/uuid_field.html#UUIDField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></p>
+<p>A read-only persistent Baserow UUID.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">TYPE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'uuid'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compatible_filters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_read_only</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd><p>Determine if the field is read-only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the field is read-only, otherwise False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">parse_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UUID</span></span></span><a class="reference internal" href="_modules/baserowapi/models/fields/uuid_field.html#UUIDField.parse_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Parse a returned UUID string without changing ordinary row reads.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.fields.</span></span><span class="sig-name descname"><span class="pre">UrlField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/fields/url_field.html#UrlField"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseTextClass</span></code></p>
 <p>Represents a URL field in Baserow.</p>
@@ -1957,6 +2019,26 @@ the list using the stored row data and synchronizes the internal state.</p>
 <h2>RowValue<a class="headerlink" href="#rowvalue" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">AutonumberRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AutonumberField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/autonumber_row_value.html#AutonumberRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
+<p>Compatibility facade for a read-only Autonumber field.</p>
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></span></dt>
+<dd><p>Get the value in a user-friendly format.
+By default, this returns the raw value, but child classes can override this
+for type-specific formatting or conversion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>User-friendly formatted value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">BooleanRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BooleanField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/boolean_row_value.html#BooleanRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
 <p>Represents a RowValue specifically designed for a BooleanField.</p>
@@ -2011,29 +2093,16 @@ For BooleanRowValue, this returns the raw value as a boolean or None.</p>
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">CountRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CountField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/count_row_value.html#CountRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
-<p>Represents a RowValue designed for a CountField.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> – The associated CountField object.</p></li>
-<li><p><strong>raw_value</strong> – The raw value as fetched/returned from the API, representing the main (primary) field text values of the linked rows. Defaults to None.</p></li>
-<li><p><strong>client</strong> – The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#baserowapi.exceptions.InvalidRowValueError" title="baserowapi.exceptions.InvalidRowValueError"><strong>InvalidRowValueError</strong></a> – If the provided field is not an instance of the CountField class.</p>
-</dd>
-</dl>
+<p>Compatibility facade for field-owned count-result semantics.</p>
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></span></dt>
-<dd><p>Get the value in a user-friendly format. This method returns the main (primary) field text values of the linked rows.</p>
+<dd><p>Get the value in a user-friendly format.
+By default, this returns the raw value, but child classes can override this
+for type-specific formatting or conversion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The main (primary) field text values of the linked rows.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-odd"><p>User-friendly formatted value.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2184,29 +2253,16 @@ for type-specific formatting or conversion.</p>
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">FormulaRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FormulaField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/formula_row_value.html#FormulaRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
-<p>Represents a RowValue designed for a FormulaField.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> – The associated FormulaField object.</p></li>
-<li><p><strong>raw_value</strong> – The raw value as fetched/returned from the API. Defaults to None.</p></li>
-<li><p><strong>client</strong> – The Baserow class API client. Some RowValue subclasses might need this. Defaults to None.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#baserowapi.exceptions.InvalidRowValueError" title="baserowapi.exceptions.InvalidRowValueError"><strong>InvalidRowValueError</strong></a> – If the provided field is not an instance of the FormulaField class.</p>
-</dd>
-</dl>
+<p>Compatibility facade for field-owned formula-result semantics.</p>
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></span></dt>
-<dd><p>Get the value in a user-friendly format. This method returns the raw value.</p>
+<dd><p>Get the value in a user-friendly format.
+By default, this returns the raw value, but child classes can override this
+for type-specific formatting or conversion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The raw value of the FormulaRowValue.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-odd"><p>User-friendly formatted value.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2700,6 +2756,26 @@ for type-specific formatting or conversion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">UUIDRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUIDField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/uuid_row_value.html#UUIDRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
+<p>Compatibility facade for a read-only UUID field.</p>
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></span></dt>
+<dd><p>Get the value in a user-friendly format.
+By default, this returns the raw value, but child classes can override this
+for type-specific formatting or conversion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>User-friendly formatted value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.row_values.</span></span><span class="sig-name descname"><span class="pre">UrlRowValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UrlField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/row_values/url_row_value.html#UrlRowValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RowValue</span></code></p>
 <p>Represents a RowValue specifically for a UrlField.</p>
@@ -2892,21 +2968,30 @@ for type-specific formatting or conversion.</p>
 <h2>Filter<a class="headerlink" href="#filter" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.filter.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'equal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/filter.html#Filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.filter.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'equal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/filter.html#Filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Represents a filter expression used to filter results when fetching rows from a table.</p>
-<p>Attributes:
-- field_name (str): The name of the field to apply the filter on.
-- value (str, int, etc.): The value to compare against using the operator.
-- operator (str): The comparison operator. Default is “equal”.</p>
-<p>Properties:
-- query_string (str): Computes the API’s required GET parameter string.</p>
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">query_string</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span></dt>
-<dd><p>Returns the filter as a query string formatted for use as a GET parameter in an API call.</p>
-<p>Format: filter__&lt;encoded_field_name&gt;__&lt;operator&gt;=&lt;encoded_value&gt;</p>
+<p>One structurally valid Baserow row filter.</p>
 </dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">baserowapi.models.filter.</span></span><span class="sig-name descname"><span class="pre">FilterCompatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baserowapi/models/filter.html#FilterCompatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The package’s advisory knowledge of a field/operator combination.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">SUPPORTED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'supported'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unknown'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">UNSUPPORTED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unsupported'</span></span></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

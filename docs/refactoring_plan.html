@@ -50,10 +50,11 @@
 <li class="toctree-l1"><a class="reference internal" href="table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Semantic refactoring plan</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#purpose">Purpose</a></li>
@@ -290,6 +291,12 @@ Baserow behavior.</p></li>
 </section>
 <section id="phase-4-implement-computed-unknown-and-filter-semantics">
 <h2>Phase 4: Implement computed, unknown, and filter semantics<a class="headerlink" href="#phase-4-implement-computed-unknown-and-filter-semantics" title="Link to this heading"></a></h2>
+<p>Status: complete on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. The full offline and serial
+hosted suites passed on 2026-09-02. Focused hosted checks covered the configured
+Formula button, Count, text Lookup, UUID, Autonumber, and representative
+filters. Unobserved computed result families and field categories remain raw
+through the generic fallback rather than being inferred. Commit status is
+intentionally tracked separately from phase completion.</p>
 <section id="id7">
 <h3>Goal<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
 <p>Interpret computed results through their declared result metadata and make

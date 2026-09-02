@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from baserowapi.exceptions import FieldValidationError
-from baserowapi.models.fields import GenericField
+from baserowapi.models.fields import AutonumberField, GenericField, UUIDField
 from baserowapi.models.values import (
     BaserowFile,
     Collaborator,
@@ -46,7 +46,10 @@ def test_file_and_collaborator_reads_use_identity_records(characterized_row):
 
 
 def test_current_computed_and_password_reads(characterized_row):
-    assert characterized_row["Formula"] == "Example"
+    assert characterized_row["Formula"] == {
+        "label": "Baserow Home",
+        "url": "https://baserow.io",
+    }
     assert characterized_row["Count"] == "1"
     assert characterized_row["Password"] is True
 
@@ -60,9 +63,9 @@ def test_unknown_fields_retain_type_metadata_and_raw_value(characterized_row):
     assert characterized_row["Future Value"] == {"new": "shape"}
 
 
-def test_uuid_and_autonumber_currently_use_generic_fallback(characterized_row):
-    assert isinstance(characterized_row.table.fields["UUID"], GenericField)
-    assert isinstance(characterized_row.table.fields["Autonumber"], GenericField)
+def test_uuid_and_autonumber_have_dedicated_read_only_fields(characterized_row):
+    assert isinstance(characterized_row.table.fields["UUID"], UUIDField)
+    assert isinstance(characterized_row.table.fields["Autonumber"], AutonumberField)
     assert characterized_row["UUID"] == "123e4567-e89b-12d3-a456-426614174000"
     assert characterized_row["Autonumber"] == 12
 

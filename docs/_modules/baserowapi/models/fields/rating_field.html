@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
@@ -99,7 +100,14 @@
 <span class="sd">    """</span>
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"rating"</span>
-    <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"equal"</span><span class="p">,</span> <span class="s2">"not_equal"</span><span class="p">,</span> <span class="s2">"higher_than"</span><span class="p">,</span> <span class="s2">"lower_than"</span><span class="p">]</span>
+    <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"equal"</span><span class="p">,</span>
+        <span class="s2">"not_equal"</span><span class="p">,</span>
+        <span class="s2">"higher_than"</span><span class="p">,</span>
+        <span class="s2">"higher_than_or_equal"</span><span class="p">,</span>
+        <span class="s2">"lower_than"</span><span class="p">,</span>
+        <span class="s2">"lower_than_or_equal"</span><span class="p">,</span>
+    <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>

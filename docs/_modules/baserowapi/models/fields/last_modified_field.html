@@ -47,10 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../table.html">Table Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../row.html">Row Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datefields.html">Working with Date Fields in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../computedfields.html">Computed and Generated Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filefields.html">Working with File Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters in Baserow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
@@ -99,6 +100,13 @@
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"last_modified"</span>
     <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"date_is"</span><span class="p">,</span>
+        <span class="s2">"date_is_not"</span><span class="p">,</span>
+        <span class="s2">"date_is_before"</span><span class="p">,</span>
+        <span class="s2">"date_is_on_or_before"</span><span class="p">,</span>
+        <span class="s2">"date_is_after"</span><span class="p">,</span>
+        <span class="s2">"date_is_on_or_after"</span><span class="p">,</span>
+        <span class="s2">"date_is_within"</span><span class="p">,</span>
         <span class="s2">"date_equal"</span><span class="p">,</span>
         <span class="s2">"date_not_equal"</span><span class="p">,</span>
         <span class="s2">"date_equals_today"</span><span class="p">,</span>

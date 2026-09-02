@@ -13,7 +13,14 @@ class RatingField(Field):
     """
 
     TYPE = "rating"
-    _COMPATIBLE_FILTERS = ["equal", "not_equal", "higher_than", "lower_than"]
+    _COMPATIBLE_FILTERS = [
+        "equal",
+        "not_equal",
+        "higher_than",
+        "higher_than_or_equal",
+        "lower_than",
+        "lower_than_or_equal",
+    ]
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """

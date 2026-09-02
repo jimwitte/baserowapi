@@ -63,6 +63,13 @@ model is simplified, a newly supported Baserow field type still requires both
 field and RowValue dispatch entries. Always retain the quiet, raw generic
 fallback for hosted Baserow field types the package does not yet recognize.
 
+Filter compatibility is advisory. ``Field.filter_compatibility`` distinguishes
+operators documented for the field, known operators not documented for it, and
+operators unknown to this package. Do not block normal row queries based on
+this advisory result: unknown operators must reach hosted Baserow. The JSON
+filter tree built by ``Table`` is the sole query encoding; do not restore the
+detached ``FilterValidator`` or ``Filter.query_string`` path.
+
 `docsrc/semantic_inventory.rst` records implementation evidence, current
 coverage, settled semantic decisions, and remaining evidence gaps. Treat settled
 rules in this file as agent policy; do not invent behavior for gaps that still

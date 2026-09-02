@@ -1,6 +1,9 @@
 from typing import Any, Dict, Union
 import logging
 
+from baserowapi.exceptions import InvalidOperatorError
+from baserowapi.models.filter import FilterCompatibility, KNOWN_FILTER_OPERATORS
+
 
 class Field:
     """
@@ -84,6 +87,16 @@ class Field:
         """Validate and encode a caller value for the Baserow API."""
         self.validate_value(value)
         return value
+
+    def filter_compatibility(self, operator: str) -> FilterCompatibility:
+        """Return advisory compatibility without blocking unknown operators."""
+        if not isinstance(operator, str) or not operator.strip():
+            raise InvalidOperatorError("operator must be a non-empty string.")
+        if operator in getattr(self, "compatible_filters", ()):
+            return FilterCompatibility.SUPPORTED
+        if operator in KNOWN_FILTER_OPERATORS:
+            return FilterCompatibility.UNSUPPORTED
+        return FilterCompatibility.UNKNOWN
 
     def format_for_api(self, value: Any) -> Any:
         """Compatibility alias for :meth:`encode_value`.
