@@ -424,8 +424,14 @@ error behavior in one request implementation.</p></li>
 <li><p>Make header combination, raw execution, and response parsing private.</p></li>
 <li><p>Retain one documented low-level request escape hatch with explicitly limited
 guarantees.</p></li>
-<li><p>Add table discovery and explicit schema refresh within the database-token
-scope.</p></li>
+<li><p>Add table discovery within the database-token scope.</p></li>
+<li><p>Keep <code class="docutils literal notranslate"><span class="pre">Baserow.get_table(table_id)</span></code> uncached. A newly constructed Table
+lazily loads current hosted field metadata and is the documented way to
+obtain a new schema snapshot after an external schema change.</p></li>
+<li><p>Do not add schema-refresh cache invalidation without a demonstrated
+long-running application need. Database tokens cannot mutate schema, and a
+refresh method would need to define behavior for Rows created under the old
+schema.</p></li>
 <li><p>Configure timeout and any safe read-retry policy at Client construction.</p></li>
 <li><p>Do not retry mutating operations without an idempotency guarantee.</p></li>
 </ul>
@@ -436,7 +442,8 @@ scope.</p></li>
 <li><p>Endpoint methods, file uploads, pagination, and the low-level escape hatch all
 use the same exception and response boundary.</p></li>
 <li><p>Importing or constructing the package does not configure application logging.</p></li>
-<li><p>Schema refresh invalidates every dependent field cache consistently.</p></li>
+<li><p>Separate Table instances do not share cached Fields; a newly constructed
+Table loads current hosted schema when its fields are first accessed.</p></li>
 <li><p>Table discovery is verified against hosted database-token permissions.</p></li>
 </ul>
 </section>

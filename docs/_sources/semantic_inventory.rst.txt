@@ -430,8 +430,8 @@ The inventory supports retaining and strengthening these responsibilities:
 
 * database-token authentication, Baserow endpoints, pagination, and structured
   error interpretation;
-* table discovery, schema retrieval, cached metadata, and an explicit schema
-  refresh operation;
+* table discovery and lazy schema retrieval, with a new Table instance used
+  when callers need a fresh snapshot after an external schema change;
 * one field semantic authority for decoding, validation, encoding, read-only
   status, and result-dependent behavior;
 * row reads, singular and batch writes, movement, deletion, and uniform value
@@ -598,6 +598,13 @@ and no-argument staged updates have been removed so raw, decoded, and pending
 state cannot diverge. Row operation conveniences remain thin delegates to the
 same Table primitives used for singular requests; batch updates require
 explicit mappings with row IDs.
+
+Each Table lazily loads and caches one field-schema snapshot. ``get_table``
+will remain uncached, so callers can construct a new Table after a schema change
+made through the Baserow UI or a separate administrative client. Database
+tokens cannot mutate schema, and no current application requires in-place
+refresh semantics for existing Table and Row objects. The package will not add
+a schema-refresh method until that need and its Row behavior are demonstrated.
 
 The Client will retain one request boundary for authentication, timeouts,
 connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging

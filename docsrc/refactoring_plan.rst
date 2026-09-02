@@ -289,8 +289,14 @@ Work
 * Make header combination, raw execution, and response parsing private.
 * Retain one documented low-level request escape hatch with explicitly limited
   guarantees.
-* Add table discovery and explicit schema refresh within the database-token
-  scope.
+* Add table discovery within the database-token scope.
+* Keep ``Baserow.get_table(table_id)`` uncached. A newly constructed Table
+  lazily loads current hosted field metadata and is the documented way to
+  obtain a new schema snapshot after an external schema change.
+* Do not add schema-refresh cache invalidation without a demonstrated
+  long-running application need. Database tokens cannot mutate schema, and a
+  refresh method would need to define behavior for Rows created under the old
+  schema.
 * Configure timeout and any safe read-retry policy at Client construction.
 * Do not retry mutating operations without an idempotency guarantee.
 
@@ -300,7 +306,8 @@ Exit criteria
 * Endpoint methods, file uploads, pagination, and the low-level escape hatch all
   use the same exception and response boundary.
 * Importing or constructing the package does not configure application logging.
-* Schema refresh invalidates every dependent field cache consistently.
+* Separate Table instances do not share cached Fields; a newly constructed
+  Table loads current hosted schema when its fields are first accessed.
 * Table discovery is verified against hosted database-token permissions.
 
 Phase 8: Compatibility, documentation, and beta release
