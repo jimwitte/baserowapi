@@ -234,6 +234,11 @@ Exit criteria
 Phase 6: Simplify the public row and field model
 ------------------------------------------------
 
+Status: complete on branch ``release/0.2.0b1`` and verified against hosted
+``baserow.io`` on 2026-09-02. The public RowValue and custom-container layers
+were removed in favor of Field-owned decoding and explicit read-only mappings.
+Commit status is intentionally tracked separately from phase completion.
+
 Goal
 ~~~~
 

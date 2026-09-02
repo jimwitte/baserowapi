@@ -1,13 +1,13 @@
 import os
 import json
 from pathlib import Path
+from types import MappingProxyType
 from unittest.mock import Mock
 
 import pytest
 from dotenv import load_dotenv
 
 from baserowapi import Baserow
-from baserowapi.models.fields import FieldList
 from baserowapi.models.row import Row
 from baserowapi.models.table import Table
 
@@ -32,14 +32,13 @@ def characterized_table(characterized_field_metadata):
     client = Mock()
     client.batch_size = 10
     table = Table(10, client)
-    table._fields = FieldList(
-        [
-            Table._field_class_from_data(field_data)(
-                field_data["name"], field_data, client=client
-            )
-            for field_data in characterized_field_metadata
-        ]
-    )
+    fields = [
+        Table._field_class_from_data(field_data)(
+            field_data["name"], field_data, client=client
+        )
+        for field_data in characterized_field_metadata
+    ]
+    table._fields = MappingProxyType({field.name: field for field in fields})
     return table
 
 

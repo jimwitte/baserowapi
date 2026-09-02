@@ -1,48 +1,64 @@
 Row Class
 =========
 
-The ``Row`` class represents individual rows within a Baserow table. This class provides methods for manipulating the data of a single row and for interacting with the server for CRUD operations. Below is a detailed guide on how to work with the ``Row`` objects.
+``Row`` represents one Baserow row. It provides field access and thin
+conveniences for updating, moving, and deleting that row.
 
-**Key Points**:
-- The ``update()`` method communicates and synchronizes changes with the server.
-- Using direct setters (e.g., ``single_row['Notes'] = "Changed note in memory"``) will only alter values in the memory, and not immediately update them on the server.
+Reading values
+--------------
 
-Methods and Usage
------------------
+Indexing a row returns the value decoded by its Field. ``values`` exposes all
+decoded values as an ordered, read-only mapping. ``raw_values`` exposes the
+original values returned by Baserow, which is useful for forward compatibility
+and inspecting unfamiliar field types. ``to_dict()`` returns a mutable,
+top-level copy of the decoded values.
 
 .. code-block:: python
 
-    from baserowapi import Baserow
+    row = table.get_row(1)
 
-    baserow = Baserow(token='mytoken')
+    print(row["Notes"])
+    print(row.values)
+    print(row.raw_values)
 
-    # Initializing a table instance
-    table = baserow.get_table(1234567)
+    values = row.to_dict()
+    values["Notes"] = "This changes only the copied dictionary"
 
-    # Retrieving a single row by id
-    single_row = table.get_row(1)
+Rows do not stage mutations. Item assignment is unsupported, so raw, decoded,
+and pending state cannot silently diverge.
 
-    # Modifying an in-memory Row value
-    single_row['Notes'] = "Changed note in memory"
+Updating and deleting
+---------------------
 
-    # Displaying row content of all fields as a dictionary
-    print(single_row.to_dict())
+Pass an explicit mapping to ``update``. The method returns the server's updated
+``Row`` and refreshes the existing object's response data.
 
-    # Accessing a specific row value
-    print(single_row['Notes'])
+.. code-block:: python
 
-    # Synchronizing the current row values with the server
-    updated_row = single_row.update()
+    updated_row = row.update({"Notes": "Updated on the server"})
 
-    # Updating a Row using a dictionary and saving changes to the server
-    updated_row = single_row.update({'Notes': 'Updated row via dictionary'})
+    # Place the row before row 4, or omit before_id to move it to the end.
+    moved_row = row.move(before_id=4)
+    moved_to_end = row.move()
 
-    # Reordering a row to be placed before another row (specified by ID)
-    single_row.move_row(before_id=4)
+    deleted = row.delete()
 
-    # Moving a row to the end of the table
-    single_row.move_row()
+For multiple rows, use ``Table.update_rows`` with a list of mappings containing
+explicit ``id`` values. Batch updates do not accept ``Row`` objects.
 
-    # Deleting the row
-    deleted_status = single_row.delete()
+Migration from 0.1
+------------------
 
+Replace staged assignment and a no-argument update with one explicit update:
+
+.. code-block:: python
+
+    # 0.1
+    row["Notes"] = "Updated"
+    updated_row = row.update()
+
+    # 0.2
+    updated_row = row.update({"Notes": "Updated"})
+
+Code that previously navigated ``RowValue`` objects should use the decoded
+mapping, raw mapping, or the corresponding Field helper directly.

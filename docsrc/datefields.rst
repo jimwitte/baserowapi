@@ -40,10 +40,6 @@ date-only field and a timezone-aware ``datetime`` for a datetime field:
 
     parsed_value = field.parse_value(raw_value)
 
-``RowValue.as_datetime()`` remains available for compatibility. For a date-only
-field it returns midnight as a naive ``datetime``; new code should prefer the
-field helper when the distinction between ``date`` and ``datetime`` matters.
-
 Formatting for display
 ----------------------
 
@@ -62,8 +58,7 @@ and forced-timezone metadata:
 
 If neither the caller nor the field specifies a display timezone, the helper
 retains the timestamp's supplied offset. It does not use the executing
-computer's local timezone implicitly. ``RowValue.formatted_date`` delegates to
-the same field helper for compatibility.
+computer's local timezone implicitly.
 
 Writing date values
 -------------------

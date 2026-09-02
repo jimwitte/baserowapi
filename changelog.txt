@@ -22,6 +22,19 @@
   - Split singular and plural row writes into fixed contracts: `add_row()` and
     `update_row()` return one Row, while `add_rows()` and `update_rows()` accept
     non-empty lists and return lists. `add_rows(mapping)` is no longer accepted.
+  - Removed `FieldList`, `RowValueList`, all per-type RowValue classes, their
+    package exports, and RowValue-specific exceptions. Field classes are now the
+    sole value-semantic dispatch.
+  - `Table.fields` and `Table.writable_fields` now return ordered, read-only
+    mappings. Iterating them yields field names; use `.values()` for Fields.
+  - `Row.values` now returns an ordered, read-only mapping of decoded values;
+    use `Row.raw_values` for the original Baserow response values.
+  - Removed staged Row item assignment, no-argument `Row.update()`, and the
+    `memory_only` update mode. `Row.update(values)` requires an explicit mapping.
+  - `Table.update_rows()` no longer accepts Row objects; each list item must be
+    a mapping containing an explicit row ID.
+  - Root-package exports are now explicit and limited to the supported client,
+    table, row, Field, filter, and Baserow value-record concepts.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -57,12 +70,18 @@
     rows completed by earlier non-atomic request chunks.
 - **Row Writes:**
   - Unified singular create, batch create, singular update, batch mapping
-    update, batch Row update, and `Row.update()` around Field-owned validation
-    and encoding.
+    update, and explicit `Row.update(values)` around Field-owned validation and
+    encoding.
   - Added consistent row-ID, batch-size, writable-field, and response-shape
     validation before or at the request boundary.
   - Batch writes validate and encode every row before the first request and do
     not automatically retry or roll back partially completed writes.
+- **Row Reads:**
+  - Row indexing decodes only the requested value through its Field; decoded and
+    raw mappings remain independently inspectable.
+  - Password reads preserve hosted `true` or `null` values. Added
+    `PasswordField.is_set()` for explicit boolean interpretation and retained
+    the hosted string, `true`, and `null` write forms.
 - **Testing and Documentation:**
   - Added credential-free scalar field tests and recorded hosted compatibility
     probes for nullability, numeric precision, and timezone-offset writes.
@@ -72,6 +91,8 @@
     Autonumber, and filter compatibility tests.
   - Added offline singular/batch encoding parity and partial-failure tests, plus
     hosted row-write parity coverage against baserow.io.
+  - Added offline row-model and public-export coverage, hosted password-state
+    coverage, migration guidance, and updated architecture documentation.
 
 
 #### 2026-09-01: 0.1.0b5

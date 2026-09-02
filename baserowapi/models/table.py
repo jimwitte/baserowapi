@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
 from baserowapi.exceptions import (
     BaserowResponseError,
@@ -12,7 +13,7 @@ from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
 from baserowapi.models.fields import (
     AutonumberField,
-    FieldList,
+    Field,
     TextField,
     LongTextField,
     BooleanField,
@@ -117,7 +118,7 @@ class Table:
         )  # Default to base Field class if type not found
 
     @property
-    def fields(self) -> FieldList:
+    def fields(self) -> Mapping[str, Field]:
         """
         Retrieve the fields associated with the table.
 
@@ -125,8 +126,8 @@ class Table:
         to retrieve them. Once retrieved, the fields are cached to avoid unnecessary
         API requests in subsequent calls.
 
-        :return: A FieldList containing all the Field objects associated with this table.
-        :rtype: FieldList
+        :return: An ordered, read-only mapping from field name to Field.
+        :rtype: Mapping[str, Field]
         :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.
         """
         if self._fields is None:
@@ -138,7 +139,15 @@ class Table:
                 for fd in fields_data:
                     FieldClass = self._field_class_from_data(fd)
                     field_objects.append(FieldClass(fd["name"], fd, client=self.client))
-                self._fields = FieldList(field_objects)
+                field_objects.sort(
+                    key=lambda field: (field.order is None, field.order)
+                )
+                fields_by_name = {field.name: field for field in field_objects}
+                if len(fields_by_name) != len(field_objects):
+                    raise BaserowResponseError(
+                        "Field names must be unique when user_field_names is enabled."
+                    )
+                self._fields = MappingProxyType(fields_by_name)
             except Exception as e:
                 self.logger.error(
                     f"Failed to fetch fields for table {self.id}. Error: {e}"
@@ -149,19 +158,23 @@ class Table:
         return self._fields
 
     @property
-    def writable_fields(self) -> FieldList:
+    def writable_fields(self) -> Mapping[str, Field]:
         """
         Retrieve the list of writable fields for the table.
 
         This property lazily loads the fields using the `fields` property and then
         filters them to include only those fields where `is_read_only` is False.
 
-        :return: A FieldList containing only writable Field objects.
-        :rtype: FieldList
+        :return: An ordered, read-only mapping of writable fields.
+        :rtype: Mapping[str, Field]
         """
         if not hasattr(self, "_writable_fields") or self._writable_fields is None:
-            writable_fields = [field for field in self.fields if not field.is_read_only]
-            self._writable_fields = FieldList(writable_fields)
+            writable_fields = {
+                name: field
+                for name, field in self.fields.items()
+                if not field.is_read_only
+            }
+            self._writable_fields = MappingProxyType(writable_fields)
         return self._writable_fields
 
     @property
@@ -190,7 +203,7 @@ class Table:
 
         :raises ValueError: If no primary field is found for the table.
         """
-        for field in self.fields:
+        for field in self.fields.values():
             if field.is_primary:
                 self._primary_field = field.name
                 return
@@ -207,13 +220,7 @@ class Table:
         :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.
         """
         try:
-            # Sort fields based on 'order' property
-            # If 'order' is None, sort those fields last
-            sorted_fields = sorted(
-                self.fields, key=lambda field: (field.order is None, field.order)
-            )
-
-            return [field.name for field in sorted_fields]
+            return list(self.fields)
         except Exception as e:
             self.logger.error(
                 f"Failed to get field names for table {self.id}. Error: {e}"
@@ -649,17 +656,16 @@ class Table:
 
     def update_rows(
         self,
-        rows_data: List[Union[Mapping[str, Any], Row]],
+        rows_data: List[Mapping[str, Any]],
         batch_size: Optional[int] = None,
     ) -> List[Row]:
         """
         Updates multiple rows in the table using the Baserow batch update endpoint.
 
-        :param rows_data: A list of dictionaries or Row objects.
+        :param rows_data: A list of dictionaries.
                         Each dictionary should contain the field values for updating
                         a specific row and include the ID of the row to be updated.
-                        Row objects represent the rows to be updated.
-        :type rows_data: list[Union[dict, Row]]
+        :type rows_data: list[dict]
         :param batch_size: The number of rows to process in each batch.
         :type batch_size: int
 
@@ -668,7 +674,7 @@ class Table:
 
         :raises ValueError: If parameters are not valid.
         :raises KeyError: If a dictionary contains a key that doesn't correspond to any writable field in the table or is missing the 'id' key.
-        :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.
+        :raises TypeError: If an item in rows_data is not a mapping, or if a generator is passed.
         :raises RowUpdateError: If rows cannot be updated or parsed.
         """
 
@@ -691,24 +697,9 @@ class Table:
                     {"id": row_id, **self._encode_row_values(item, allow_order=True)}
                 )
 
-            elif isinstance(item, Row):
-                if item.table_id != self.id:
-                    raise ValueError(
-                        f"Row {item.id!r} belongs to table {item.table_id}, not {self.id}."
-                    )
-                row_id = self._validated_row_id(item.id)
-                values = {
-                    rv.name: rv.format_for_api()
-                    for rv in item.values
-                    if not rv.is_read_only
-                }
-                formatted_data.append(
-                    {"id": row_id, **self._encode_row_values(values)}
-                )
-
             else:
                 raise TypeError(
-                    f"Unsupported type {type(item)} in rows_data. Expected dict or Row object."
+                    f"Unsupported type {type(item)} in rows_data. Expected a mapping."
                 )
 
         endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"

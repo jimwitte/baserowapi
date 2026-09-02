@@ -52,3 +52,18 @@ def test_hosted_schema_blocks_computed_and_absent_fields_before_write(
         all_fields_table.add_row({"Name": "blocked", "Formula": "computed"})
     with pytest.raises(KeyError, match="does not exist"):
         all_fields_table.add_row({"Not a hosted field": "unknown"})
+
+
+def test_hosted_password_read_states_and_accepted_write_forms(all_fields_table):
+    row = all_fields_table.add_row(
+        {"Name": "phase-6-password-semantics", "Password": "temporary-password"}
+    )
+    assert row.raw_values["Password"] is True
+    assert row["Password"] is True
+
+    preserved = all_fields_table.update_row(row.id, {"Password": True})
+    assert preserved.raw_values["Password"] is True
+
+    cleared = all_fields_table.update_row(row.id, {"Password": None})
+    assert cleared.raw_values["Password"] is None
+    assert cleared["Password"] is None

@@ -5,7 +5,6 @@ import pytest
 
 from baserowapi.exceptions import FieldValidationError, FieldValueError
 from baserowapi.models.fields import GenericField
-from baserowapi.models.row_values import GenericRowValue
 
 
 pytestmark = pytest.mark.offline
@@ -38,10 +37,8 @@ def test_unknown_field_operations_are_lossless_and_quiet(caplog):
 
     with caplog.at_level(logging.WARNING):
         field = GenericField("Future", field_data)
-        row_value = GenericRowValue(field, raw_value)
         assert field.decode_value(raw_value) is raw_value
         assert field.encode_value(raw_value) is raw_value
-        assert row_value.value is raw_value
 
     assert field.type == "future_type"
     assert field.field_data is field_data
@@ -69,6 +66,20 @@ def test_boolean_and_rating_nullability_matches_hosted_baserow(characterized_tab
         characterized_table.fields["Active"].encode_value(None)
     with pytest.raises(FieldValidationError):
         characterized_table.fields["Rating"].encode_value(None)
+
+
+def test_password_field_preserves_wire_state_and_rejects_malformed_reads(
+    characterized_table,
+):
+    field = characterized_table.fields["Password"]
+
+    assert field.decode_value(True) is True
+    assert field.decode_value(None) is None
+    assert field.is_set(True) is True
+    assert field.is_set(None) is False
+    for malformed in (False, 1, "true"):
+        with pytest.raises(FieldValueError):
+            field.decode_value(malformed)
 
 
 def test_rating_field_rejects_boolean_values(characterized_table):
@@ -158,10 +169,11 @@ def test_date_parse_helper_has_a_field_conversion_error(characterized_table):
         characterized_table.fields["Date Time"].parse_value("2026-09-01")
 
 
-def test_scalar_row_values_delegate_to_their_fields(characterized_row):
+def test_scalar_row_access_uses_field_semantics(characterized_row):
     assert characterized_row["Active"] is True
     assert characterized_row["Rating"] == 4
     assert characterized_row["Number"] == "42.00"
-
-    characterized_row["Number"] = "21.50"
-    assert characterized_row.values["Number"].format_for_api() == "21.50"
+    assert (
+        characterized_row.table.fields["Number"].encode_value("21.50")
+        == "21.50"
+    )

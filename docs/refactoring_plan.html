@@ -370,6 +370,10 @@ exclusion, file, and unknown-field cases.</p></li>
 </section>
 <section id="phase-6-simplify-the-public-row-and-field-model">
 <h2>Phase 6: Simplify the public row and field model<a class="headerlink" href="#phase-6-simplify-the-public-row-and-field-model" title="Link to this heading"></a></h2>
+<p>Status: complete on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code> and verified against hosted
+<code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> on 2026-09-02. The public RowValue and custom-container layers
+were removed in favor of Field-owned decoding and explicit read-only mappings.
+Commit status is intentionally tracked separately from phase completion.</p>
 <section id="id13">
 <h3>Goal<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
 <p>Remove containers and per-cell classes that no longer own Baserow knowledge.</p>

@@ -1,10 +1,11 @@
-import pytest
 from datetime import datetime
+
+import pytest
 
 pytestmark = pytest.mark.integration
 
 
-def test_rowvalue_as_datetime(all_fields_table, single_row_data):
+def test_date_field_parse_value(all_fields_table, single_row_data):
     # Step 1: Create a single row with a specific ISO Date
     single_row_data["ISO Date"]["input"] = "2024-03-17"
     input_data = {
@@ -12,25 +13,23 @@ def test_rowvalue_as_datetime(all_fields_table, single_row_data):
     }
     created_row = all_fields_table.add_row(input_data)
 
-    # Step 2: Access the as_datetime() function
-    iso_date_as_datetime = created_row.values["ISO Date"].as_datetime()
+    # Step 2: Parse explicitly through the field definition.
+    parsed = all_fields_table.fields["ISO Date"].parse_value(
+        created_row["ISO Date"]
+    )
 
     # Step 3: Verify that the returned value is a datetime object
-    assert isinstance(iso_date_as_datetime, datetime), (
-        f"Expected a datetime object, but got {type(iso_date_as_datetime)}"
-    )
+    assert parsed.isoformat() == "2024-03-17"
 
     # Step 4: Verify that the returned datetime object refers to the correct date
     expected_date = datetime(2024, 3, 17)
-    assert iso_date_as_datetime.date() == expected_date.date(), (
-        f"Expected date {expected_date.date()}, but got {iso_date_as_datetime.date()}"
-    )
+    assert parsed == expected_date.date()
 
     # Step 5: Clean up by deleting the row
     all_fields_table.delete_rows([created_row.id])
 
 
-def test_rowvalue_formatted_date(all_fields_table, single_row_data):
+def test_date_field_format_value(all_fields_table, single_row_data):
     # Step 1: Create a single row with a specific US Date Time
     single_row_data["US Date Time"]["input"] = "2024-08-02T22:51:00Z"
     input_data = {
@@ -38,8 +37,10 @@ def test_rowvalue_formatted_date(all_fields_table, single_row_data):
     }
     created_row = all_fields_table.add_row(input_data)
 
-    # Step 2: Access the formatted_date property
-    us_date_time_formatted = created_row.values["US Date Time"].formatted_date
+    # Step 2: Format explicitly through the field definition.
+    us_date_time_formatted = all_fields_table.fields["US Date Time"].format_value(
+        created_row["US Date Time"]
+    )
 
     # Step 3: Verify that the returned value is correctly formatted
     expected_format = '08-02-2024 10:51:00 PM UTC'

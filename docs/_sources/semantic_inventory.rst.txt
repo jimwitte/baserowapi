@@ -33,6 +33,9 @@ Evidence for this inventory was collected from:
 * a disposable hosted row probe on 2026-09-02 confirming a raw Formula button
   object, Count decimal string, empty text Lookup list, UUID string, and
   Autonumber integer;
+* disposable hosted password probes on 2026-09-02 confirming that string,
+  literal ``true``, and ``null`` writes are accepted and that reads expose only
+  ``true`` or ``null``;
 * the generated API documentation captured on 2026-09-01, visually checked on
   2026-09-02 for configured filter lists, plus hosted equality and empty-result
   filter probes;
@@ -62,9 +65,8 @@ Support levels
    no semantic guarantee.
 
 ``Fallback``
-   An unknown type is preserved through ``GenericField`` and
-   ``GenericRowValue``. This supports reading but deliberately provides no
-   validation or type-specific filtering.
+   An unknown type is preserved through ``GenericField``. This supports reading
+   but deliberately provides no validation or type-specific filtering.
 
 ``Absent``
    Current Baserow documentation identifies the field category, but the package
@@ -73,8 +75,8 @@ Support levels
 Cross-cutting value pipeline
 ----------------------------
 
-The current field semantics are not applied uniformly. This is more important
-than the behavior of any individual field class.
+The Phase 6 row model now applies Field-owned semantics uniformly. The table
+below records the current pipeline.
 
 .. list-table::
    :header-rows: 1
@@ -85,12 +87,11 @@ than the behavior of any individual field class.
      - Guarantee
      - Required direction
    * - Read row
-     - ``Row`` chooses a ``RowValue`` subclass using a second type map, then
-       ``row[name]`` returns ``RowValue.value``.
-     - Scalar, unknown, select, link, lookup, file, and collaborator RowValues
-       delegate to ``Field.decode_value``. Password remains an exception.
-     - Fields now own scalar and identity-bearing semantics. RowValue classes
-       remain compatibility facades until the public row model is simplified.
+     - ``row[name]`` decodes the requested raw value through its Field;
+       ``values`` and ``raw_values`` expose read-only mappings.
+     - Scalar and identity-bearing values have one semantic dispatch. Unknown
+       fields and values remain raw and lossless.
+     - Preserve Field ownership and explicit raw access.
    * - Create rows
      - ``Table.add_row`` and ``Table.add_rows`` both validate and encode through
        each writable Field before sending a singular or batch request.
@@ -99,13 +100,13 @@ than the behavior of any individual field class.
      - Keep one internal row encoder authoritative.
    * - Update one ``Row``
      - ``Row.update`` delegates persistence to ``Table.update_row`` and
-       synchronizes itself from the returned Row. Staged updates remain for
-       Phase 6.
+       synchronizes itself from the returned Row. It requires an explicit
+       mapping and has no staged mutation state.
      - The same Field encoder owns singular and plural update values.
-     - Keep Row convenience behavior thin until staged mutation is resolved.
+     - Keep Row convenience behavior thin.
    * - Batch update mappings
-     - Mapping and Row inputs are normalized through the same Field encoder.
-       All local validation completes before the first request chunk.
+     - Mapping inputs with explicit row IDs use the same Field encoder. All
+       local validation completes before the first request chunk.
      - Batch failures report the failed chunk and completed response row IDs;
        writes are not retried or rolled back.
      - Preserve this explicit non-atomic contract.
@@ -117,19 +118,16 @@ than the behavior of any individual field class.
      - Keep structural Filter validation and allow unknown operators to reach
        the unpinned hosted service.
    * - Unknown type
-     - Field and value mappings independently fall back to generic classes
-       without routine warnings.
+     - The Field mapping falls back to ``GenericField`` without routine
+       warnings.
      - Raw values remain readable; writable unknown fields can be sent without
        semantic validation.
      - The fallback preserves the original type, metadata, and raw value as
        expected forward compatibility.
 
-The two independent dispatch tables, ``Table.FIELD_TYPE_CLASS_MAP`` and
-``ROW_VALUE_TYPE_MAPPING``, duplicate the list of supported Baserow types. A new
-field currently requires coordinated changes to both maps. Fields own scalar
-and structured decoding, validation, and encoding; ``format_for_api`` remains a
-compatibility alias. The duplicate dispatch remains until the public row model
-is simplified.
+``Table.FIELD_TYPE_CLASS_MAP`` is the sole semantic dispatch table. Fields own
+scalar and structured decoding, validation, and encoding;
+``format_for_api`` remains a compatibility alias.
 
 Field-by-field inventory
 ------------------------
@@ -153,22 +151,22 @@ encoders described in the write column.
      - ``str`` or ``None``.
      - ``str`` or ``None``; no transformation.
      - Partial
-     - The field is useful schema metadata, but ``TextRowValue`` is only a
-       type-checked pass-through. Local filters omit ``starts_with``.
+     - The field provides schema metadata and scalar validation without wrapping
+       the returned value. Local filters omit ``starts_with``.
    * - ``long_text``
      - Text default and rich-text flag.
      - ``str`` or ``None``.
      - ``str`` or ``None``; Markdown semantics are not interpreted.
      - Partial
-     - The field class earns its metadata; the separate RowValue class does not.
-       Local filters omit ``starts_with``.
+     - The field owns its metadata and scalar behavior. Local filters omit
+       ``starts_with``.
    * - ``boolean``
      - Boolean filter and API scalar shape.
      - ``bool``.
      - Exactly ``bool``; ``None`` is rejected locally.
      - Partial
-     - RowValue delegates to the field validator. Hosted ``baserow.io`` rejected
-       a ``null`` write on 2026-09-01, confirming the non-null write policy.
+     - Hosted ``baserow.io`` rejected a ``null`` write on 2026-09-01,
+       confirming the non-null write policy.
    * - ``number``
      - Decimal-place and negative-number settings; numeric filters.
      - Hosted tests currently receive a decimal string such as ``"42.00"``.
@@ -183,8 +181,8 @@ encoders described in the write column.
      - Numeric value.
      - Integer from zero through ``max_value``; ``None`` is rejected.
      - Partial
-     - RowValue delegates to field validation. Hosted ``baserow.io`` rejected a
-       ``null`` write on 2026-09-01. Local filters omit inclusive comparisons
+     - Hosted ``baserow.io`` rejected a ``null`` write on 2026-09-01. Local
+       filters omit inclusive comparisons
        present in generated documentation.
    * - ``date``
      - Date-only versus datetime, display format, 12/24-hour display, timezone
@@ -212,8 +210,8 @@ encoders described in the write column.
      - ISO date or datetime ``str`` with date helpers.
      - Read-only; setter raises.
      - Partial
-     - Same semantic family as ``date`` and ``created_on``; a separate RowValue
-       class adds little beyond the read-only setter.
+     - Same semantic family as ``date`` and ``created_on`` with Field-owned
+       read-only handling.
    * - ``url``
      - URL field identity and Baserow filters.
      - ``str`` or ``None``.
@@ -233,8 +231,8 @@ encoders described in the write column.
      - ``str``.
      - Empty, ``None``, or a matching phone string.
      - Partial
-     - The validator encodes real server knowledge. RowValue duplicates the
-       validator. Local filters omit ``starts_with``.
+     - The validator encodes real server knowledge. Local filters omit
+       ``starts_with``.
    * - ``single_select``
      - Option IDs, labels, colors, read object shape, write-by-ID-or-label, and
        first-match label behavior.
@@ -313,12 +311,12 @@ encoders described in the write column.
    * - ``password``
      - Write-only secret behavior: server reads are ``null`` or ``true`` and a
        string write sets the password.
-     - Boolean indicating whether the raw value is non-``None``.
+     - Raw ``True`` or ``None``; ``is_set`` provides an explicit boolean helper.
      - ``str``, ``None``, or literal ``True`` pass local validation.
      - Partial
-     - The asymmetry is important, but accepting ``True`` for writes is not
-       justified by generated API documentation. The RowValue contains unused
-       state and would report a raw ``False`` as set.
+     - Hosted ``baserow.io`` accepted all three write forms and returned only
+       ``true`` or ``null`` on 2026-09-02. The client preserves the asymmetric
+       wire state instead of converting it implicitly.
    * - ``uuid``
      - Read-only unique persistent identifier.
      - UUID string, with an explicit ``parse_value`` helper returning
@@ -454,10 +452,9 @@ and therefore preserve one semantic implementation.
 Settled design decisions
 ------------------------
 
-These decisions describe the intended contract for the refactor. Phase 2 scalar
-semantics and Phase 3 identity-bearing values are implemented on
-``release/0.2.0b1``; later sections remain design direction until their phase is
-completed.
+These decisions describe the intended contract for the refactor. Phases 2
+through 6 are implemented on ``release/0.2.0b1``; later sections remain design
+direction until their phase is completed.
 
 Focus and authority
 ~~~~~~~~~~~~~~~~~~~
@@ -466,7 +463,7 @@ Focus and authority
 encode Baserow field, query, row, file, and error behavior without growing into
 a complete administration SDK or a general HTTP framework.
 
-Each Field will become the single semantic authority for decoding a Baserow
+Each Field is the single semantic authority for decoding a Baserow
 response, validating a supported input, encoding an API write, reporting
 read-only status, exposing advisory filter knowledge, and interpreting computed
 result metadata. Create, single-update, and batch-update operations will use the
@@ -590,17 +587,17 @@ current Baserow documentation and hosted behavior.
 Rows, containers, and transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``Table.fields`` will become an ordered read-only mapping from field name to
-Field. ``FieldList`` and ``RowValueList`` will not remain public abstractions.
-Row access will return values decoded by the Field, with explicit access to the
-original raw value when needed. Per-type RowValue classes will be removed after
-their behavior has moved to Fields and domain records.
+``Table.fields`` and ``Table.writable_fields`` are ordered read-only mappings
+from field name to Field. ``Row.values`` is an ordered read-only mapping of
+Field-decoded values, and ``Row.raw_values`` exposes the original Baserow
+values. The custom FieldList and RowValue containers and all per-type RowValue
+classes have been removed.
 
-Explicit ``row.update({...})`` is the preferred persistence operation. The
-current staged ``row[name] = value; row.update()`` behavior should be removed or
-modeled explicitly rather than allowing raw and decoded state to diverge. Row
-operation conveniences may remain as thin delegates to the same Table
-primitives used for singular and batch requests.
+``row.update({...})`` is the sole Row persistence operation. Row item assignment
+and no-argument staged updates have been removed so raw, decoded, and pending
+state cannot diverge. Row operation conveniences remain thin delegates to the
+same Table primitives used for singular requests; batch updates require
+explicit mappings with row IDs.
 
 The Client will retain one request boundary for authentication, timeouts,
 connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging

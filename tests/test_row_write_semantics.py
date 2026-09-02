@@ -79,45 +79,11 @@ def test_singular_and_batch_update_use_identical_field_encoding(
     ] == {"items": [{"id": 1001, **expected_values()}]}
 
 
-def test_mapping_and_row_object_batch_updates_use_identical_field_encoding(
-    characterized_table, characterized_row_response
-):
-    row_data = {
-        "id": 1001,
-        "order": "1.0",
-        "Date Time": "2026-09-01T00:00:00+00:00",
-        "Status": {"id": 101, "value": "Open", "color": "green"},
-        "Future Value": {"future": [1, 2]},
-    }
-    row = Row(
-        row_data=row_data,
-        table=characterized_table,
-        client=characterized_table.client,
-    )
-    characterized_table.client.make_api_request.side_effect = [
-        {"items": [deepcopy(characterized_row_response)]},
-        {"items": [deepcopy(characterized_row_response)]},
-    ]
+def test_batch_updates_require_explicit_mappings(characterized_table, characterized_row):
+    with pytest.raises(TypeError, match="Expected a mapping"):
+        characterized_table.update_rows([characterized_row])
 
-    characterized_table.update_rows([row])
-    characterized_table.update_rows(
-        [
-            {
-                "id": row.id,
-                "Date Time": row["Date Time"],
-                "Status": row["Status"],
-                "Future Value": row["Future Value"],
-            }
-        ]
-    )
-
-    first_payload = characterized_table.client.make_api_request.call_args_list[0].kwargs[
-        "data"
-    ]
-    second_payload = characterized_table.client.make_api_request.call_args_list[1].kwargs[
-        "data"
-    ]
-    assert first_payload == second_payload
+    characterized_table.client.make_api_request.assert_not_called()
 
 
 def test_row_update_is_a_thin_table_delegate(

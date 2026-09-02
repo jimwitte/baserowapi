@@ -8,16 +8,15 @@
 The public workflow is `Baserow` -> `Table` -> `Row`. `Baserow` owns HTTP
 sessions and request handling, `Table` handles field metadata and row
 operations, and `Row` provides typed field access and single-row operations.
-Field and RowValue subclasses translate between Baserow metadata, API payloads,
-and Python values. Unknown field types fall back to the generic field and row
-value implementations.
+Field subclasses translate between Baserow metadata, API payloads, and Python
+values. Unknown field types fall back to ``GenericField``, which preserves raw
+metadata and values.
 
 Important locations:
 
 * `baserowapi/` contains the package implementation.
 * `baserowapi/models/fields/` defines field metadata, validation, and API
   formatting.
-* `baserowapi/models/row_values/` defines values exposed through rows.
 * `tests/` contains live integration tests against hosted `baserow.io`.
 * `docsrc/` contains the handwritten Sphinx documentation sources.
 * `docs/` contains generated, tracked documentation output.
@@ -56,12 +55,18 @@ symmetry. Do not wrap scalar values merely to make the object model uniform.
 The field definition owns scalar and structured decoding, validation, and API
 encoding through
 ``decode_value``, ``validate_value``, and ``encode_value``;
-``format_for_api`` remains a compatibility alias. RowValue classes are
-compatibility facades; do not add new semantics to them. Password behavior is
-the remaining exception pending computed and row-model phases. Until the row
-model is simplified, a newly supported Baserow field type still requires both
-field and RowValue dispatch entries. Always retain the quiet, raw generic
-fallback for hosted Baserow field types the package does not yet recognize.
+``format_for_api`` remains a compatibility alias. Do not reintroduce per-cell
+RowValue classes or a second field-type dispatch table. A newly supported
+Baserow field type requires one Field implementation and a Table field mapping
+entry. Always retain the quiet, raw generic fallback for hosted Baserow field
+types the package does not yet recognize.
+
+``Table.fields`` and ``Table.writable_fields`` are ordered, read-only mappings
+from field name to Field. ``Row.values`` is an ordered, read-only mapping of
+Field-decoded values, while ``Row.raw_values`` exposes the original Baserow
+response values. ``row[name]`` decodes only the requested field. ``Row`` has no
+staged mutable state: persist changes with ``row.update(mapping)``. Batch
+updates accept mappings with explicit row IDs, not Row objects.
 
 Filter compatibility is advisory. ``Field.filter_compatibility`` distinguishes
 operators documented for the field, known operators not documented for it, and
@@ -103,10 +108,10 @@ Keep changes focused and explicit. Avoid speculative abstractions, unrelated
 refactoring, and new dependencies without a concrete need. Preserve unrelated
 working-tree changes and generated artifacts that are outside the task.
 
-When adding support for a Baserow field type, update both the Table field-class
-mapping and the Row row-value mapping. Add tests for metadata handling,
-validation, API formatting, and returned values as applicable. Retain the
-generic fallback for unknown hosted Baserow field types.
+When adding support for a Baserow field type, update the Table field-class
+mapping. Add tests for metadata handling, decoding, validation, API encoding,
+and returned values as applicable. Retain the generic fallback for unknown
+hosted Baserow field types.
 
 Package exceptions must have one definition and a consistent inheritance
 hierarchy rooted in `BaserowAPIError`. Preserve underlying failures with

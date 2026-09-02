@@ -1,6 +1,6 @@
 from typing import Any, Dict
 from baserowapi.models.fields.field import Field
-from baserowapi.exceptions import FieldValidationError
+from baserowapi.exceptions import FieldValidationError, FieldValueError
 
 
 class PasswordField(Field):
@@ -28,3 +28,15 @@ class PasswordField(Field):
             raise FieldValidationError(
                 f"Expected a string, None, or True for PasswordField but got {type(value)}"
             )
+
+    def decode_value(self, raw_value: Any) -> Any:
+        """Preserve Baserow's ``True`` or ``None`` password read state."""
+        if raw_value is not True and raw_value is not None:
+            raise FieldValueError(
+                "A password response must be True or None."
+            )
+        return raw_value
+
+    def is_set(self, raw_value: Any) -> bool:
+        """Return whether a hosted password read indicates a set password."""
+        return self.decode_value(raw_value) is True

@@ -34,21 +34,20 @@ def test_update_single_row(all_fields_table, single_row_data):
     # Step 6: Clean up by deleting the row
     all_fields_table.delete_rows([created_row.id])
 
-def test_update_single_row_with_direct_access(all_fields_table, single_row_data):
+def test_update_single_row_requires_explicit_values(all_fields_table, single_row_data):
     # Step 1: Create a single row
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
     created_row = all_fields_table.add_row(input_data)
 
-    # Step 2: Set new values using dict-style access
-    created_row['Name'] = 'Updated Name'
-    created_row['Notes'] = 'Updated note for testing'
-    created_row['Active'] = False
-    created_row['Number'] = 84
-
-    # Step 3: Update the row by calling update() without parameters
-    created_row.update()
+    # Step 2: Update explicitly; Row has no staged mutable state.
+    created_row.update({
+        'Name': 'Updated Name',
+        'Notes': 'Updated note for testing',
+        'Active': False,
+        'Number': 84,
+    })
 
     # Step 4: Fetch the updated row to verify the update
     updated_row = all_fields_table.get_row(created_row.id)

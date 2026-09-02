@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from collections.abc import Mapping
+from datetime import date, datetime, timezone
 
 import pytest
 
@@ -71,10 +72,12 @@ def test_uuid_and_autonumber_have_dedicated_read_only_fields(characterized_row):
 
 
 def test_current_date_helpers_parse_iso_values(characterized_row):
-    assert characterized_row.values["Date Only"].as_datetime() == datetime(
-        2026, 9, 1
-    )
-    assert characterized_row.values["Date Time"].as_datetime() == datetime(
+    assert characterized_row.table.fields["Date Only"].parse_value(
+        characterized_row["Date Only"]
+    ) == date(2026, 9, 1)
+    assert characterized_row.table.fields["Date Time"].parse_value(
+        characterized_row["Date Time"]
+    ) == datetime(
         2026, 9, 1, 12, 30, tzinfo=timezone.utc
     )
 
@@ -95,17 +98,37 @@ def test_row_dictionary_contains_decoded_values_only(characterized_row):
     assert values["Related"] == [LinkedRow(20, 501, "Acme")]
 
 
-def test_current_custom_containers_iterate_over_objects(characterized_row):
-    assert next(iter(characterized_row.table.fields)).name == "Name"
+def test_field_and_row_values_are_read_only_mappings(characterized_row):
+    assert isinstance(characterized_row.table.fields, Mapping)
+    assert next(iter(characterized_row.table.fields)) == "Name"
     assert characterized_row.table.fields["Name"].name == "Name"
     assert "Name" in characterized_row.table.fields
-    assert next(iter(characterized_row.values)).name == "Name"
-    assert characterized_row.values.fields[0] == "Name"
+    assert next(iter(characterized_row.values)) == "Name"
+    assert characterized_row.values["Name"] == "Example"
+    with pytest.raises(TypeError):
+        characterized_row.table.fields["new"] = object()
+    with pytest.raises(TypeError):
+        characterized_row.values["Name"] = "Changed"
 
 
-def test_current_item_assignment_stages_a_value_without_a_request(characterized_row):
-    characterized_row["Name"] = "Changed"
+def test_row_exposes_raw_values_without_staged_mutation(characterized_row):
+    assert characterized_row.raw_values["Status"] == {
+        "id": 101,
+        "value": "Open",
+        "color": "green",
+    }
+    assert characterized_row.values["Status"] == SelectOption(101, "Open", "green")
 
-    assert characterized_row["Name"] == "Changed"
-    assert characterized_row.to_dict()["Name"] == "Changed"
+    with pytest.raises(TypeError):
+        characterized_row["Name"] = "Changed"
     characterized_row.client.make_api_request.assert_not_called()
+
+
+def test_password_field_preserves_hosted_state_and_has_explicit_helper(
+    characterized_row,
+):
+    field = characterized_row.table.fields["Password"]
+
+    assert characterized_row["Password"] is True
+    assert field.is_set(characterized_row.raw_values["Password"])
+    assert not field.is_set(None)

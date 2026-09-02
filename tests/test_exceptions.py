@@ -14,8 +14,6 @@ from baserowapi.exceptions import (
     FilterError,
     InvalidFieldNameError,
     InvalidOperatorError,
-    InvalidRowValueError,
-    ReadOnlyValueError,
     RowAddError,
     RowDeleteError,
     RowError,
@@ -23,8 +21,6 @@ from baserowapi.exceptions import (
     RowMoveError,
     RowUpdateError,
     RowWriteError,
-    RowValueError,
-    RowValueOperationError,
 )
 
 pytestmark = pytest.mark.offline
@@ -42,14 +38,11 @@ def test_package_exceptions_share_a_common_base():
         FieldValueError,
         InvalidFieldNameError,
         InvalidOperatorError,
-        InvalidRowValueError,
-        ReadOnlyValueError,
         RowAddError,
         RowDeleteError,
         RowFetchError,
         RowMoveError,
         RowUpdateError,
-        RowValueOperationError,
     )
 
     assert all(
@@ -87,13 +80,5 @@ def test_domain_exception_groups_are_consistent():
             FieldDataRetrievalError,
             FieldValidationError,
             FieldValueError,
-        )
-    )
-    assert all(
-        issubclass(exception_class, RowValueError)
-        for exception_class in (
-            InvalidRowValueError,
-            ReadOnlyValueError,
-            RowValueOperationError,
         )
     )

@@ -43,15 +43,6 @@ Row
    :show-inheritance:
    :noindex:
 
-RowValue
------------------------------------
-
-.. automodule:: baserowapi.models.row_values
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
-
 Identity-bearing Values
 -----------------------------------
 

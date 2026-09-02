@@ -76,7 +76,7 @@ def test_get_rows_with_include_fields(all_fields_table, single_row_data):
 
     # Step 4: Verify that only the included fields are returned
     for row in fetched_rows:
-        assert row.values.fields == ['Name', 'Active'], f"Expected fields ['Name', 'Active'], but got {row.values.fields}"
+        assert list(row.values) == ['Name', 'Active'], f"Expected fields ['Name', 'Active'], but got {list(row.values)}"
 
     # Step 5: Clean up by deleting the rows
     all_fields_table.delete_rows(created_row_ids)
@@ -99,8 +99,8 @@ def test_get_rows_with_exclude_fields(all_fields_table, single_row_data):
 
     # Step 4: Verify that the excluded fields are not in the results
     for row in fetched_rows:
-        assert 'Name' not in row.values.fields, "Field 'Name' should not be included in the results"
-        assert 'Active' not in row.values.fields, "Field 'Active' should not be included in the results"
+        assert 'Name' not in row.values, "Field 'Name' should not be included in the results"
+        assert 'Active' not in row.values, "Field 'Active' should not be included in the results"
 
     # Step 5: Clean up by deleting the rows
     all_fields_table.delete_rows(created_row_ids)

@@ -1,3 +1,5 @@
+"""Hosted file upload and assignment semantics."""
+
 from pathlib import Path
 
 import pytest

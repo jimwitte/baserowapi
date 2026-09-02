@@ -4,7 +4,7 @@ from .count_field import CountField
 from .created_on_field import CreatedOnField
 from .date_field import DateField
 from .email_field import EmailField
-from .field_list import FieldList
+from .field import Field
 from .file_field import FileField
 from .formula_field import FormulaField
 from .generic_field import GenericField
@@ -30,7 +30,7 @@ __all__ = [
     "CreatedOnField",
     "DateField",
     "EmailField",
-    "FieldList",
+    "Field",
     "FileField",
     "FormulaField",
     "GenericField",

@@ -132,10 +132,8 @@ def test_detached_filter_validator_is_no_longer_public():
 
 
 def test_all_write_paths_exclude_read_only_fields(
-    characterized_table, characterized_row, characterized_row_response
+    characterized_table, characterized_row
 ):
-    read_only_names = {"Formula", "Count", "Lookup", "UUID", "Autonumber"}
-
     with pytest.raises(KeyError):
         characterized_table.add_row({"Name": "New", "Formula": "not writable"})
     with pytest.raises(KeyError):
@@ -144,10 +142,3 @@ def test_all_write_paths_exclude_read_only_fields(
         characterized_table.update_rows(
             [{"id": characterized_row.id, "UUID": "not writable"}]
         )
-
-    characterized_table.client.make_api_request.return_value = {
-        "items": [characterized_row_response]
-    }
-    characterized_table.update_rows([characterized_row])
-    payload = characterized_table.client.make_api_request.call_args.kwargs["data"]
-    assert read_only_names.isdisjoint(payload["items"][0])

@@ -24,9 +24,10 @@ def resolve_qualified_attribute(qualified_name):
 
 def test_intended_root_exports_are_recorded():
     expected = set(load_snapshot()["root_names"])
-    actual = {name for name in vars(baserowapi) if not name.startswith("_")}
+    actual = set(baserowapi.__all__)
 
     assert actual == expected
+    assert all(hasattr(baserowapi, name) for name in expected)
 
 
 @pytest.mark.parametrize(

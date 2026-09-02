@@ -145,19 +145,3 @@ class FieldValueError(FieldError):
 
 class FieldDataRetrievalError(FieldError):
     """Raised when data required by a field cannot be retrieved."""
-
-
-class RowValueError(BaserowAPIError):
-    """Base class for row-value errors."""
-
-
-class InvalidRowValueError(RowValueError):
-    """Raised when a value is incompatible with its field."""
-
-
-class RowValueOperationError(RowValueError):
-    """Raised when row-value formatting or conversion fails."""
-
-
-class ReadOnlyValueError(RowValueError):
-    """Raised when attempting to set a read-only row value."""

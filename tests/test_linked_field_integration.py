@@ -13,7 +13,7 @@ def test_table_link_field_get_linked_rows(all_fields_table):
     assert all(isinstance(row.id, int) for row in linked_rows)
 
 
-def test_update_table_link_row_value_with_discovered_rows(all_fields_table):
+def test_update_table_link_field_with_discovered_rows(all_fields_table):
     created_row = all_fields_table.add_rows(
         [{"Name": "Test Row", "TableLink": []}]
     )[0]
@@ -21,8 +21,7 @@ def test_update_table_link_row_value_with_discovered_rows(all_fields_table):
     assert len(available_rows) >= 2
     selected_rows = available_rows[:2]
 
-    created_row["TableLink"] = selected_rows
-    created_row.update()
+    created_row.update({"TableLink": selected_rows})
 
     updated_rows = all_fields_table.get_row(created_row.id)["TableLink"]
     assert updated_rows == selected_rows

@@ -84,6 +84,7 @@
              
   <h1>Source code for baserowapi.models.table</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaserowResponseError</span><span class="p">,</span>
@@ -97,7 +98,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row</span><span class="w"> </span><span class="kn">import</span> <span class="n">Row</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AutonumberField</span><span class="p">,</span>
-    <span class="n">FieldList</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">,</span>
     <span class="n">TextField</span><span class="p">,</span>
     <span class="n">LongTextField</span><span class="p">,</span>
     <span class="n">BooleanField</span><span class="p">,</span>
@@ -204,7 +205,7 @@
         <span class="p">)</span>  <span class="c1"># Default to base Field class if type not found</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FieldList</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieve the fields associated with the table.</span>
 
@@ -212,8 +213,8 @@
 <span class="sd">        to retrieve them. Once retrieved, the fields are cached to avoid unnecessary</span>
 <span class="sd">        API requests in subsequent calls.</span>
 
-<span class="sd">        :return: A FieldList containing all the Field objects associated with this table.</span>
-<span class="sd">        :rtype: FieldList</span>
+<span class="sd">        :return: An ordered, read-only mapping from field name to Field.</span>
+<span class="sd">        :rtype: Mapping[str, Field]</span>
 <span class="sd">        :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -225,7 +226,15 @@
                 <span class="k">for</span> <span class="n">fd</span> <span class="ow">in</span> <span class="n">fields_data</span><span class="p">:</span>
                     <span class="n">FieldClass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field_class_from_data</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
                     <span class="n">field_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FieldClass</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="n">fd</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="n">FieldList</span><span class="p">(</span><span class="n">field_objects</span><span class="p">)</span>
+                <span class="n">field_objects</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">field</span><span class="p">:</span> <span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">fields_by_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">field_objects</span><span class="p">}</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields_by_name</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">field_objects</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                        <span class="s2">"Field names must be unique when user_field_names is enabled."</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">fields_by_name</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Failed to fetch fields for table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
@@ -236,19 +245,23 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">writable_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FieldList</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">writable_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieve the list of writable fields for the table.</span>
 
 <span class="sd">        This property lazily loads the fields using the `fields` property and then</span>
 <span class="sd">        filters them to include only those fields where `is_read_only` is False.</span>
 
-<span class="sd">        :return: A FieldList containing only writable Field objects.</span>
-<span class="sd">        :rtype: FieldList</span>
+<span class="sd">        :return: An ordered, read-only mapping of writable fields.</span>
+<span class="sd">        :rtype: Mapping[str, Field]</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_writable_fields"</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writable_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">writable_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">field</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_writable_fields</span> <span class="o">=</span> <span class="n">FieldList</span><span class="p">(</span><span class="n">writable_fields</span><span class="p">)</span>
+            <span class="n">writable_fields</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="n">field</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">field</span><span class="o">.</span><span class="n">is_read_only</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_writable_fields</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">writable_fields</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writable_fields</span>
 
     <span class="nd">@property</span>
@@ -277,7 +290,7 @@
 
 <span class="sd">        :raises ValueError: If no primary field is found for the table.</span>
 <span class="sd">        """</span>
-        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">is_primary</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_primary_field</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span>
                 <span class="k">return</span>
@@ -294,13 +307,7 @@
 <span class="sd">        :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.</span>
 <span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Sort fields based on 'order' property</span>
-            <span class="c1"># If 'order' is None, sort those fields last</span>
-            <span class="n">sorted_fields</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">field</span><span class="p">:</span> <span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
-            <span class="p">)</span>
-
-            <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">sorted_fields</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Failed to get field names for table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
@@ -753,17 +760,16 @@
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.update_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Row</span><span class="p">]],</span>
+        <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Updates multiple rows in the table using the Baserow batch update endpoint.</span>
 
-<span class="sd">        :param rows_data: A list of dictionaries or Row objects.</span>
+<span class="sd">        :param rows_data: A list of dictionaries.</span>
 <span class="sd">                        Each dictionary should contain the field values for updating</span>
 <span class="sd">                        a specific row and include the ID of the row to be updated.</span>
-<span class="sd">                        Row objects represent the rows to be updated.</span>
-<span class="sd">        :type rows_data: list[Union[dict, Row]]</span>
+<span class="sd">        :type rows_data: list[dict]</span>
 <span class="sd">        :param batch_size: The number of rows to process in each batch.</span>
 <span class="sd">        :type batch_size: int</span>
 
@@ -772,7 +778,7 @@
 
 <span class="sd">        :raises ValueError: If parameters are not valid.</span>
 <span class="sd">        :raises KeyError: If a dictionary contains a key that doesn't correspond to any writable field in the table or is missing the 'id' key.</span>
-<span class="sd">        :raises TypeError: If an item in rows_data is neither a dictionary nor a Row object, or if a generator is passed.</span>
+<span class="sd">        :raises TypeError: If an item in rows_data is not a mapping, or if a generator is passed.</span>
 <span class="sd">        :raises RowUpdateError: If rows cannot be updated or parsed.</span>
 <span class="sd">        """</span>
 
@@ -795,24 +801,9 @@
                     <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">row_id</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">allow_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
                 <span class="p">)</span>
 
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Row</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">table_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Row </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> belongs to table </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span>
-                    <span class="p">)</span>
-                <span class="n">row_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">rv</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">()</span>
-                    <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">values</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">rv</span><span class="o">.</span><span class="n">is_read_only</span>
-                <span class="p">}</span>
-                <span class="n">formatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">row_id</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">values</span><span class="p">)}</span>
-                <span class="p">)</span>
-
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Unsupported type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> in rows_data. Expected dict or Row object."</span>
+                    <span class="sa">f</span><span class="s2">"Unsupported type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> in rows_data. Expected a mapping."</span>
                 <span class="p">)</span>
 
         <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch/?user_field_names=true"</span>

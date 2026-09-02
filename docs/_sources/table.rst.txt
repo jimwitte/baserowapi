@@ -13,7 +13,8 @@ Row write contracts
 Singular and plural writes are deliberately separate. ``add_row(values)`` and
 ``update_row(row_id, values)`` return one ``Row``. ``add_rows(rows)`` and
 ``update_rows(rows)`` accept non-empty lists and always return ``list[Row]``.
-The plural methods no longer accept a single mapping.
+The plural methods no longer accept a single mapping. ``update_rows`` entries
+must be mappings containing an explicit ``id``; Row objects are not accepted.
 
 Every create and update passes supplied values through the corresponding
 Field's validation and encoder. This gives a date, select option, linked-row
@@ -32,7 +33,8 @@ Properties
 
 - ``id``: Table's unique identifier.
 - ``primary_field``: The primary field of the table.
-- ``fields``: Dictionary of table fields (columns) with their properties.
+- ``fields``: Ordered, read-only mapping of field names to Field objects.
+- ``writable_fields``: Ordered, read-only subset of fields accepted by writes.
 - ``field_names``: List of field names present in the table.
 
 Methods and Usage
@@ -166,3 +168,19 @@ Plural calls continue to use a list and return a list. For direct table updates,
 use ``update_row(row_id, values)`` for one row and ``update_rows(rows)`` for a
 list. ``row.update(values)`` remains available and delegates to
 ``table.update_row``.
+
+``Table.fields`` previously used a custom container whose iteration yielded
+Field objects. It is now an ordinary read-only mapping, so iteration yields
+field names and ``table.fields.values()`` yields Field objects.
+
+Batch updates previously accepted Row objects. Pass explicit mappings instead:
+
+.. code-block:: python
+
+    # 0.1
+    updated_rows = table.update_rows([row])
+
+    # 0.2
+    updated_rows = table.update_rows([
+        {"id": row.id, "Notes": "Updated"},
+    ])

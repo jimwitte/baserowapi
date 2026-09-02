@@ -102,7 +102,8 @@ generator instead.</p>
 <p>Singular and plural writes are deliberately separate. <code class="docutils literal notranslate"><span class="pre">add_row(values)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">update_row(row_id,</span> <span class="pre">values)</span></code> return one <code class="docutils literal notranslate"><span class="pre">Row</span></code>. <code class="docutils literal notranslate"><span class="pre">add_rows(rows)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">update_rows(rows)</span></code> accept non-empty lists and always return <code class="docutils literal notranslate"><span class="pre">list[Row]</span></code>.
-The plural methods no longer accept a single mapping.</p>
+The plural methods no longer accept a single mapping. <code class="docutils literal notranslate"><span class="pre">update_rows</span></code> entries
+must be mappings containing an explicit <code class="docutils literal notranslate"><span class="pre">id</span></code>; Row objects are not accepted.</p>
 <p>Every create and update passes supplied values through the corresponding
 Field’s validation and encoder. This gives a date, select option, linked-row
 reference, file record, or unknown writable field the same wire representation
@@ -119,7 +120,8 @@ mutating requests.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: Table’s unique identifier.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">primary_field</span></code>: The primary field of the table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fields</span></code>: Dictionary of table fields (columns) with their properties.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fields</span></code>: Ordered, read-only mapping of field names to Field objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">writable_fields</span></code>: Ordered, read-only subset of fields accepted by writes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">field_names</span></code>: List of field names present in the table.</p></li>
 </ul>
 </section>
@@ -250,6 +252,19 @@ a one-element list. Use the explicit singular method instead:</p>
 use <code class="docutils literal notranslate"><span class="pre">update_row(row_id,</span> <span class="pre">values)</span></code> for one row and <code class="docutils literal notranslate"><span class="pre">update_rows(rows)</span></code> for a
 list. <code class="docutils literal notranslate"><span class="pre">row.update(values)</span></code> remains available and delegates to
 <code class="docutils literal notranslate"><span class="pre">table.update_row</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Table.fields</span></code> previously used a custom container whose iteration yielded
+Field objects. It is now an ordinary read-only mapping, so iteration yields
+field names and <code class="docutils literal notranslate"><span class="pre">table.fields.values()</span></code> yields Field objects.</p>
+<p>Batch updates previously accepted Row objects. Pass explicit mappings instead:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 0.1</span>
+<span class="n">updated_rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">update_rows</span><span class="p">([</span><span class="n">row</span><span class="p">])</span>
+
+<span class="c1"># 0.2</span>
+<span class="n">updated_rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">update_rows</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">"Notes"</span><span class="p">:</span> <span class="s2">"Updated"</span><span class="p">},</span>
+<span class="p">])</span>
+</pre></div>
+</div>
 </section>
 </section>
 

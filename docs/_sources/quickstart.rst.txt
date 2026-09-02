@@ -1,59 +1,39 @@
 Quick Start with Baserow API
 ============================
 
-Welcome to the Quick Start guide for the Baserow API! Follow the steps below to swiftly get up and running with basic operations.
-
 Installation
 ------------
-
-To start with, install the Baserow API Python package:
 
 .. code-block:: bash
 
     pip install baserowapi
 
-Begin with Basic Operations
----------------------------
-
-After installation, you can perform basic operations such as fetching tables, reading rows, and manipulating data.
+Basic operations
+----------------
 
 .. code-block:: python
 
     from baserowapi import Baserow
 
-    # Initialize the Baserow client
-    baserow = Baserow(url='https://api.baserow.io', token='mytoken')
-
-    # Create a table instance using its ID
+    baserow = Baserow(url="https://api.baserow.io", token="mytoken")
     table = baserow.get_table(1234567)
 
-    # Print a list of field names in the table
     print(table.field_names)
+    print(table.fields["Name"])
 
-    # Fetch a row using its ID
-    my_row = table.get_row(1)
-    # Display a dictionary of field names and their values for this row
-    print(my_row.to_dict())
+    row = table.get_row(1)
+    print(row["Name"])
+    print(row.to_dict())
 
-    # Access a specific field's value in the row
-    print(my_row['Name'])
+    # Decoded and raw Baserow values are both read-only mappings.
+    print(row.values)
+    print(row.raw_values)
 
-    # Retrieve all rows in the table. Returns a list of Row objects
-    all_my_rows = table.get_rows()
-    for row in all_my_rows:
-        print(row.to_dict())
+    for result in table.get_rows():
+        print(result.to_dict())
 
-    # Modify an in-memory value of the Row object
-    my_row['Notes'] = "Changed note in memory"
-    print(my_row['Notes'])
+    updated_row = row.update({"Notes": "Updated on the server"})
+    deleted = updated_row.delete()
 
-    # Synchronize changes made in memory to the server
-    updated_row = my_row.update()
-    print(updated_row.to_dict())
-
-    # Update a Row's content using a dictionary and save to the server
-    updated_row = my_row.update({'Notes': 'Updated row via dictionary'})
-
-    # Delete a single row
-    deleted_status = updated_row.delete()
-
+Rows do not stage item assignment. Supply every change explicitly to
+``row.update(values)`` or ``table.update_row(row_id, values)``.

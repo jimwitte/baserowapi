@@ -138,6 +138,9 @@ payloads;</p></li>
 <li><p>a disposable hosted row probe on 2026-09-02 confirming a raw Formula button
 object, Count decimal string, empty text Lookup list, UUID string, and
 Autonumber integer;</p></li>
+<li><p>disposable hosted password probes on 2026-09-02 confirming that string,
+literal <code class="docutils literal notranslate"><span class="pre">true</span></code>, and <code class="docutils literal notranslate"><span class="pre">null</span></code> writes are accepted and that reads expose only
+<code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">null</span></code>;</p></li>
 <li><p>the generated API documentation captured on 2026-09-01, visually checked on
 2026-09-02 for configured filter lists, plus hosted equality and empty-result
 filter probes;</p></li>
@@ -161,9 +164,8 @@ representations, settings, operations, or tests are missing or inconsistent.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">Pass-through</span></code></dt><dd><p>The package mostly preserves the server value. The class name adds little or
 no semantic guarantee.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Fallback</span></code></dt><dd><p>An unknown type is preserved through <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> and
-<code class="docutils literal notranslate"><span class="pre">GenericRowValue</span></code>. This supports reading but deliberately provides no
-validation or type-specific filtering.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">Fallback</span></code></dt><dd><p>An unknown type is preserved through <code class="docutils literal notranslate"><span class="pre">GenericField</span></code>. This supports reading
+but deliberately provides no validation or type-specific filtering.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">Absent</span></code></dt><dd><p>Current Baserow documentation identifies the field category, but the package
 has no dedicated support and the configured test table does not exercise it.</p>
@@ -172,8 +174,8 @@ has no dedicated support and the configured test table does not exercise it.</p>
 </section>
 <section id="cross-cutting-value-pipeline">
 <h2>Cross-cutting value pipeline<a class="headerlink" href="#cross-cutting-value-pipeline" title="Link to this heading"></a></h2>
-<p>The current field semantics are not applied uniformly. This is more important
-than the behavior of any individual field class.</p>
+<p>The Phase 6 row model now applies Field-owned semantics uniformly. The table
+below records the current pipeline.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19.0%" />
@@ -190,12 +192,11 @@ than the behavior of any individual field class.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Read row</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Row</span></code> chooses a <code class="docutils literal notranslate"><span class="pre">RowValue</span></code> subclass using a second type map, then
-<code class="docutils literal notranslate"><span class="pre">row[name]</span></code> returns <code class="docutils literal notranslate"><span class="pre">RowValue.value</span></code>.</p></td>
-<td><p>Scalar, unknown, select, link, lookup, file, and collaborator RowValues
-delegate to <code class="docutils literal notranslate"><span class="pre">Field.decode_value</span></code>. Password remains an exception.</p></td>
-<td><p>Fields now own scalar and identity-bearing semantics. RowValue classes
-remain compatibility facades until the public row model is simplified.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">row[name]</span></code> decodes the requested raw value through its Field;
+<code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">raw_values</span></code> expose read-only mappings.</p></td>
+<td><p>Scalar and identity-bearing values have one semantic dispatch. Unknown
+fields and values remain raw and lossless.</p></td>
+<td><p>Preserve Field ownership and explicit raw access.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Create rows</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Table.add_row</span></code> and <code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> both validate and encode through
@@ -206,14 +207,14 @@ and returns <code class="docutils literal notranslate"><span class="pre">list[Ro
 </tr>
 <tr class="row-even"><td><p>Update one <code class="docutils literal notranslate"><span class="pre">Row</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Row.update</span></code> delegates persistence to <code class="docutils literal notranslate"><span class="pre">Table.update_row</span></code> and
-synchronizes itself from the returned Row. Staged updates remain for
-Phase 6.</p></td>
+synchronizes itself from the returned Row. It requires an explicit
+mapping and has no staged mutation state.</p></td>
 <td><p>The same Field encoder owns singular and plural update values.</p></td>
-<td><p>Keep Row convenience behavior thin until staged mutation is resolved.</p></td>
+<td><p>Keep Row convenience behavior thin.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Batch update mappings</p></td>
-<td><p>Mapping and Row inputs are normalized through the same Field encoder.
-All local validation completes before the first request chunk.</p></td>
+<td><p>Mapping inputs with explicit row IDs use the same Field encoder. All
+local validation completes before the first request chunk.</p></td>
 <td><p>Batch failures report the failed chunk and completed response row IDs;
 writes are not retried or rolled back.</p></td>
 <td><p>Preserve this explicit non-atomic contract.</p></td>
@@ -227,8 +228,8 @@ no compatibility result blocks a normal query.</p></td>
 the unpinned hosted service.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Unknown type</p></td>
-<td><p>Field and value mappings independently fall back to generic classes
-without routine warnings.</p></td>
+<td><p>The Field mapping falls back to <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> without routine
+warnings.</p></td>
 <td><p>Raw values remain readable; writable unknown fields can be sent without
 semantic validation.</p></td>
 <td><p>The fallback preserves the original type, metadata, and raw value as
@@ -236,12 +237,9 @@ expected forward compatibility.</p></td>
 </tr>
 </tbody>
 </table>
-<p>The two independent dispatch tables, <code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> and
-<code class="docutils literal notranslate"><span class="pre">ROW_VALUE_TYPE_MAPPING</span></code>, duplicate the list of supported Baserow types. A new
-field currently requires coordinated changes to both maps. Fields own scalar
-and structured decoding, validation, and encoding; <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> remains a
-compatibility alias. The duplicate dispatch remains until the public row model
-is simplified.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> is the sole semantic dispatch table. Fields own
+scalar and structured decoding, validation, and encoding;
+<code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> remains a compatibility alias.</p>
 </section>
 <section id="field-by-field-inventory">
 <h2>Field-by-field inventory<a class="headerlink" href="#field-by-field-inventory" title="Link to this heading"></a></h2>
@@ -272,24 +270,24 @@ encoders described in the write column.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; no transformation.</p></td>
 <td><p>Partial</p></td>
-<td><p>The field is useful schema metadata, but <code class="docutils literal notranslate"><span class="pre">TextRowValue</span></code> is only a
-type-checked pass-through. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+<td><p>The field provides schema metadata and scalar validation without wrapping
+the returned value. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">long_text</span></code></p></td>
 <td><p>Text default and rich-text flag.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; Markdown semantics are not interpreted.</p></td>
 <td><p>Partial</p></td>
-<td><p>The field class earns its metadata; the separate RowValue class does not.
-Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+<td><p>The field owns its metadata and scalar behavior. Local filters omit
+<code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code></p></td>
 <td><p>Boolean filter and API scalar shape.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></td>
 <td><p>Exactly <code class="docutils literal notranslate"><span class="pre">bool</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected locally.</p></td>
 <td><p>Partial</p></td>
-<td><p>RowValue delegates to the field validator. Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected
-a <code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01, confirming the non-null write policy.</p></td>
+<td><p>Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected a <code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01,
+confirming the non-null write policy.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">number</span></code></p></td>
 <td><p>Decimal-place and negative-number settings; numeric filters.</p></td>
@@ -306,8 +304,8 @@ settings without exposing <code class="docutils literal notranslate"><span class
 <td><p>Numeric value.</p></td>
 <td><p>Integer from zero through <code class="docutils literal notranslate"><span class="pre">max_value</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> is rejected.</p></td>
 <td><p>Partial</p></td>
-<td><p>RowValue delegates to field validation. Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected a
-<code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01. Local filters omit inclusive comparisons
+<td><p>Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> rejected a <code class="docutils literal notranslate"><span class="pre">null</span></code> write on 2026-09-01. Local
+filters omit inclusive comparisons
 present in generated documentation.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">date</span></code></p></td>
@@ -338,8 +336,8 @@ shape or field settings.</p></td>
 <td><p>ISO date or datetime <code class="docutils literal notranslate"><span class="pre">str</span></code> with date helpers.</p></td>
 <td><p>Read-only; setter raises.</p></td>
 <td><p>Partial</p></td>
-<td><p>Same semantic family as <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">created_on</span></code>; a separate RowValue
-class adds little beyond the read-only setter.</p></td>
+<td><p>Same semantic family as <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">created_on</span></code> with Field-owned
+read-only handling.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">url</span></code></p></td>
 <td><p>URL field identity and Baserow filters.</p></td>
@@ -362,8 +360,8 @@ Local filters omit <code class="docutils literal notranslate"><span class="pre">
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code>.</p></td>
 <td><p>Empty, <code class="docutils literal notranslate"><span class="pre">None</span></code>, or a matching phone string.</p></td>
 <td><p>Partial</p></td>
-<td><p>The validator encodes real server knowledge. RowValue duplicates the
-validator. Local filters omit <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
+<td><p>The validator encodes real server knowledge. Local filters omit
+<code class="docutils literal notranslate"><span class="pre">starts_with</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_select</span></code></p></td>
 <td><p>Option IDs, labels, colors, read object shape, write-by-ID-or-label, and
@@ -451,12 +449,12 @@ and the complete documented write surface still need verification.</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">password</span></code></p></td>
 <td><p>Write-only secret behavior: server reads are <code class="docutils literal notranslate"><span class="pre">null</span></code> or <code class="docutils literal notranslate"><span class="pre">true</span></code> and a
 string write sets the password.</p></td>
-<td><p>Boolean indicating whether the raw value is non-<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+<td><p>Raw <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>; <code class="docutils literal notranslate"><span class="pre">is_set</span></code> provides an explicit boolean helper.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>, or literal <code class="docutils literal notranslate"><span class="pre">True</span></code> pass local validation.</p></td>
 <td><p>Partial</p></td>
-<td><p>The asymmetry is important, but accepting <code class="docutils literal notranslate"><span class="pre">True</span></code> for writes is not
-justified by generated API documentation. The RowValue contains unused
-state and would report a raw <code class="docutils literal notranslate"><span class="pre">False</span></code> as set.</p></td>
+<td><p>Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> accepted all three write forms and returned only
+<code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">null</span></code> on 2026-09-02. The client preserves the asymmetric
+wire state instead of converting it implicitly.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">uuid</span></code></p></td>
 <td><p>Read-only unique persistent identifier.</p></td>
@@ -619,16 +617,15 @@ and therefore preserve one semantic implementation.</p>
 </section>
 <section id="settled-design-decisions">
 <h2>Settled design decisions<a class="headerlink" href="#settled-design-decisions" title="Link to this heading"></a></h2>
-<p>These decisions describe the intended contract for the refactor. Phase 2 scalar
-semantics and Phase 3 identity-bearing values are implemented on
-<code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>; later sections remain design direction until their phase is
-completed.</p>
+<p>These decisions describe the intended contract for the refactor. Phases 2
+through 6 are implemented on <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>; later sections remain design
+direction until their phase is completed.</p>
 <section id="focus-and-authority">
 <h3>Focus and authority<a class="headerlink" href="#focus-and-authority" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">baserowapi</span></code> will focus on the schema-aware database-token data API. It will
 encode Baserow field, query, row, file, and error behavior without growing into
 a complete administration SDK or a general HTTP framework.</p>
-<p>Each Field will become the single semantic authority for decoding a Baserow
+<p>Each Field is the single semantic authority for decoding a Baserow
 response, validating a supported input, encoding an API write, reporting
 read-only status, exposing advisory filter knowledge, and interpreting computed
 result metadata. Create, single-update, and batch-update operations will use the
@@ -739,16 +736,16 @@ current Baserow documentation and hosted behavior.</p>
 </section>
 <section id="rows-containers-and-transport">
 <h3>Rows, containers, and transport<a class="headerlink" href="#rows-containers-and-transport" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">Table.fields</span></code> will become an ordered read-only mapping from field name to
-Field. <code class="docutils literal notranslate"><span class="pre">FieldList</span></code> and <code class="docutils literal notranslate"><span class="pre">RowValueList</span></code> will not remain public abstractions.
-Row access will return values decoded by the Field, with explicit access to the
-original raw value when needed. Per-type RowValue classes will be removed after
-their behavior has moved to Fields and domain records.</p>
-<p>Explicit <code class="docutils literal notranslate"><span class="pre">row.update({...})</span></code> is the preferred persistence operation. The
-current staged <code class="docutils literal notranslate"><span class="pre">row[name]</span> <span class="pre">=</span> <span class="pre">value;</span> <span class="pre">row.update()</span></code> behavior should be removed or
-modeled explicitly rather than allowing raw and decoded state to diverge. Row
-operation conveniences may remain as thin delegates to the same Table
-primitives used for singular and batch requests.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Table.fields</span></code> and <code class="docutils literal notranslate"><span class="pre">Table.writable_fields</span></code> are ordered read-only mappings
+from field name to Field. <code class="docutils literal notranslate"><span class="pre">Row.values</span></code> is an ordered read-only mapping of
+Field-decoded values, and <code class="docutils literal notranslate"><span class="pre">Row.raw_values</span></code> exposes the original Baserow
+values. The custom FieldList and RowValue containers and all per-type RowValue
+classes have been removed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">row.update({...})</span></code> is the sole Row persistence operation. Row item assignment
+and no-argument staged updates have been removed so raw, decoded, and pending
+state cannot diverge. Row operation conveniences remain thin delegates to the
+same Table primitives used for singular requests; batch updates require
+explicit mappings with row IDs.</p>
 <p>The Client will retain one request boundary for authentication, timeouts,
 connectivity, HTTP failures, JSON parsing, and Baserow error extraction. Logging
 configuration, header combination, request execution, and response parsing will
