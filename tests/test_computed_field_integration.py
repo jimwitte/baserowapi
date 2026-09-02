@@ -7,7 +7,7 @@ pytestmark = pytest.mark.integration
 
 
 def test_hosted_computed_uuid_autonumber_shapes_and_filters(all_fields_table):
-    row = all_fields_table.add_rows({"Name": "phase-4-hosted-semantics"})[0]
+    row = all_fields_table.add_row({"Name": "phase-4-hosted-semantics"})
     fetched = all_fields_table.get_row(row.id)
 
     assert fetched["Formula"] == {

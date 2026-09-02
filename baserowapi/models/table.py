@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
 from baserowapi.exceptions import (
+    BaserowResponseError,
     FieldDataRetrievalError,
     RowFetchError,
     RowAddError,
@@ -496,93 +498,158 @@ class Table:
         :raises ValueError: If the provided row_id is not valid or cannot be converted to an integer.
         :raises RowFetchError: If there's any error during the API request or if the row is not found.
         """
-        if not row_id:
-            raise ValueError("The provided row_id is not valid.")
-
-        try:
-            row_id = int(row_id)
-        except ValueError:
-            raise ValueError(f"The provided row_id '{row_id}' cannot be converted to an integer.")
+        row_id = self._validated_row_id(row_id)
 
         endpoint = f"/api/database/rows/table/{self.id}/{row_id}/?user_field_names=true"
         try:
             response = self.client.make_api_request(endpoint)
-            return Row(row_data=response, table=self, client=self.client)
+            return self._row_from_response(response)
         except Exception as e:
             error_message = f"Failed to retrieve row with ID {row_id} from table {self.id}. Error: {e}"
             self.logger.error(error_message)
             raise RowFetchError(f"Failed to retrieve row: {e}") from e
 
+    @staticmethod
+    def _validated_row_id(row_id: Union[int, str]) -> int:
+        if isinstance(row_id, bool) or not isinstance(row_id, (int, str)):
+            raise TypeError("row_id must be a positive integer or numeric string.")
+        try:
+            validated_id = int(row_id)
+        except ValueError as error:
+            raise ValueError(f"row_id {row_id!r} is not a valid integer.") from error
+        if validated_id <= 0:
+            raise ValueError("row_id must be greater than zero.")
+        return validated_id
+
+    def _validated_batch_size(self, batch_size: Optional[int]) -> int:
+        if batch_size is None:
+            batch_size = self.client.batch_size
+        if isinstance(batch_size, bool) or not isinstance(batch_size, int):
+            raise TypeError("batch_size must be a positive integer.")
+        if batch_size <= 0:
+            raise ValueError("batch_size must be greater than zero.")
+        return batch_size
+
+    def _encode_row_values(
+        self, values: Mapping[str, Any], *, allow_order: bool = False
+    ) -> Dict[str, Any]:
+        """Validate and encode one row mapping through its Field definitions."""
+        if not isinstance(values, Mapping):
+            raise TypeError("Row values must be provided as a mapping.")
+
+        encoded: Dict[str, Any] = {}
+        for field_name, value in values.items():
+            if not isinstance(field_name, str):
+                raise TypeError("Row field names must be strings.")
+            if field_name == "order" and allow_order:
+                if (
+                    isinstance(value, bool)
+                    or not isinstance(value, (int, float))
+                    or value <= 0
+                ):
+                    raise ValueError("order must be a positive number.")
+                encoded[field_name] = value
+                continue
+            if field_name not in self.fields:
+                raise KeyError(f"Field {field_name!r} does not exist in the table.")
+            field = self.fields[field_name]
+            if field.is_read_only:
+                raise KeyError(f"Field {field_name!r} is read-only.")
+            encoded[field_name] = field.encode_value(value)
+        return encoded
+
+    def _row_from_response(self, response: Any) -> Row:
+        if not isinstance(response, Mapping):
+            raise BaserowResponseError("A row response must be an object.")
+        if "id" not in response:
+            raise BaserowResponseError("A row response is missing its 'id'.")
+        try:
+            row_data = dict(response)
+            row_data["id"] = self._validated_row_id(response["id"])
+            return Row(row_data=row_data, table=self, client=self.client)
+        except (TypeError, ValueError) as error:
+            raise BaserowResponseError("A row response has an invalid 'id'.") from error
+
+    def _rows_from_batch_response(
+        self, response: Any, expected_count: int
+    ) -> List[Row]:
+        if not isinstance(response, Mapping) or not isinstance(
+            response.get("items"), list
+        ):
+            raise BaserowResponseError(
+                "A batch row response must contain an 'items' list."
+            )
+        items = response["items"]
+        if len(items) != expected_count:
+            raise BaserowResponseError(
+                f"A batch row response returned {len(items)} item(s); "
+                f"{expected_count} were expected."
+            )
+        return [self._row_from_response(item) for item in items]
+
     def add_rows(
         self,
-        rows_data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        rows_data: List[Mapping[str, Any]],
         batch_size: Optional[int] = None,
-    ) -> Union[Row, List[Row]]:
+    ) -> List[Row]:
         """
-        Add a new row (or multiple rows) to the table.
+        Add multiple rows to the table.
 
-        :param rows_data: A dictionary representing the fields and values
-                        of the row to add, or a list of dictionaries for
-                        adding multiple rows.
-        :type rows_data: dict or list[dict]
+        :param rows_data: A non-empty list of field-value mappings.
+        :type rows_data: list[dict]
 
         :param batch_size: The number of rows to include in each batch request when adding multiple rows.
                         Defaults to the client's batch_size.
         :type batch_size: int
 
-        :return: An instance of the Row model representing the added row or
-                a list of Row instances for multiple rows.
-        :rtype: Row or list[Row]
+        :return: The added rows in input order.
+        :rtype: list[Row]
 
         :raises ValueError: If parameters are not valid.
         :raises RowAddError: If rows cannot be added or parsed.
         """
 
-        def _add_rows_chunk(chunk):
-            """
-            Helper function to add a chunk of rows.
-            """
-            api_endpoint = (
-                f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
-            )
-            data_payload = {"items": chunk}
-            response = self.client.make_api_request(
-                api_endpoint, method="POST", data=data_payload
-            )
-            return [
-                Row(row_data=row_data_item, table=self, client=self.client)
-                for row_data_item in response["items"]
-            ]
+        if isinstance(rows_data, Mapping) or not isinstance(rows_data, list):
+            raise TypeError("add_rows expects a list; use add_row for one row.")
+        if not rows_data:
+            raise ValueError("rows_data must contain at least one row.")
 
-        # Normalize rows_data to always be a list of dictionaries
-        if isinstance(rows_data, dict):
-            rows_data = [rows_data]
-
-        # Validate each row
-        for row in rows_data:
-            for field_name in row.keys():
-                if field_name not in self.writable_fields:
-                    error_message = f"Field '{field_name}' is not writable or does not exist in the table."
-                    self.logger.error(error_message)
-                    raise RowAddError(error_message)
-
-        if batch_size is None:
-            batch_size = self.client.batch_size
-
-        added_rows = []
-        for i in range(0, len(rows_data), batch_size):
-            chunk = rows_data[i : i + batch_size]
+        encoded_rows = [self._encode_row_values(row) for row in rows_data]
+        batch_size = self._validated_batch_size(batch_size)
+        endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+        added_rows: List[Row] = []
+        for offset in range(0, len(encoded_rows), batch_size):
+            chunk = encoded_rows[offset : offset + batch_size]
+            batch_number = offset // batch_size + 1
             try:
-                added_rows.extend(_add_rows_chunk(chunk))
-            except Exception as e:
-                error_message = f"Failed to add row(s) to table {self.id}. Error: {e}"
-                self.logger.error(error_message)
-                raise RowAddError(f"Failed to add rows: {e}") from e
+                response = self.client.make_api_request(
+                    endpoint, method="POST", data={"items": chunk}
+                )
+                added_rows.extend(self._rows_from_batch_response(response, len(chunk)))
+            except Exception as error:
+                raise RowAddError(
+                    f"Failed to add batch {batch_number} to table {self.id}; "
+                    f"{len(added_rows)} row(s) were already added.",
+                    failed_batch_number=batch_number,
+                    completed_row_ids=[row.id for row in added_rows],
+                ) from error
         return added_rows
+
+    def add_row(self, values: Mapping[str, Any]) -> Row:
+        """Add one row and return it."""
+        encoded_values = self._encode_row_values(values)
+        endpoint = f"/api/database/rows/table/{self.id}/?user_field_names=true"
+        try:
+            response = self.client.make_api_request(
+                endpoint, method="POST", data=encoded_values
+            )
+            return self._row_from_response(response)
+        except Exception as error:
+            raise RowAddError(f"Failed to add a row to table {self.id}.") from error
 
     def update_rows(
         self,
-        rows_data: Union[List[Union[Dict[str, Any], Row]], Generator[Row, None, None]],
+        rows_data: List[Union[Mapping[str, Any], Row]],
         batch_size: Optional[int] = None,
     ) -> List[Row]:
         """
@@ -605,85 +672,86 @@ class Table:
         :raises RowUpdateError: If rows cannot be updated or parsed.
         """
 
+        if not isinstance(rows_data, list):
+            raise TypeError("update_rows expects a list; use update_row for one row.")
         if not rows_data:
-            warning_msg = "The rows_data list is empty. Nothing to update."
-            self.logger.warning(warning_msg)
-            raise ValueError(warning_msg)
-
-        if isinstance(rows_data, Generator):
-            raise TypeError(
-                "The update_rows method does not accept generator objects. Please provide a list of rows."
-            )
+            raise ValueError("rows_data must contain at least one row.")
 
         formatted_data = []
         for item in rows_data:
-            if isinstance(item, dict):
+            if isinstance(item, Mapping):
+                item = dict(item)
                 if "id" not in item:
                     raise KeyError(
                         "The 'id' key is missing, which is required for updating a row."
                     )
 
-                for key, value in item.items():
-                    if key == "id":
-                        continue
-
-                    if key == "order":
-                        if not isinstance(value, (int, float)) or value <= 0:
-                            raise ValueError(
-                                f"Invalid 'order' value: {value}. 'order' should be a positive numeric value."
-                            )
-                        continue
-
-                    if key not in self.writable_fields:
-                        raise KeyError(
-                            f"Field '{key}' is either read-only or does not exist in the table."
-                        )
-
-                    field_object = self.fields[key]
-
-                    try:
-                        field_object.validate_value(value)
-                    except ValueError as ve:
-                        raise ValueError(f"Invalid value for field '{key}': {ve}") from ve
-
-                formatted_data.append(item)
+                row_id = self._validated_row_id(item.pop("id"))
+                formatted_data.append(
+                    {"id": row_id, **self._encode_row_values(item, allow_order=True)}
+                )
 
             elif isinstance(item, Row):
-                row_data = {"id": item.id}
-                for rv in item.values:
-                    if not rv.is_read_only:
-                        row_data[rv.name] = rv.format_for_api()
-                formatted_data.append(row_data)
+                if item.table_id != self.id:
+                    raise ValueError(
+                        f"Row {item.id!r} belongs to table {item.table_id}, not {self.id}."
+                    )
+                row_id = self._validated_row_id(item.id)
+                values = {
+                    rv.name: rv.format_for_api()
+                    for rv in item.values
+                    if not rv.is_read_only
+                }
+                formatted_data.append(
+                    {"id": row_id, **self._encode_row_values(values)}
+                )
 
             else:
                 raise TypeError(
                     f"Unsupported type {type(item)} in rows_data. Expected dict or Row object."
                 )
 
-        try:
-            endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
-            updated_rows = []
-
-            if batch_size is None:
-                batch_size = self.client.batch_size
-
-            for i in range(0, len(formatted_data), batch_size):
-                batch_data = formatted_data[i : i + batch_size]
+        endpoint = f"/api/database/rows/table/{self.id}/batch/?user_field_names=true"
+        updated_rows: List[Row] = []
+        batch_size = self._validated_batch_size(batch_size)
+        for offset in range(0, len(formatted_data), batch_size):
+            batch_data = formatted_data[offset : offset + batch_size]
+            batch_number = offset // batch_size + 1
+            try:
                 response = self.client.make_api_request(
                     endpoint, method="PATCH", data={"items": batch_data}
                 )
-
                 updated_rows.extend(
-                    [
-                        Row(row_data=item, table=self, client=self.client)
-                        for item in response["items"]
-                    ]
+                    self._rows_from_batch_response(response, len(batch_data))
                 )
+            except Exception as error:
+                raise RowUpdateError(
+                    f"Failed to update batch {batch_number} in table {self.id}; "
+                    f"{len(updated_rows)} row(s) were already updated.",
+                    failed_batch_number=batch_number,
+                    completed_row_ids=[row.id for row in updated_rows],
+                ) from error
+        return updated_rows
 
-            return updated_rows
-        except Exception as e:
-            self.logger.error(f"Failed to update rows in table {self.id}. Error: {e}")
-            raise RowUpdateError(f"Failed to update rows: {e}") from e
+    def update_row(
+        self, row_id: Union[int, str], values: Mapping[str, Any]
+    ) -> Row:
+        """Update one row and return the server representation."""
+        validated_id = self._validated_row_id(row_id)
+        encoded_values = self._encode_row_values(values, allow_order=True)
+        endpoint = (
+            f"/api/database/rows/table/{self.id}/{validated_id}/"
+            "?user_field_names=true"
+        )
+        try:
+            response = self.client.make_api_request(
+                endpoint, method="PATCH", data=encoded_values
+            )
+            return self._row_from_response(response)
+        except Exception as error:
+            raise RowUpdateError(
+                f"Failed to update row {validated_id} in table {self.id}."
+            ) from error
 
     def delete_rows(
         self,

@@ -70,24 +70,25 @@ def test_current_pagination_follows_server_next_url(characterized_table):
     )
 
 
-def test_current_create_returns_list_and_bypasses_field_encoding(
+def test_singular_create_returns_row_and_uses_field_encoding(
     characterized_table, characterized_row_response
 ):
-    characterized_table.client.make_api_request.return_value = {
-        "items": [characterized_row_response]
+    characterized_table.client.make_api_request.return_value = characterized_row_response
+    submitted = {
+        "Name": "Created",
+        "Tags": characterized_table.fields["Tags"].options,
     }
-    submitted = {"Name": "Created", "Tags": "Urgent,Customer"}
 
-    created = characterized_table.add_rows(submitted)
+    created = characterized_table.add_row(submitted)
 
-    assert isinstance(created, list)
-    assert len(created) == 1
+    assert created.id == characterized_row_response["id"]
     assert characterized_table.client.make_api_request.call_args.kwargs["data"] == {
-        "items": [submitted]
+        "Name": "Created",
+        "Tags": [option.id for option in characterized_table.fields["Tags"].options],
     }
 
 
-def test_current_batch_mapping_update_validates_but_does_not_encode(
+def test_batch_mapping_update_uses_field_encoding(
     characterized_table, characterized_row_response
 ):
     characterized_table.client.make_api_request.return_value = {
@@ -98,7 +99,7 @@ def test_current_batch_mapping_update_validates_but_does_not_encode(
     characterized_table.update_rows([submitted])
 
     assert characterized_table.client.make_api_request.call_args.kwargs["data"] == {
-        "items": [submitted]
+        "items": [{"id": 1001, "Date Time": "2026-09-01T00:00:00Z"}]
     }
 
 

@@ -198,22 +198,25 @@ delegate to <code class="docutils literal notranslate"><span class="pre">Field.d
 remain compatibility facades until the public row model is simplified.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Create rows</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> checks only that field names are writable. It sends
-caller values directly to the batch endpoint.</p></td>
-<td><p>Field validation and <code class="docutils literal notranslate"><span class="pre">format_for_api</span></code> are bypassed.</p></td>
-<td><p>Validate and encode through the same field operation used by updates.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Table.add_row</span></code> and <code class="docutils literal notranslate"><span class="pre">Table.add_rows</span></code> both validate and encode through
+each writable Field before sending a singular or batch request.</p></td>
+<td><p>Singular create returns <code class="docutils literal notranslate"><span class="pre">Row</span></code>; plural create accepts a non-empty list
+and returns <code class="docutils literal notranslate"><span class="pre">list[Row]</span></code>.</p></td>
+<td><p>Keep one internal row encoder authoritative.</p></td>
 </tr>
 <tr class="row-even"><td><p>Update one <code class="docutils literal notranslate"><span class="pre">Row</span></code></p></td>
-<td><p>Mapping values are validated and formatted by <code class="docutils literal notranslate"><span class="pre">Field</span></code>. An update with
-no mapping formats each writable <code class="docutils literal notranslate"><span class="pre">RowValue</span></code>.</p></td>
-<td><p>This is the most complete current value pipeline.</p></td>
-<td><p>Make this pipeline authoritative and reuse it everywhere.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Row.update</span></code> delegates persistence to <code class="docutils literal notranslate"><span class="pre">Table.update_row</span></code> and
+synchronizes itself from the returned Row. Staged updates remain for
+Phase 6.</p></td>
+<td><p>The same Field encoder owns singular and plural update values.</p></td>
+<td><p>Keep Row convenience behavior thin until staged mutation is resolved.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Batch update mappings</p></td>
-<td><p>Values are validated but the original mapping is sent without
-<code class="docutils literal notranslate"><span class="pre">format_for_api</span></code>.</p></td>
-<td><p>Validation and wire encoding can disagree with single-row updates.</p></td>
-<td><p>Encode each supplied field value before constructing the batch payload.</p></td>
+<td><p>Mapping and Row inputs are normalized through the same Field encoder.
+All local validation completes before the first request chunk.</p></td>
+<td><p>Batch failures report the failed chunk and completed response row IDs;
+writes are not retried or rolled back.</p></td>
+<td><p>Preserve this explicit non-atomic contract.</p></td>
 </tr>
 <tr class="row-even"><td><p>Filter rows</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Table</span></code> sends the sole JSON filter-tree encoding. Fields expose
@@ -243,8 +246,8 @@ is simplified.</p>
 <section id="field-by-field-inventory">
 <h2>Field-by-field inventory<a class="headerlink" href="#field-by-field-inventory" title="Link to this heading"></a></h2>
 <p>The read and write columns below describe current package behavior, not every
-shape the Baserow server may accept. In particular, create currently bypasses
-the field encoders described in the write column.</p>
+shape the Baserow server may accept. All create and update paths use the field
+encoders described in the write column.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 13.0%" />
@@ -544,9 +547,11 @@ belongs in a data client rather than an administrative client.</p></td>
 <section id="test-coverage-inventory">
 <h2>Test coverage inventory<a class="headerlink" href="#test-coverage-inventory" title="Link to this heading"></a></h2>
 <p>The suite now combines credential-free characterization tests with hosted
-<code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> integration tests. A passing create test proves that the server
-accepts the supplied payload; it does not prove that the local field encoder was
-used because <code class="docutils literal notranslate"><span class="pre">add_rows</span></code> still bypasses that encoder.</p>
+<code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> integration tests. Offline payload assertions prove that every
+create and update route uses the Field encoder; hosted tests separately prove
+that representative encoded values remain compatible with the unpinned service.
+Singular and batch row writes were verified against hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> on
+2026-09-02.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 25.0%" />
@@ -564,8 +569,8 @@ used because <code class="docutils literal notranslate"><span class="pre">add_ro
 <td><p>Text, long text, boolean, number, rating, three date configurations, URL,
 email, empty file, selects, phone, empty links, empty collaborators, and
 password.</p></td>
-<td><p>Create still bypasses the encoder. Non-empty collaborators and hosted
-duplicate-label configurations remain unverified.</p></td>
+<td><p>Singular and batch encoder parity is covered. Non-empty collaborators
+and hosted duplicate-label configurations remain unverified.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Specialized operation</p></td>
 <td><p>Date conversion/display, client file upload and upload-by-URL with

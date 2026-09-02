@@ -19,6 +19,9 @@
     now client operations and row assignment is explicit.
   - Removed the detached `FilterValidator` and unused `Filter.query_string`
     encoding. Row queries continue to use Baserow's JSON filter tree.
+  - Split singular and plural row writes into fixed contracts: `add_row()` and
+    `update_row()` return one Row, while `add_rows()` and `update_rows()` accept
+    non-empty lists and return lists. `add_rows(mapping)` is no longer accepted.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -50,6 +53,16 @@
     `visible_name` metadata.
 - **Exceptions:**
   - Added `FieldValueError` for explicit field conversion failures.
+  - Row add and update failures now report the failed batch number and IDs of
+    rows completed by earlier non-atomic request chunks.
+- **Row Writes:**
+  - Unified singular create, batch create, singular update, batch mapping
+    update, batch Row update, and `Row.update()` around Field-owned validation
+    and encoding.
+  - Added consistent row-ID, batch-size, writable-field, and response-shape
+    validation before or at the request boundary.
+  - Batch writes validate and encode every row before the first request and do
+    not automatically retry or roll back partially completed writes.
 - **Testing and Documentation:**
   - Added credential-free scalar field tests and recorded hosted compatibility
     probes for nullability, numeric precision, and timezone-offset writes.
@@ -57,6 +70,8 @@
     assignment coverage against hosted baserow.io.
   - Added read-only write-path coverage and hosted Formula, Count, Lookup, UUID,
     Autonumber, and filter compatibility tests.
+  - Added offline singular/batch encoding parity and partial-failure tests, plus
+    hosted row-write parity coverage against baserow.io.
 
 
 #### 2026-09-01: 0.1.0b5

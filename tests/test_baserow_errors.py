@@ -128,12 +128,9 @@ def test_high_level_row_fetch_preserves_domain_error_and_http_cause():
 
 def test_row_update_does_not_convert_field_validation_error():
     validation_error = FieldValidationError("invalid value")
-    field = Mock()
-    field.validate_value.side_effect = validation_error
     table = Mock()
     table.id = 1
-    table.writable_fields = ["Name"]
-    table.fields = {"Name": field}
+    table.update_row.side_effect = validation_error
     row = Row(
         row_data={"id": 1, "order": 1, "Name": "original"},
         table=table,

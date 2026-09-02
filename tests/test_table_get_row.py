@@ -10,7 +10,7 @@ def test_get_row_by_id(all_fields_table, single_row_data):
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
-    created_row = all_fields_table.add_rows(input_data)[0]
+    created_row = all_fields_table.add_row(input_data)
 
     # Step 2: Fetch the row by its ID
     fetched_row = all_fields_table.get_row(created_row.id)
@@ -41,7 +41,7 @@ def test_get_row_with_invalid_id_type(all_fields_table):
         all_fields_table.get_row(invalid_row_id)
 
     # Test with a None ID
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         all_fields_table.get_row(None)
 
 def test_get_row_with_boundary_ids(all_fields_table):
@@ -50,5 +50,5 @@ def test_get_row_with_boundary_ids(all_fields_table):
         all_fields_table.get_row(0)
 
     # Test with a negative row ID
-    with pytest.raises(RowFetchError):
+    with pytest.raises(ValueError):
         all_fields_table.get_row(-1)

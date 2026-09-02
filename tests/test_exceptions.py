@@ -22,6 +22,7 @@ from baserowapi.exceptions import (
     RowFetchError,
     RowMoveError,
     RowUpdateError,
+    RowWriteError,
     RowValueError,
     RowValueOperationError,
 )
@@ -71,6 +72,10 @@ def test_domain_exception_groups_are_consistent():
             RowMoveError,
             RowUpdateError,
         )
+    )
+    assert all(
+        issubclass(exception_class, RowWriteError)
+        for exception_class in (RowAddError, RowUpdateError)
     )
     assert all(
         issubclass(exception_class, FilterError)

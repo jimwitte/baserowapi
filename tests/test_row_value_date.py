@@ -10,7 +10,7 @@ def test_rowvalue_as_datetime(all_fields_table, single_row_data):
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
-    created_row = all_fields_table.add_rows([input_data])[0]
+    created_row = all_fields_table.add_row(input_data)
 
     # Step 2: Access the as_datetime() function
     iso_date_as_datetime = created_row.values["ISO Date"].as_datetime()
@@ -36,7 +36,7 @@ def test_rowvalue_formatted_date(all_fields_table, single_row_data):
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
-    created_row = all_fields_table.add_rows([input_data])[0]
+    created_row = all_fields_table.add_row(input_data)
 
     # Step 2: Access the formatted_date property
     us_date_time_formatted = created_row.values["US Date Time"].formatted_date

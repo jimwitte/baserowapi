@@ -103,7 +103,9 @@
       "kwargs"
     ],
     "Table.add_rows": ["self", "rows_data", "batch_size"],
+    "Table.add_row": ["self", "values"],
     "Table.update_rows": ["self", "rows_data", "batch_size"],
+    "Table.update_row": ["self", "row_id", "values"],
     "Table.delete_rows": ["self", "rows_data", "batch_size"],
     "Row.update": ["self", "values", "memory_only"],
     "Row.delete": ["self"],

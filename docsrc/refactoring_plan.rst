@@ -197,6 +197,10 @@ Exit criteria
 Phase 5: Unify row create and update encoding
 ---------------------------------------------
 
+Status: COMPLETE. On 2026-09-02, the Python 3.12 suites passed with 113 offline
+tests and 35 serial hosted tests. Sphinx 9.1.0 also rebuilt the tracked
+documentation successfully.
+
 Goal
 ~~~~
 

@@ -4,7 +4,7 @@ import pytest
 
 import baserowapi
 from baserowapi import Filter, FilterCompatibility
-from baserowapi.exceptions import FieldValueError, RowAddError
+from baserowapi.exceptions import FieldValueError
 from baserowapi.models.fields import (
     AutonumberField,
     CountField,
@@ -136,8 +136,8 @@ def test_all_write_paths_exclude_read_only_fields(
 ):
     read_only_names = {"Formula", "Count", "Lookup", "UUID", "Autonumber"}
 
-    with pytest.raises(RowAddError):
-        characterized_table.add_rows({"Name": "New", "Formula": "not writable"})
+    with pytest.raises(KeyError):
+        characterized_table.add_row({"Name": "New", "Formula": "not writable"})
     with pytest.raises(KeyError):
         characterized_row.update({"Count": "2"})
     with pytest.raises(KeyError):

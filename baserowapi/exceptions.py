@@ -1,6 +1,6 @@
 """Exceptions raised by :mod:`baserowapi`."""
 
-from typing import Optional
+from typing import Iterable, Optional
 
 
 class BaserowAPIError(Exception):
@@ -80,11 +80,34 @@ class RowFetchError(RowError):
     """Raised when fetching rows fails."""
 
 
-class RowAddError(RowError):
+class RowWriteError(RowError):
+    """Base class for create and update failures.
+
+    Batch writes are not atomic. When an earlier request chunk succeeded before
+    a later chunk failed, ``completed_row_ids`` identifies the rows known to
+    have been written and ``failed_batch_number`` identifies the one-based
+    request chunk that failed.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        failed_batch_number: Optional[int] = None,
+        completed_row_ids: Iterable[int] = (),
+    ) -> None:
+        self.message = message
+        self.failed_batch_number = failed_batch_number
+        self.completed_row_ids = tuple(completed_row_ids)
+        self.completed_count = len(self.completed_row_ids)
+        super().__init__(message)
+
+
+class RowAddError(RowWriteError):
     """Raised when adding rows fails."""
 
 
-class RowUpdateError(RowError):
+class RowUpdateError(RowWriteError):
     """Raised when updating rows fails."""
 
 

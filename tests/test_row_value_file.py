@@ -14,7 +14,7 @@ def empty_file_row(all_fields_table, single_row_data):
         for key, value in single_row_data.items()
         if not value["read_only"]
     }
-    return all_fields_table.add_rows([input_data])[0]
+    return all_fields_table.add_row(input_data)
 
 
 def test_upload_file_returns_unattached_file_for_explicit_assignment(

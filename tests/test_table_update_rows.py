@@ -14,7 +14,7 @@ def test_update_row(all_fields_table, single_row_data):
         for key, value in single_row_data.items()
         if not value["read_only"]
     }
-    new_row = all_fields_table.add_rows(input_data)[0]
+    new_row = all_fields_table.add_row(input_data)
 
     # Prepare updated data (e.g., change the 'Name' and 'Notes' fields)
     updated_data = {

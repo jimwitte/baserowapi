@@ -9,7 +9,7 @@ def test_update_single_row(all_fields_table, single_row_data):
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
-    created_row = all_fields_table.add_rows([input_data])[0]
+    created_row = all_fields_table.add_row(input_data)
 
     # Step 2: Prepare update data
     update_data = {
@@ -39,7 +39,7 @@ def test_update_single_row_with_direct_access(all_fields_table, single_row_data)
     input_data = {
         key: value["input"] for key, value in single_row_data.items() if not value["read_only"]
     }
-    created_row = all_fields_table.add_rows([input_data])[0]
+    created_row = all_fields_table.add_row(input_data)
 
     # Step 2: Set new values using dict-style access
     created_row['Name'] = 'Updated Name'

@@ -77,6 +77,14 @@ require hosted verification. `docsrc/refactoring_plan.rst` defines the reviewed
 phase order and exit criteria; completing one phase does not authorize starting
 the next without review.
 
+Row writes have explicit singular and plural contracts. `Table.add_row` and
+`Table.update_row` return one `Row`; `Table.add_rows` and `Table.update_rows`
+accept non-empty lists and return `list[Row]`. Route every create and update
+through the shared Field-owned encoder. Validate all input rows before sending
+the first batch chunk. Batch writes are not atomic across chunks: report prior
+completed row IDs on failure, and do not automatically retry or roll back
+mutating requests.
+
 ## Working rules
 
 Inspect the relevant implementation, callers, tests, and documentation before

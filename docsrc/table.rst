@@ -3,7 +3,29 @@ Table Class
 
 The ``Table`` class provides an interface to interact with a Baserow table. Through this class, users can perform CRUD operations on rows, query table information, retrieve field properties, and utilize various filtering and sorting options. Below, we showcase the properties and methods available in the ``Table`` class along with examples of common use cases.
 
-**Important Note**: The ``get_rows()`` function from the Baserow API returns paged results with a default of 100 rows per page. When using this function, an iterator is returned. This iterator abstracts the paging mechanism, providing a seamless experience for fetching rows.
+**Important Note**: Baserow returns paged row results. ``get_rows()`` follows
+those pages and returns a list by default; pass ``iterator=True`` to consume a
+generator instead.
+
+Row write contracts
+-------------------
+
+Singular and plural writes are deliberately separate. ``add_row(values)`` and
+``update_row(row_id, values)`` return one ``Row``. ``add_rows(rows)`` and
+``update_rows(rows)`` accept non-empty lists and always return ``list[Row]``.
+The plural methods no longer accept a single mapping.
+
+Every create and update passes supplied values through the corresponding
+Field's validation and encoder. This gives a date, select option, linked-row
+reference, file record, or unknown writable field the same wire representation
+in singular and batch operations. Read-only and absent fields are rejected
+before a request is sent.
+
+Batch requests are processed sequentially and are not atomic across chunks. A
+``RowAddError`` or ``RowUpdateError`` raised after an earlier chunk succeeded
+exposes ``failed_batch_number``, ``completed_count``, and
+``completed_row_ids``. The client does not automatically retry or roll back
+mutating requests.
 
 Properties
 ----------
@@ -93,7 +115,7 @@ Methods and Usage
         'Notes': 'drums',
         'Active': True
     }
-    added_row = table.add_rows(new_row_data)
+    added_row = table.add_row(new_row_data)
 
     # Add multiple rows
     rows_data = [
@@ -103,6 +125,9 @@ Methods and Usage
 
     # Add the rows to the table
     added_rows = table.add_rows(rows_data)
+
+    # Update one row
+    updated_row = table.update_row(added_row.id, {'Notes': 'new note'})
 
     # Updating rows
     rows_data = [
@@ -122,3 +147,22 @@ Methods and Usage
     # Confirm the deletion
     if success:
         print(f"Deleted rows with IDs: {row_ids}")
+
+Migration from 0.1
+------------------
+
+``add_rows(mapping)`` previously accepted a single mapping but still returned
+a one-element list. Use the explicit singular method instead:
+
+.. code-block:: python
+
+    # 0.1
+    row = table.add_rows({'Name': 'Ada'})[0]
+
+    # 0.2
+    row = table.add_row({'Name': 'Ada'})
+
+Plural calls continue to use a list and return a list. For direct table updates,
+use ``update_row(row_id, values)`` for one row and ``update_rows(rows)`` for a
+list. ``row.update(values)`` remains available and delegates to
+``table.update_row``.

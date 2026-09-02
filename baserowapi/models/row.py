@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 from baserowapi.exceptions import (
     RowFetchError,
-    RowUpdateError,
     RowDeleteError,
     RowMoveError,
 )
@@ -307,57 +306,33 @@ class Row:
         :rtype: Row
         :raises RowUpdateError: If the API request results in any error responses.
         """
-        # Validate and format caller-provided values before entering the request
-        # boundary so caller errors retain their specific exception types.
-        payload = {}
-
-        if values is None:
-            for rv in self.values:
-                if not rv.is_read_only:
-                    payload[rv.name] = rv.format_for_api()
-
-        else:
-            for field_name, value in values.items():
-                if field_name not in self.table.writable_fields:
-                    raise KeyError(
-                        f"Field '{field_name}' is either read-only or does not exist in the table."
-                    )
-
-                field_object = self.table.fields[field_name]
-                field_object.validate_value(value)
-                payload[field_name] = field_object.format_for_api(value)
-                self[field_name] = value
-
-        self.logger.debug(f"Payload for API request: {payload}")
-
         if memory_only:
+            if values is not None:
+                for field_name, value in values.items():
+                    if field_name not in self.table.writable_fields:
+                        raise KeyError(
+                            f"Field '{field_name}' is either read-only or does not exist in the table."
+                        )
+                    self[field_name] = value
             self._row_data.update(self.to_dict())
             self.logger.debug(
                 f"Memory-only update for row with ID {self.id}. Skipping API request."
             )
             return self
 
-        if not payload:
-            self.logger.warning("Update called, but no fields were updated.")
+        if values is None:
+            values = {
+                rv.name: rv.format_for_api()
+                for rv in self.values
+                if not rv.is_read_only
+            }
 
-        try:
-            self._row_data.update(self.to_dict())
-            endpoint = (
-                f"/api/database/rows/table/{self.table_id}/{self.id}/?user_field_names=true"
-            )
-            response = self.client.make_api_request(endpoint, method="PATCH", data=payload)
-
-            self._row_data = response
-            self._values = self._create_row_value_list(self._row_data)
-            self.logger.debug(f"Successfully updated row with ID {self.id}.")
-
-            return self
-
-        except Exception as e:
-            self.logger.error(
-                f"Failed to update row with ID {self.id} in table {self.table_id}. Error: {e}"
-            )
-            raise RowUpdateError(f"Failed to update row with ID {self.id}.") from e
+        updated = self.table.update_row(self.id, values)
+        self.id = updated.id
+        self.order = updated.order
+        self._row_data = updated._row_data
+        self._values = None
+        return self
 
     def delete(self) -> bool:
         """

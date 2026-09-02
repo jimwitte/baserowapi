@@ -92,20 +92,23 @@ than the behavior of any individual field class.
      - Fields now own scalar and identity-bearing semantics. RowValue classes
        remain compatibility facades until the public row model is simplified.
    * - Create rows
-     - ``Table.add_rows`` checks only that field names are writable. It sends
-       caller values directly to the batch endpoint.
-     - Field validation and ``format_for_api`` are bypassed.
-     - Validate and encode through the same field operation used by updates.
+     - ``Table.add_row`` and ``Table.add_rows`` both validate and encode through
+       each writable Field before sending a singular or batch request.
+     - Singular create returns ``Row``; plural create accepts a non-empty list
+       and returns ``list[Row]``.
+     - Keep one internal row encoder authoritative.
    * - Update one ``Row``
-     - Mapping values are validated and formatted by ``Field``. An update with
-       no mapping formats each writable ``RowValue``.
-     - This is the most complete current value pipeline.
-     - Make this pipeline authoritative and reuse it everywhere.
+     - ``Row.update`` delegates persistence to ``Table.update_row`` and
+       synchronizes itself from the returned Row. Staged updates remain for
+       Phase 6.
+     - The same Field encoder owns singular and plural update values.
+     - Keep Row convenience behavior thin until staged mutation is resolved.
    * - Batch update mappings
-     - Values are validated but the original mapping is sent without
-       ``format_for_api``.
-     - Validation and wire encoding can disagree with single-row updates.
-     - Encode each supplied field value before constructing the batch payload.
+     - Mapping and Row inputs are normalized through the same Field encoder.
+       All local validation completes before the first request chunk.
+     - Batch failures report the failed chunk and completed response row IDs;
+       writes are not retried or rolled back.
+     - Preserve this explicit non-atomic contract.
    * - Filter rows
      - ``Table`` sends the sole JSON filter-tree encoding. Fields expose
        three-state advisory compatibility.
@@ -132,8 +135,8 @@ Field-by-field inventory
 ------------------------
 
 The read and write columns below describe current package behavior, not every
-shape the Baserow server may accept. In particular, create currently bypasses
-the field encoders described in the write column.
+shape the Baserow server may accept. All create and update paths use the field
+encoders described in the write column.
 
 .. list-table::
    :header-rows: 1
@@ -388,9 +391,11 @@ Test coverage inventory
 -----------------------
 
 The suite now combines credential-free characterization tests with hosted
-``baserow.io`` integration tests. A passing create test proves that the server
-accepts the supplied payload; it does not prove that the local field encoder was
-used because ``add_rows`` still bypasses that encoder.
+``baserow.io`` integration tests. Offline payload assertions prove that every
+create and update route uses the Field encoder; hosted tests separately prove
+that representative encoded values remain compatible with the unpinned service.
+Singular and batch row writes were verified against hosted ``baserow.io`` on
+2026-09-02.
 
 .. list-table::
    :header-rows: 1
@@ -403,8 +408,8 @@ used because ``add_rows`` still bypasses that encoder.
      - Text, long text, boolean, number, rating, three date configurations, URL,
        email, empty file, selects, phone, empty links, empty collaborators, and
        password.
-     - Create still bypasses the encoder. Non-empty collaborators and hosted
-       duplicate-label configurations remain unverified.
+     - Singular and batch encoder parity is covered. Non-empty collaborators
+       and hosted duplicate-label configurations remain unverified.
    * - Specialized operation
      - Date conversion/display, client file upload and upload-by-URL with
        explicit assignment, and linked-row discovery/update by ID.

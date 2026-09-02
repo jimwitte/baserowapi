@@ -83,8 +83,10 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.table</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaserowResponseError</span><span class="p">,</span>
     <span class="n">FieldDataRetrievalError</span><span class="p">,</span>
     <span class="n">RowFetchError</span><span class="p">,</span>
     <span class="n">RowAddError</span><span class="p">,</span>
@@ -591,99 +593,167 @@
 <span class="sd">        :raises ValueError: If the provided row_id is not valid or cannot be converted to an integer.</span>
 <span class="sd">        :raises RowFetchError: If there's any error during the API request or if the row is not found.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The provided row_id is not valid."</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The provided row_id '</span><span class="si">{</span><span class="n">row_id</span><span class="si">}</span><span class="s2">' cannot be converted to an integer."</span><span class="p">)</span>
+        <span class="n">row_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
 
         <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">row_id</span><span class="si">}</span><span class="s2">/?user_field_names=true"</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">Row</span><span class="p">(</span><span class="n">row_data</span><span class="o">=</span><span class="n">response</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Failed to retrieve row with ID </span><span class="si">{</span><span class="n">row_id</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">RowFetchError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to retrieve row: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
 
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"row_id must be a positive integer or numeric string."</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">validated_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"row_id </span><span class="si">{</span><span class="n">row_id</span><span class="si">!r}</span><span class="s2"> is not a valid integer."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">if</span> <span class="n">validated_id</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"row_id must be greater than zero."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">validated_id</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validated_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"batch_size must be a positive integer."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"batch_size must be greater than zero."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">batch_size</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_row_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">allow_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Validate and encode one row mapping through its Field definitions."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Row values must be provided as a mapping."</span><span class="p">)</span>
+
+        <span class="n">encoded</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Row field names must be strings."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">field_name</span> <span class="o">==</span> <span class="s2">"order"</span> <span class="ow">and</span> <span class="n">allow_order</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+                    <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"order must be a positive number."</span><span class="p">)</span>
+                <span class="n">encoded</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">field_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Field </span><span class="si">{</span><span class="n">field_name</span><span class="si">!r}</span><span class="s2"> does not exist in the table."</span><span class="p">)</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Field </span><span class="si">{</span><span class="n">field_name</span><span class="si">!r}</span><span class="s2"> is read-only."</span><span class="p">)</span>
+            <span class="n">encoded</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">encode_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">encoded</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_row_from_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Row</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span><span class="s2">"A row response must be an object."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"id"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span><span class="s2">"A row response is missing its 'id'."</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">row_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+            <span class="n">row_data</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Row</span><span class="p">(</span><span class="n">row_data</span><span class="o">=</span><span class="n">row_data</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span><span class="s2">"A row response has an invalid 'id'."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rows_from_batch_response</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">expected_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">),</span> <span class="nb">list</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="s2">"A batch row response must contain an 'items' list."</span>
+            <span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">!=</span> <span class="n">expected_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"A batch row response returned </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s2"> item(s); "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">expected_count</span><span class="si">}</span><span class="s2"> were expected."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+
 <div class="viewcode-block" id="Table.add_rows">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.add_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Add a new row (or multiple rows) to the table.</span>
+<span class="sd">        Add multiple rows to the table.</span>
 
-<span class="sd">        :param rows_data: A dictionary representing the fields and values</span>
-<span class="sd">                        of the row to add, or a list of dictionaries for</span>
-<span class="sd">                        adding multiple rows.</span>
-<span class="sd">        :type rows_data: dict or list[dict]</span>
+<span class="sd">        :param rows_data: A non-empty list of field-value mappings.</span>
+<span class="sd">        :type rows_data: list[dict]</span>
 
 <span class="sd">        :param batch_size: The number of rows to include in each batch request when adding multiple rows.</span>
 <span class="sd">                        Defaults to the client's batch_size.</span>
 <span class="sd">        :type batch_size: int</span>
 
-<span class="sd">        :return: An instance of the Row model representing the added row or</span>
-<span class="sd">                a list of Row instances for multiple rows.</span>
-<span class="sd">        :rtype: Row or list[Row]</span>
+<span class="sd">        :return: The added rows in input order.</span>
+<span class="sd">        :rtype: list[Row]</span>
 
 <span class="sd">        :raises ValueError: If parameters are not valid.</span>
 <span class="sd">        :raises RowAddError: If rows cannot be added or parsed.</span>
 <span class="sd">        """</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_add_rows_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">"""</span>
-<span class="sd">            Helper function to add a chunk of rows.</span>
-<span class="sd">            """</span>
-            <span class="n">api_endpoint</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch/?user_field_names=true"</span>
-            <span class="p">)</span>
-            <span class="n">data_payload</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"items"</span><span class="p">:</span> <span class="n">chunk</span><span class="p">}</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
-                <span class="n">api_endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data_payload</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="p">[</span>
-                <span class="n">Row</span><span class="p">(</span><span class="n">row_data</span><span class="o">=</span><span class="n">row_data_item</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">row_data_item</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span>
-            <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"add_rows expects a list; use add_row for one row."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rows_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"rows_data must contain at least one row."</span><span class="p">)</span>
 
-        <span class="c1"># Normalize rows_data to always be a list of dictionaries</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">rows_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">rows_data</span><span class="p">]</span>
-
-        <span class="c1"># Validate each row</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_data</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">field_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">writable_fields</span><span class="p">:</span>
-                    <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Field '</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">' is not writable or does not exist in the table."</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="n">RowAddError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
-
-        <span class="n">added_rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_data</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
-            <span class="n">chunk</span> <span class="o">=</span> <span class="n">rows_data</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+        <span class="n">encoded_rows</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_data</span><span class="p">]</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_batch_size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch/?user_field_names=true"</span>
+        <span class="n">added_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded_rows</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">encoded_rows</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">batch_number</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">//</span> <span class="n">batch_size</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">added_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_add_rows_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Failed to add row(s) to table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">RowAddError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to add rows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                    <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"items"</span><span class="p">:</span> <span class="n">chunk</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">added_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows_from_batch_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">RowAddError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Failed to add batch </span><span class="si">{</span><span class="n">batch_number</span><span class="si">}</span><span class="s2"> to table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">; "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">added_rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) were already added."</span><span class="p">,</span>
+                    <span class="n">failed_batch_number</span><span class="o">=</span><span class="n">batch_number</span><span class="p">,</span>
+                    <span class="n">completed_row_ids</span><span class="o">=</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">added_rows</span><span class="p">],</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
         <span class="k">return</span> <span class="n">added_rows</span></div>
+
+
+<div class="viewcode-block" id="Table.add_row">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.add_row">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Row</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Add one row and return it."""</span>
+        <span class="n">encoded_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/?user_field_names=true"</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">encoded_values</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RowAddError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to add a row to table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
 
 
 <div class="viewcode-block" id="Table.update_rows">
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.update_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Row</span><span class="p">]],</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]],</span>
+        <span class="n">rows_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Row</span><span class="p">]],</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -706,85 +776,89 @@
 <span class="sd">        :raises RowUpdateError: If rows cannot be updated or parsed.</span>
 <span class="sd">        """</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"update_rows expects a list; use update_row for one row."</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">rows_data</span><span class="p">:</span>
-            <span class="n">warning_msg</span> <span class="o">=</span> <span class="s2">"The rows_data list is empty. Nothing to update."</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning_msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">warning_msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">"The update_rows method does not accept generator objects. Please provide a list of rows."</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"rows_data must contain at least one row."</span><span class="p">)</span>
 
         <span class="n">formatted_data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">rows_data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
                 <span class="k">if</span> <span class="s2">"id"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
                         <span class="s2">"The 'id' key is missing, which is required for updating a row."</span>
                     <span class="p">)</span>
 
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"id"</span><span class="p">:</span>
-                        <span class="k">continue</span>
-
-                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"order"</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                                <span class="sa">f</span><span class="s2">"Invalid 'order' value: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">. 'order' should be a positive numeric value."</span>
-                            <span class="p">)</span>
-                        <span class="k">continue</span>
-
-                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">writable_fields</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"Field '</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">' is either read-only or does not exist in the table."</span>
-                        <span class="p">)</span>
-
-                    <span class="n">field_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">field_object</span><span class="o">.</span><span class="n">validate_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ve</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid value for field '</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">': </span><span class="si">{</span><span class="n">ve</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ve</span>
-
-                <span class="n">formatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="n">row_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"id"</span><span class="p">))</span>
+                <span class="n">formatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">row_id</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">allow_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
+                <span class="p">)</span>
 
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Row</span><span class="p">):</span>
-                <span class="n">row_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
-                <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">rv</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">:</span>
-                        <span class="n">row_data</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">()</span>
-                <span class="n">formatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">table_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Row </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> belongs to table </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">table_id</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="p">)</span>
+                <span class="n">row_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">rv</span><span class="o">.</span><span class="n">format_for_api</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">values</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">rv</span><span class="o">.</span><span class="n">is_read_only</span>
+                <span class="p">}</span>
+                <span class="n">formatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">row_id</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">values</span><span class="p">)}</span>
+                <span class="p">)</span>
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Unsupported type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> in rows_data. Expected dict or Row object."</span>
                 <span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch/?user_field_names=true"</span>
-            <span class="n">updated_rows</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
-
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">formatted_data</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
-                <span class="n">batch_data</span> <span class="o">=</span> <span class="n">formatted_data</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch/?user_field_names=true"</span>
+        <span class="n">updated_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_batch_size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">formatted_data</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">batch_data</span> <span class="o">=</span> <span class="n">formatted_data</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">batch_number</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">//</span> <span class="n">batch_size</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">try</span><span class="p">:</span>
                 <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
                     <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"PATCH"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"items"</span><span class="p">:</span> <span class="n">batch_data</span><span class="p">}</span>
                 <span class="p">)</span>
-
                 <span class="n">updated_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="p">[</span>
-                        <span class="n">Row</span><span class="p">(</span><span class="n">row_data</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
-                        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span>
-                    <span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_rows_from_batch_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_data</span><span class="p">))</span>
                 <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">RowUpdateError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Failed to update batch </span><span class="si">{</span><span class="n">batch_number</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">; "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">updated_rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) were already updated."</span><span class="p">,</span>
+                    <span class="n">failed_batch_number</span><span class="o">=</span><span class="n">batch_number</span><span class="p">,</span>
+                    <span class="n">completed_row_ids</span><span class="o">=</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">updated_rows</span><span class="p">],</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">return</span> <span class="n">updated_rows</span></div>
 
-            <span class="k">return</span> <span class="n">updated_rows</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to update rows in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">RowUpdateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to update rows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+
+<div class="viewcode-block" id="Table.update_row">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.update_row">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_row</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">row_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">values</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Row</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update one row and return the server representation."""</span>
+        <span class="n">validated_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
+        <span class="n">encoded_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_row_values</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">allow_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2">/"</span>
+            <span class="s2">"?user_field_names=true"</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"PATCH"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">encoded_values</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RowUpdateError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Failed to update row </span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
 
 
 <div class="viewcode-block" id="Table.delete_rows">

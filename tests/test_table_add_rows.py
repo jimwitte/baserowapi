@@ -14,7 +14,7 @@ def test_create_row(all_fields_table, single_row_data):
     }
 
     # Create a new row using the filtered input data
-    new_row = all_fields_table.add_rows(input_data)[0]
+    new_row = all_fields_table.add_row(input_data)
 
     # Verify the data in the new row
     for field, value in single_row_data.items():
