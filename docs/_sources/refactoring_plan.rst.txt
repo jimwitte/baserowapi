@@ -420,12 +420,11 @@ Exit criteria
 Phase 8: Compatibility, documentation, and beta release
 --------------------------------------------------------
 
-Status: implemented on branch ``release/0.2.0b1``. On 2026-09-02, all 240
-offline tests and 37 serial hosted tests passed under Python 3.12, and the
+Status: complete on branch ``release/0.2.0b1``. On 2026-09-02, all 240 offline
+tests and 37 serial hosted tests passed under Python 3.12, and the
 warning-strict Sphinx 9.1.0 build passed. Isolated ``0.2.0b1`` wheel and source
-artifacts passed Twine, wheel-install, source-content, and extracted-source
-offline-test checks. Repeating artifact verification from the exact clean
-release commit remains the final exit criterion.
+artifacts were rebuilt from the exact clean release commit and passed Twine,
+wheel-install, source-content, and extracted-source offline-test checks.
 
 Goal
 ~~~~
