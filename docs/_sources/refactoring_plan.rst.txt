@@ -17,7 +17,7 @@ and leave another maintainer able to find each rule in one place.
 The working release target is ``0.2.0b1`` on branch
 ``release/0.2.0b1``. The new minor beta identifies this as a deliberate,
 potentially breaking public API revision. Keep the installed package and Sphinx
-release at the last published version until Phase 8 prepares the release.
+release aligned at ``0.2.0b1`` while Phase 8 prepares the release.
 
 Constraints
 -----------
@@ -420,7 +420,12 @@ Exit criteria
 Phase 8: Compatibility, documentation, and beta release
 --------------------------------------------------------
 
-Status: planned on branch ``release/0.2.0b1``. Implementation has not begun.
+Status: implemented on branch ``release/0.2.0b1``. On 2026-09-02, all 240
+offline tests and 37 serial hosted tests passed under Python 3.12, and the
+warning-strict Sphinx 9.1.0 build passed. Isolated ``0.2.0b1`` wheel and source
+artifacts passed Twine, wheel-install, source-content, and extracted-source
+offline-test checks. Repeating artifact verification from the exact clean
+release commit remains the final exit criterion.
 
 Goal
 ~~~~

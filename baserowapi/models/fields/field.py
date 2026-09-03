@@ -142,12 +142,12 @@ class Field:
         return table_id
 
     @property
-    def order(self) -> Union[int, None]:
+    def order(self) -> Union[int, float, None]:
         """
         Retrieve the order of the field.
 
         :return: The order of the field or None if not present.
-        :rtype: Union[int, None]
+        :rtype: Union[int, float, None]
         """
         order = self.field_data.get("order", None)
         if order is None:

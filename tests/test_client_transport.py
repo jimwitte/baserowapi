@@ -39,6 +39,18 @@ def test_client_rejects_invalid_read_retry_counts(read_retries):
         Baserow(token="test-token", read_retries=read_retries)
 
 
+@pytest.mark.parametrize("batch_size", [True, 1.5, "10"])
+def test_client_rejects_non_integer_default_batch_sizes(batch_size):
+    with pytest.raises(TypeError, match="batch_size"):
+        Baserow(token="test-token", batch_size=batch_size)
+
+
+@pytest.mark.parametrize("batch_size", [0, -1])
+def test_client_rejects_non_positive_default_batch_sizes(batch_size):
+    with pytest.raises(ValueError, match="batch_size"):
+        Baserow(token="test-token", batch_size=batch_size)
+
+
 def test_constructing_client_does_not_configure_application_logging(monkeypatch):
     basic_config = Mock()
     monkeypatch.setattr(logging, "basicConfig", basic_config)

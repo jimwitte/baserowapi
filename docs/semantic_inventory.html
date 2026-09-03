@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Field semantic inventory &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Field semantic inventory &mdash; Baserow API Package 0.2.0b1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
 
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/documentation_options.js?v=3804d0ff"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -114,20 +114,21 @@
 <h1>Field semantic inventory<a class="headerlink" href="#field-semantic-inventory" title="Link to this heading"></a></h1>
 <section id="purpose-and-status">
 <h2>Purpose and status<a class="headerlink" href="#purpose-and-status" title="Link to this heading"></a></h2>
-<p>This document inventories the Baserow-specific knowledge currently encoded by
-<code class="docutils literal notranslate"><span class="pre">baserowapi</span></code>. It is a design input for narrowing the library’s focus. It does
-not expand the public API or promise support that the implementation does not
-currently provide.</p>
-<p>The proposed focus is a schema-aware client for Baserow’s database-token data
-API. Under that focus, the library should own behavior that callers would
-otherwise have to rediscover from Baserow, including field metadata, read and
-write representations, read-only rules, filtering, pagination, linked rows,
-file upload, and Baserow error responses. General Python collection helpers,
-permissive argument coercion, logging setup, and HTTP implementation details do
-not belong in the public contract unless they support one of those behaviors.</p>
+<p>This document records the Baserow-specific knowledge currently encoded by
+<code class="docutils literal notranslate"><span class="pre">baserowapi</span></code>, the package’s settled semantic decisions, and evidence gaps
+that still require hosted verification. It does not expand the public API or
+promise support that the implementation does not currently provide.</p>
+<p>The package is a schema-aware client for Baserow’s database-token data API. It
+provides behavior that callers would otherwise have to rediscover from
+Baserow, including field metadata, read and write representations, read-only
+rules, filtering, pagination, linked rows, file upload, and Baserow error
+responses. General Python collection helpers, permissive argument coercion,
+logging setup, and HTTP implementation details do not belong in the public
+contract unless they support one of those behaviors.</p>
 <p>Evidence for this inventory was collected from:</p>
 <ul class="simple">
-<li><p>package implementation and integration tests at release <code class="docutils literal notranslate"><span class="pre">0.1.0b5</span></code>;</p></li>
+<li><p>package implementation and integration tests prepared for release
+<code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code>;</p></li>
 <li><p>a read-only schema request to the configured hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> test table
 on 2026-09-01;</p></li>
 <li><p>disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
@@ -180,8 +181,8 @@ has no dedicated support and the configured test table does not exercise it.</p>
 </section>
 <section id="cross-cutting-value-pipeline">
 <h2>Cross-cutting value pipeline<a class="headerlink" href="#cross-cutting-value-pipeline" title="Link to this heading"></a></h2>
-<p>The Phase 6 row model now applies Field-owned semantics uniformly. The table
-below records the current pipeline.</p>
+<p>The current row model applies Field-owned semantics uniformly. The table below
+records the value pipeline.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19.0%" />
@@ -323,8 +324,9 @@ or timezone-aware <code class="docutils literal notranslate"><span class="pre">d
 <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>. Encoding never invents missing date, time, or
 timezone information.</p></td>
 <td><p>Partial</p></td>
-<td><p>Phase 2 removed two-digit-year guessing, slash normalization, implicit
-midnight, local-machine display timezone, and unjustified <code class="docutils literal notranslate"><span class="pre">Z</span></code> handling.
+<td><p>The current encoder rejects two-digit-year guessing, slash normalization,
+implicit midnight, local-machine display timezone, and unjustified <code class="docutils literal notranslate"><span class="pre">Z</span></code>
+handling.
 Hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> accepted a non-UTC ISO offset and returned canonical
 UTC <code class="docutils literal notranslate"><span class="pre">Z</span></code> form on 2026-09-01. New <code class="docutils literal notranslate"><span class="pre">date_is*</span></code> filters remain missing
 while deprecated operators dominate the local list.</p></td>
@@ -623,12 +625,12 @@ and therefore preserve one semantic implementation.</p>
 </section>
 <section id="settled-design-decisions">
 <h2>Settled design decisions<a class="headerlink" href="#settled-design-decisions" title="Link to this heading"></a></h2>
-<p>These decisions describe the implemented contract through Phase 7.5 on
-<code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code> and remain the design direction for release work.</p>
+<p>These decisions describe the current contract prepared for release
+<code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code>.</p>
 <section id="focus-and-authority">
 <h3>Focus and authority<a class="headerlink" href="#focus-and-authority" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">baserowapi</span></code> focuses on the schema-aware database-token data API. It
-encode Baserow field, query, row, file, and error behavior without growing into
+encodes Baserow field, query, row, file, and error behavior without growing into
 a complete administration SDK or a general HTTP framework.</p>
 <p>Each Field is the single semantic authority for decoding a Baserow
 response, validating a supported input, encoding an API write, reporting
@@ -725,10 +727,12 @@ type and raw metadata remain inspectable. Reads return the raw value unchanged;
 writes pass values through unchanged only when hosted metadata marks the field
 writable. The package does not claim validation, formatting, or filter knowledge
 for an unknown type. Unknown types do not produce a warning for every field
-and row. <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> is the public fallback for unknown hosted types. The
-explicit <code class="docutils literal notranslate"><span class="pre">&quot;generic&quot;</span></code> registry entry is retained because
-<code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code> is inspectable and documents that known type;
-the registry lookup also falls back to the same class for every unknown type.</p>
+and row. <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> is the public fallback for unknown hosted types.
+<code class="docutils literal notranslate"><span class="pre">GenericField.TYPE</span> <span class="pre">==</span> <span class="pre">&quot;generic&quot;</span></code> is an internal sentinel; current repository
+evidence does not establish <code class="docutils literal notranslate"><span class="pre">generic</span></code> as a hosted Baserow field type. The
+explicit registry entry remains for compatibility with callers that inspect
+<code class="docutils literal notranslate"><span class="pre">Table.FIELD_TYPE_CLASS_MAP</span></code>. Registry lookup also falls back to the same
+class for every unknown type.</p>
 </section>
 <section id="filters">
 <h3>Filters<a class="headerlink" href="#filters" title="Link to this heading"></a></h3>

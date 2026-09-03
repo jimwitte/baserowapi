@@ -48,6 +48,8 @@
   - `Table.delete_rows()` now accepts only a non-empty list of row IDs. Use
     `delete_row()` for one ID; Row objects, scalar IDs, and generators are no
     longer accepted by the batch method.
+  - Table IDs and the client's default batch size must be positive integers.
+    Boolean values and numeric strings are no longer accepted implicitly.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -98,6 +100,12 @@
     metadata.
   - Kept `get_table()` uncached so a newly constructed Table lazily loads a new
     hosted schema snapshot after an external schema change.
+  - Removed query values and hosted descriptions that may repeat submitted
+    values from client-generated logs and default exception messages.
+    Structured hosted error details remain available on `BaserowHTTPError` for
+    explicit inspection.
+  - Added structural validation for successful field-schema responses while
+    retaining extra metadata and the unknown-type `GenericField` fallback.
 - **Row Writes:**
   - Unified singular create, batch create, singular update, batch mapping
     update, and explicit `Row.update(values)` around Field-owned validation and
@@ -147,6 +155,8 @@
   - Removed obsolete test media and stale local release outputs, corrected the
     remaining upload fixture's WebP filename, and kept JSON test fixtures in
     source distributions.
+  - Included runtime and development requirement declarations in source
+    distributions so their included offline tests can be run independently.
 
 
 #### 2026-09-01: 0.1.0b5
@@ -215,7 +225,7 @@
     - Added a basic set of functional tests.
 
 
-#### 2024--8-06: 0.1.0b3
+#### 2024-08-06: 0.1.0b3
 - **New Features:**
   - **Generic Field Type:** Added a generic field type to serve as a default if a specific field type is not available.
   - **Password Field Type:** Added a password field type.

@@ -6,30 +6,30 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Semantic refactoring plan &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Semantic refactoring plan &mdash; Baserow API Package 0.2.0b1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/documentation_options.js?v=3804d0ff"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Field semantic inventory" href="semantic_inventory.html" /> 
+    <link rel="prev" title="Field semantic inventory" href="semantic_inventory.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -151,7 +151,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="semantic-refactoring-plan">
 <h1>Semantic refactoring plan<a class="headerlink" href="#semantic-refactoring-plan" title="Link to this heading"></a></h1>
 <section id="purpose">
@@ -167,7 +167,7 @@ and leave another maintainer able to find each rule in one place.</p>
 <p>The working release target is <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> on branch
 <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. The new minor beta identifies this as a deliberate,
 potentially breaking public API revision. Keep the installed package and Sphinx
-release at the last published version until Phase 8 prepares the release.</p>
+release aligned at <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> while Phase 8 prepares the release.</p>
 </section>
 <section id="constraints">
 <h2>Constraints<a class="headerlink" href="#constraints" title="Link to this heading"></a></h2>
@@ -570,7 +570,12 @@ generation succeeds.</p></li>
 </section>
 <section id="phase-8-compatibility-documentation-and-beta-release">
 <h2>Phase 8: Compatibility, documentation, and beta release<a class="headerlink" href="#phase-8-compatibility-documentation-and-beta-release" title="Link to this heading"></a></h2>
-<p>Status: planned on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. Implementation has not begun.</p>
+<p>Status: implemented on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. On 2026-09-02, all 240
+offline tests and 37 serial hosted tests passed under Python 3.12, and the
+warning-strict Sphinx 9.1.0 build passed. Isolated <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> wheel and source
+artifacts passed Twine, wheel-install, source-content, and extracted-source
+offline-test checks. Repeating artifact verification from the exact clean
+release commit remains the final exit criterion.</p>
 <section id="id25">
 <h3>Goal<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
 <p>Close the remaining public-boundary, diagnostic, packaging, and documentation
@@ -686,7 +691,7 @@ phase:</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -697,7 +702,7 @@ phase:</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

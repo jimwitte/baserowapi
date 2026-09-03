@@ -6,31 +6,31 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Full Class and Function docs &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Full Class and Function docs &mdash; Baserow API Package 0.2.0b1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/documentation_options.js?v=3804d0ff"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Field semantic inventory" href="semantic_inventory.html" />
-    <link rel="prev" title="Code Structure" href="code.html" /> 
+    <link rel="prev" title="Code Structure" href="code.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -149,7 +149,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="full-class-and-function-docs">
 <h1>Full Class and Function docs<a class="headerlink" href="#full-class-and-function-docs" title="Link to this heading"></a></h1>
 <section id="baserow-client">
@@ -167,7 +167,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="baserowapi.baserow.Baserow.get_table">
 <span class="sig-name descname"><span class="pre">get_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#baserowapi.models.table.Table" title="baserowapi.models.table.Table"><span class="pre">Table</span></a></span></span><a class="reference internal" href="_modules/baserowapi/baserow.html#Baserow.get_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#baserowapi.baserow.Baserow.get_table" title="Link to this definition"></a></dt>
-<dd><p>Return a new Table whose field schema is loaded lazily.</p>
+<dd><p>Return a new Table for a positive integer ID.</p>
+<p>The Table’s field schema is loaded lazily.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -431,7 +432,9 @@ Defaults to the client’s batch_size.</p></li>
 <dd><p>Retrieve the fields associated with the table.</p>
 <p>If the fields haven’t been fetched yet, this property sends an API request
 to retrieve them. Once retrieved, the fields are cached to avoid unnecessary
-API requests in subsequent calls.</p>
+API requests in subsequent calls. The hosted response must provide the
+stable metadata required to construct and order each Field; extra metadata
+and unknown non-empty field types are preserved.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>An ordered, read-only mapping from field name to Field.</p>
@@ -866,14 +869,14 @@ field subclass defines a Baserow-specific structured representation.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd><p>Retrieve the order of the field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The order of the field or None if not present.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Union[int, None]</p>
+<dd class="field-even"><p>Union[int, float, None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1672,11 +1675,6 @@ field subclass defines a Baserow-specific structured representation.</p>
 <dd><p>Delete this row through its Table.</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">logger</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Logger</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">baserowapi.models.row</span> <span class="pre">(WARNING)&gt;</span></span></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">before_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Row</span></span></span><a class="reference internal" href="_modules/baserowapi/models/row.html#Row.move"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
@@ -1912,7 +1910,7 @@ field subclass defines a Baserow-specific structured representation.</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -1923,7 +1921,7 @@ field subclass defines a Baserow-specific structured representation.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

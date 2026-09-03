@@ -1,6 +1,5 @@
 """Baserow row model backed directly by Field semantics."""
 
-import logging
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Optional, Union
@@ -12,8 +11,6 @@ if TYPE_CHECKING:
 
 class Row:
     """One Baserow row with decoded and raw field-value access."""
-
-    logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(
         self, row_data: Mapping[str, Any], table: "Table", client: "Client"

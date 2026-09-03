@@ -11,6 +11,13 @@ URL or ``None``; malformed hosted responses raise ``RowFetchError``.
 non-negative integer; a zero limit returns no rows without contacting Baserow.
 Boolean values are rejected for all three parameters.
 
+A Table ID must be a positive integer. Field metadata is loaded lazily and
+must be returned as a list of objects with a positive integer ID, a non-empty
+name and type, and a non-negative numeric order. Extra metadata is preserved,
+and an unfamiliar non-empty type continues through ``GenericField``. A
+malformed schema raises ``FieldDataRetrievalError`` with the response error as
+its cause.
+
 Row write contracts
 -------------------
 

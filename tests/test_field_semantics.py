@@ -4,7 +4,7 @@ import logging
 import pytest
 
 from baserowapi.exceptions import FieldValidationError, FieldValueError
-from baserowapi.models.fields import GenericField
+from baserowapi.models.fields import GenericField, PhoneNumberField
 
 
 pytestmark = pytest.mark.offline
@@ -43,6 +43,20 @@ def test_unknown_field_operations_are_lossless_and_quiet(caplog):
     assert field.type == "future_type"
     assert field.field_data is field_data
     assert caplog.records == []
+
+
+def test_invalid_phone_number_is_not_repeated_in_diagnostics(caplog):
+    sentinel = "PRIVATE_PHONE_VALUE"
+    field = PhoneNumberField(
+        "Phone", {"id": 1, "name": "Phone", "type": "phone_number", "order": 0}
+    )
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(FieldValidationError) as raised:
+            field.encode_value(sentinel)
+
+    assert sentinel not in str(raised.value)
+    assert sentinel not in caplog.text
 
 
 @pytest.mark.parametrize("value", [0, 42, -1, 1.25, "42.00", None])

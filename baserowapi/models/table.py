@@ -1,4 +1,5 @@
 from collections.abc import Iterator, Mapping
+import math
 from types import MappingProxyType
 from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any
 from baserowapi.exceptions import (
@@ -90,6 +91,10 @@ class Table:
         :param client: The Baserow client instance to make API requests.
         :param table_data: Optional metadata returned by table discovery.
         """
+        if isinstance(table_id, bool) or not isinstance(table_id, int):
+            raise TypeError("table_id must be a positive integer.")
+        if table_id <= 0:
+            raise ValueError("table_id must be greater than zero.")
         self.id = table_id
         self.client = client
         metadata = dict(table_data or {"id": table_id})
@@ -128,6 +133,43 @@ class Table:
         field_type = field_data.get("type")
         return Table.FIELD_TYPE_CLASS_MAP.get(field_type, GenericField)
 
+    @staticmethod
+    def _validated_field_data(field_data: Any, index: int) -> Dict[str, Any]:
+        """Validate metadata required to construct and order one Field."""
+        if not isinstance(field_data, dict):
+            raise BaserowResponseError(
+                f"Field-schema item {index} is not an object."
+            )
+
+        field_id = field_data.get("id")
+        if (
+            isinstance(field_id, bool)
+            or not isinstance(field_id, int)
+            or field_id <= 0
+        ):
+            raise BaserowResponseError(
+                f"Field-schema item {index} has an invalid field ID."
+            )
+
+        for key in ("name", "type"):
+            value = field_data.get(key)
+            if not isinstance(value, str) or not value.strip():
+                raise BaserowResponseError(
+                    f"Field-schema item {index} has an invalid {key}."
+                )
+
+        order = field_data.get("order")
+        if (
+            isinstance(order, bool)
+            or not isinstance(order, (int, float))
+            or (isinstance(order, float) and not math.isfinite(order))
+            or order < 0
+        ):
+            raise BaserowResponseError(
+                f"Field-schema item {index} has an invalid order."
+            )
+        return field_data
+
     @property
     def fields(self) -> Mapping[str, Field]:
         """
@@ -135,7 +177,9 @@ class Table:
 
         If the fields haven't been fetched yet, this property sends an API request
         to retrieve them. Once retrieved, the fields are cached to avoid unnecessary
-        API requests in subsequent calls.
+        API requests in subsequent calls. The hosted response must provide the
+        stable metadata required to construct and order each Field; extra metadata
+        and unknown non-empty field types are preserved.
 
         :return: An ordered, read-only mapping from field name to Field.
         :rtype: Mapping[str, Field]
@@ -145,9 +189,15 @@ class Table:
             endpoint = f"/api/database/fields/table/{self.id}/"
             try:
                 response = self.client.make_api_request(endpoint)
-                fields_data = response
+                if not isinstance(response, list):
+                    raise BaserowResponseError(
+                        "A field-schema response must be a list.",
+                        method="GET",
+                        url=endpoint,
+                    )
                 field_objects = []
-                for fd in fields_data:
+                for index, raw_field_data in enumerate(response):
+                    fd = self._validated_field_data(raw_field_data, index)
                     FieldClass = self._field_class_from_data(fd)
                     field_objects.append(FieldClass(fd["name"], fd, client=self.client))
                 field_objects.sort(
@@ -290,7 +340,6 @@ class Table:
 
         query_params = "&".join(query_params_parts)
         full_request_url = f"{base_url}&{query_params}" if query_params else base_url
-        self.logger.debug(f"Built request URL: '{full_request_url}'")
         return full_request_url
 
     @staticmethod
@@ -430,7 +479,6 @@ class Table:
         yielded_rows = 0  # Tracks the number of rows yielded
 
         while request_url:
-            self.logger.debug(f"Fetching data from URL: {request_url}")
             try:
                 response_data = self.client.make_api_request(request_url)
                 rows, request_url = self._parse_row_page(response_data)
@@ -443,13 +491,12 @@ class Table:
                         self.logger.debug(f"Reached the limit of {limit} rows.")
                         return
 
-                if request_url:
-                    self.logger.debug(f"Next page URL: {request_url}")
-                else:
+                if not request_url:
                     self.logger.debug("No more pages to fetch.")
-            except Exception as e:
-                self.logger.error(f"Error fetching rows: {e}")
-                raise RowFetchError(f"Error fetching rows: {e}") from e
+            except Exception as error:
+                raise RowFetchError(
+                    f"Failed to fetch rows from table {self.id}."
+                ) from error
 
     def get_rows(
         self,

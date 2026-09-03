@@ -4,22 +4,23 @@ Field semantic inventory
 Purpose and status
 ------------------
 
-This document inventories the Baserow-specific knowledge currently encoded by
-``baserowapi``. It is a design input for narrowing the library's focus. It does
-not expand the public API or promise support that the implementation does not
-currently provide.
+This document records the Baserow-specific knowledge currently encoded by
+``baserowapi``, the package's settled semantic decisions, and evidence gaps
+that still require hosted verification. It does not expand the public API or
+promise support that the implementation does not currently provide.
 
-The proposed focus is a schema-aware client for Baserow's database-token data
-API. Under that focus, the library should own behavior that callers would
-otherwise have to rediscover from Baserow, including field metadata, read and
-write representations, read-only rules, filtering, pagination, linked rows,
-file upload, and Baserow error responses. General Python collection helpers,
-permissive argument coercion, logging setup, and HTTP implementation details do
-not belong in the public contract unless they support one of those behaviors.
+The package is a schema-aware client for Baserow's database-token data API. It
+provides behavior that callers would otherwise have to rediscover from
+Baserow, including field metadata, read and write representations, read-only
+rules, filtering, pagination, linked rows, file upload, and Baserow error
+responses. General Python collection helpers, permissive argument coercion,
+logging setup, and HTTP implementation details do not belong in the public
+contract unless they support one of those behaviors.
 
 Evidence for this inventory was collected from:
 
-* package implementation and integration tests at release ``0.1.0b5``;
+* package implementation and integration tests prepared for release
+  ``0.2.0b1``;
 * a read-only schema request to the configured hosted ``baserow.io`` test table
   on 2026-09-01;
 * disposable hosted write probes on 2026-09-01 for boolean and rating nulls,
@@ -78,8 +79,8 @@ Support levels
 Cross-cutting value pipeline
 ----------------------------
 
-The Phase 6 row model now applies Field-owned semantics uniformly. The table
-below records the current pipeline.
+The current row model applies Field-owned semantics uniformly. The table below
+records the value pipeline.
 
 .. list-table::
    :header-rows: 1
@@ -196,8 +197,9 @@ encoders described in the write column.
        ``datetime``, or ``None``. Encoding never invents missing date, time, or
        timezone information.
      - Partial
-     - Phase 2 removed two-digit-year guessing, slash normalization, implicit
-       midnight, local-machine display timezone, and unjustified ``Z`` handling.
+     - The current encoder rejects two-digit-year guessing, slash normalization,
+       implicit midnight, local-machine display timezone, and unjustified ``Z``
+       handling.
        Hosted ``baserow.io`` accepted a non-UTC ISO offset and returned canonical
        UTC ``Z`` form on 2026-09-01. New ``date_is*`` filters remain missing
        while deprecated operators dominate the local list.
@@ -455,14 +457,14 @@ and therefore preserve one semantic implementation.
 Settled design decisions
 ------------------------
 
-These decisions describe the implemented contract through Phase 7.5 on
-``release/0.2.0b1`` and remain the design direction for release work.
+These decisions describe the current contract prepared for release
+``0.2.0b1``.
 
 Focus and authority
 ~~~~~~~~~~~~~~~~~~~
 
 ``baserowapi`` focuses on the schema-aware database-token data API. It
-encode Baserow field, query, row, file, and error behavior without growing into
+encodes Baserow field, query, row, file, and error behavior without growing into
 a complete administration SDK or a general HTTP framework.
 
 Each Field is the single semantic authority for decoding a Baserow
@@ -570,10 +572,12 @@ type and raw metadata remain inspectable. Reads return the raw value unchanged;
 writes pass values through unchanged only when hosted metadata marks the field
 writable. The package does not claim validation, formatting, or filter knowledge
 for an unknown type. Unknown types do not produce a warning for every field
-and row. ``GenericField`` is the public fallback for unknown hosted types. The
-explicit ``"generic"`` registry entry is retained because
-``Table.FIELD_TYPE_CLASS_MAP`` is inspectable and documents that known type;
-the registry lookup also falls back to the same class for every unknown type.
+and row. ``GenericField`` is the public fallback for unknown hosted types.
+``GenericField.TYPE == "generic"`` is an internal sentinel; current repository
+evidence does not establish ``generic`` as a hosted Baserow field type. The
+explicit registry entry remains for compatibility with callers that inspect
+``Table.FIELD_TYPE_CLASS_MAP``. Registry lookup also falls back to the same
+class for every unknown type.
 
 Filters
 ~~~~~~~

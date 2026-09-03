@@ -6,31 +6,31 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baserow Client Class &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>Baserow Client Class &mdash; Baserow API Package 0.2.0b1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=18948dd3"></script>
+      <script src="_static/documentation_options.js?v=3804d0ff"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Table Class" href="table.html" />
-    <link rel="prev" title="Quick Start with Baserow API" href="quickstart.html" /> 
+    <link rel="prev" title="Quick Start with Baserow API" href="quickstart.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -51,6 +51,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#table-discovery-and-schema-snapshots">Table discovery and schema snapshots</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#low-level-request-escape-hatch">Low-level request escape hatch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-0-1">Migration from 0.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#token-handling">Token handling</a></li>
 </ul>
 </li>
@@ -94,7 +95,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="baserow-client-class">
 <h1>Baserow Client Class<a class="headerlink" href="#baserow-client-class" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">Baserow</span></code> client is the authenticated request boundary for the hosted
@@ -105,7 +106,9 @@ exceptions.</p>
 <h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">token</span></code> is required and must be a non-empty database token. <code class="docutils literal notranslate"><span class="pre">url</span></code> defaults
 to <code class="docutils literal notranslate"><span class="pre">https://api.baserow.io</span></code>. <code class="docutils literal notranslate"><span class="pre">timeout</span></code> sets the request timeout in seconds,
-and <code class="docutils literal notranslate"><span class="pre">read_retries</span></code> sets the number of retries for safe reads.</p>
+<code class="docutils literal notranslate"><span class="pre">read_retries</span></code> sets the number of retries for safe reads, and <code class="docutils literal notranslate"><span class="pre">batch_size</span></code>
+sets the default number of rows in each batch request. <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> must be a
+positive integer and defaults to 10.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Baserow</span>
 
 <span class="n">baserow</span> <span class="o">=</span> <span class="n">Baserow</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s2">"mytoken"</span><span class="p">)</span>
@@ -137,7 +140,9 @@ list of Tables visible to the token:</p>
 </div>
 <p>Each discovered Table retains the complete returned metadata in its read-only
 <code class="docutils literal notranslate"><span class="pre">metadata</span></code> mapping. <code class="docutils literal notranslate"><span class="pre">get_table(table_id)</span></code> remains useful when an ID is
-already known.</p>
+already known. Table IDs must be positive integers; boolean values and numeric
+strings are not accepted. Convert configuration strings to integers before
+calling <code class="docutils literal notranslate"><span class="pre">get_table</span></code>.</p>
 <p>Every call to <code class="docutils literal notranslate"><span class="pre">get_table</span></code> returns a new Table. A Table loads and caches its
 field schema only when <code class="docutils literal notranslate"><span class="pre">fields</span></code> is first accessed. After a schema change made
 through the Baserow UI or a separate administrative client, construct a new
@@ -184,10 +189,23 @@ a modeled response shape cannot be interpreted.</p></li>
 <p>The original <code class="docutils literal notranslate"><span class="pre">requests</span></code> exception is available through <code class="docutils literal notranslate"><span class="pre">__cause__</span></code>.
 <code class="docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code> provides <code class="docutils literal notranslate"><span class="pre">status_code</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>,
 <code class="docutils literal notranslate"><span class="pre">error_code</span></code>, and <code class="docutils literal notranslate"><span class="pre">description</span></code>. Higher-level Table and Row operations
-retain their operation-specific exceptions and chain the request failure.</p>
+retain their operation-specific exceptions and chain the request failure.
+Diagnostic URLs omit query values, and default exception messages and log
+records do not repeat hosted descriptions that may contain submitted values.
+Callers that need Baserow’s full explanation can inspect <code class="docutils literal notranslate"><span class="pre">description</span></code>
+explicitly.</p>
 <p>Successful JSON responses are decoded and returned. A 204 response returns the
 integer <code class="docutils literal notranslate"><span class="pre">204</span></code>, an empty response returns <code class="docutils literal notranslate"><span class="pre">None</span></code>, and non-JSON content is
 returned as text when its content type does not advertise JSON.</p>
+</section>
+<section id="migration-from-0-1">
+<h2>Migration from 0.1<a class="headerlink" href="#migration-from-0-1" title="Link to this heading"></a></h2>
+<p>Convert table IDs read from environment variables or command-line arguments to
+integers before calling <code class="docutils literal notranslate"><span class="pre">get_table</span></code>. Ensure a configured <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> is a
+positive integer when constructing <code class="docutils literal notranslate"><span class="pre">Baserow</span></code>. Code that displayed
+<code class="docutils literal notranslate"><span class="pre">BaserowHTTPError</span></code> to obtain Baserow’s hosted description should instead read
+the exception’s <code class="docutils literal notranslate"><span class="pre">description</span></code> attribute explicitly; the default string now
+uses a safe status message.</p>
 </section>
 <section id="token-handling">
 <h2>Token handling<a class="headerlink" href="#token-handling" title="Link to this heading"></a></h2>
@@ -216,7 +234,7 @@ allow a per-request header mapping to replace it.</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -227,7 +245,7 @@ allow a per-request header mapping to replace it.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

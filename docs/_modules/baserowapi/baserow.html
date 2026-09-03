@@ -5,29 +5,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baserowapi.baserow &mdash; Baserow API Package 0.1.0b5 documentation</title>
+  <title>baserowapi.baserow &mdash; Baserow API Package 0.2.0b1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=18948dd3"></script>
+      <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="../../index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -84,7 +84,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <h1>Source code for baserowapi.baserow</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""Synchronous request client for Baserow's database-token API."""</span>
 
@@ -144,7 +144,8 @@
 
 <span class="sd">        ``timeout`` is the default for every request. ``read_retries`` applies</span>
 <span class="sd">        only to GET and HEAD requests after transient connectivity, timeout,</span>
-<span class="sd">        rate-limit, or service-availability failures.</span>
+<span class="sd">        rate-limit, or service-availability failures. ``batch_size`` is the</span>
+<span class="sd">        positive integer default used by plural row mutations.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"token must be a non-empty database token string."</span><span class="p">)</span>
@@ -165,6 +166,10 @@
             <span class="ow">or</span> <span class="n">read_retries</span> <span class="o">&lt;</span> <span class="mi">0</span>
         <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"read_retries must be a non-negative integer."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"batch_size must be a positive integer."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"batch_size must be greater than zero."</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">normalized_url</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
@@ -181,7 +186,10 @@
 <div class="viewcode-block" id="Baserow.get_table">
 <a class="viewcode-back" href="../../baserowapi.html#baserowapi.baserow.Baserow.get_table">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Table</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return a new Table whose field schema is loaded lazily."""</span>
+<span class="w">        </span><span class="sd">"""Return a new Table for a positive integer ID.</span>
+
+<span class="sd">        The Table's field schema is loaded lazily.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
 
@@ -210,7 +218,11 @@
             <span class="n">name</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
             <span class="n">database_id</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"database_id"</span><span class="p">)</span>
             <span class="n">order</span> <span class="o">=</span> <span class="n">table_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"order"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">table_id</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Table-discovery item </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has an invalid table ID."</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span>
@@ -316,21 +328,22 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">200</span> <span class="o">&lt;=</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
             <span class="n">error_code</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_error_details</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+            <span class="n">diagnostic_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_url_for_diagnostics</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
             <span class="n">fallback_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ERROR_MESSAGES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
                 <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
                 <span class="s2">"Baserow returned an unsuccessful response from </span><span class="si">{url}</span><span class="s2">."</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
-            <span class="n">error_message</span> <span class="o">=</span> <span class="n">description</span> <span class="ow">or</span> <span class="n">error_code</span> <span class="ow">or</span> <span class="n">fallback_message</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">"Baserow request failed with HTTP </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"Baserow </span><span class="si">%s</span><span class="s2"> request to </span><span class="si">%s</span><span class="s2"> failed with HTTP </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+                <span class="n">method</span><span class="p">,</span>
+                <span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
-                <span class="n">error_message</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">BaserowHTTPError</span><span class="p">(</span>
                 <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
-                <span class="n">error_message</span><span class="p">,</span>
+                <span class="n">fallback_message</span><span class="p">,</span>
                 <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
-                <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                <span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="n">error_code</span><span class="o">=</span><span class="n">error_code</span><span class="p">,</span>
                 <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
             <span class="p">)</span>
@@ -353,6 +366,12 @@
             <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
             <span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="n">default_port</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_safe_url_for_diagnostics</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a request URL without query values or fragments."""</span>
+        <span class="n">parsed_url</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">geturl</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="p">:</span>
@@ -419,9 +438,10 @@
         <span class="n">is_safe_read</span> <span class="o">=</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SAFE_RETRY_METHODS</span>
         <span class="n">retry_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_retries</span> <span class="k">if</span> <span class="n">is_safe_read</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="n">retry_number</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">diagnostic_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_url_for_diagnostics</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Making Baserow </span><span class="si">%s</span><span class="s2"> request to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Making Baserow </span><span class="si">%s</span><span class="s2"> request to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">diagnostic_url</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">request_arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">"method"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
@@ -442,7 +462,9 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_wait_before_retry</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="k">raise</span> <span class="n">BaserowTimeoutError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> timed out."</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
+                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">diagnostic_url</span><span class="si">}</span><span class="s2"> timed out."</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
             <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">retry_number</span> <span class="o">&lt;</span> <span class="n">retry_limit</span><span class="p">:</span>
@@ -450,15 +472,15 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_wait_before_retry</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">retry_number</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="k">raise</span> <span class="n">BaserowConnectionError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Could not connect to Baserow at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Could not connect to Baserow at </span><span class="si">{</span><span class="n">diagnostic_url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
-                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
             <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">BaserowRequestError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> could not be completed."</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Request to </span><span class="si">{</span><span class="n">diagnostic_url</span><span class="si">}</span><span class="s2"> could not be completed."</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
-                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
             <span class="k">if</span> <span class="p">(</span>
@@ -505,10 +527,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_response</span><span class="p">(</span>
         <span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">diagnostic_url</span> <span class="o">=</span> <span class="n">Baserow</span><span class="o">.</span><span class="n">_safe_url_for_diagnostics</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No response body received from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No response body received from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">diagnostic_url</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
@@ -516,9 +539,9 @@
             <span class="n">content_type</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="s2">"json"</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Baserow returned an invalid JSON response from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Baserow returned an invalid JSON response from </span><span class="si">{</span><span class="n">diagnostic_url</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
-                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">diagnostic_url</span><span class="p">,</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span></div>
 
@@ -539,7 +562,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -550,7 +573,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

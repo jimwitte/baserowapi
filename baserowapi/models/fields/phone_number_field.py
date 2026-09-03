@@ -1,5 +1,3 @@
-from typing import Any, Dict
-import logging
 import re
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError
@@ -14,6 +12,7 @@ class PhoneNumberField(Field):
     """
 
     TYPE = "phone_number"
+    _VALID_CHARACTERS = re.compile(r"^[0-9 Nx,._+*()#=;/-]{1,100}$")
     _COMPATIBLE_FILTERS = (
         "equal",
         "not_equal",
@@ -24,21 +23,6 @@ class PhoneNumberField(Field):
         "empty",
         "not_empty",
     )
-
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initialize a PhoneNumberField object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's data and attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
-        super().__init__(name, field_data, client)
-        self.valid_characters = re.compile(r"^[0-9 Nx,._+*()#=;/-]{1,100}$")
-        self.logger = logging.getLogger(__name__)
 
     def validate_value(self, value: str) -> None:
         """
@@ -53,10 +37,7 @@ class PhoneNumberField(Field):
         """
         if value is None or value == "":
             return
-        if not self.valid_characters.match(value):
-            self.logger.error(
-                f"The provided phone number '{value}' doesn't match the expected format."
-            )
+        if not self._VALID_CHARACTERS.match(value):
             raise FieldValidationError(
-                f"The provided phone number '{value}' doesn't match the expected format."
+                "The provided phone number doesn't match Baserow's expected format."
             )

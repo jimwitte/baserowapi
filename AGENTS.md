@@ -98,13 +98,20 @@ hatch. Authentication, URL validation, header merging, execution, and response
 parsing remain private. Absolute pagination URLs must use the configured
 Baserow origin. Client safe-read retries apply only to GET and HEAD; never add
 automatic retries for mutating requests. The package emits logging records but
-must not configure application logging or log request payloads and file values.
+must not configure application logging or log request payloads, file values,
+query values, or hosted descriptions that may repeat submitted data. Diagnostic
+URLs omit query strings. ``BaserowHTTPError.description`` preserves the hosted
+description for callers that explicitly inspect it.
 
 `Baserow.get_tables()` discovers token-visible Tables and preserves returned
 name, database ID, order, and raw metadata. `Baserow.get_table()` remains
 uncached, and each Table lazily caches its own schema snapshot. Construct a new
 Table after an external schema change; do not introduce in-place schema refresh
 without a demonstrated need and an explicit policy for existing Rows.
+Table IDs and the client default batch size are positive, non-boolean integers.
+Successful field-schema responses must be lists of objects with the stable
+metadata required to construct and order Fields. Preserve extra metadata and
+route every unknown non-empty field type through ``GenericField``.
 
 Row writes have explicit singular and plural contracts. `Table.add_row` and
 `Table.update_row` return one `Row`; `Table.add_rows` and `Table.update_rows`

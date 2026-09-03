@@ -79,7 +79,7 @@ def baserow_client(integration_environment):
 
 @pytest.fixture(scope="session")
 def all_fields_table(baserow_client):
-    table_id = os.getenv("BASEROW_TABLE_ID")
+    table_id = int(os.environ["BASEROW_TABLE_ID"])
     return baserow_client.get_table(table_id)
 
 

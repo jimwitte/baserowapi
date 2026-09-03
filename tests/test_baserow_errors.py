@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import Mock
 
 import pytest
@@ -46,6 +47,33 @@ def test_every_http_error_status_raises_baserow_http_error(status_code):
     assert raised.value.error_code == "ERROR_TEST"
     assert raised.value.description == "Test failure"
     assert raised.value.method == "GET"
+
+
+def test_http_diagnostics_omit_query_and_hosted_description_values(caplog):
+    query_sentinel = "PRIVATE_SEARCH_VALUE"
+    description_sentinel = "PRIVATE_SUBMITTED_VALUE"
+    client = Baserow(token="test-token", read_retries=0)
+    client._session.request = Mock(
+        return_value=make_response(
+            400,
+            (
+                '{"error":"ERROR_REQUEST_BODY_VALIDATION",'
+                f'"description":"Rejected {description_sentinel}"}}'
+            ).encode(),
+        )
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        with pytest.raises(BaserowHTTPError) as raised:
+            client.make_api_request(f"/test/?search={query_sentinel}")
+
+    assert query_sentinel in client._session.request.call_args.kwargs["url"]
+    assert raised.value.description == f"Rejected {description_sentinel}"
+    assert raised.value.url == "https://api.baserow.io/test/"
+    assert query_sentinel not in str(raised.value)
+    assert description_sentinel not in str(raised.value)
+    assert query_sentinel not in caplog.text
+    assert description_sentinel not in caplog.text
 
 
 def test_timeout_is_translated_and_chained():

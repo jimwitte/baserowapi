@@ -54,7 +54,8 @@ class Baserow:
 
         ``timeout`` is the default for every request. ``read_retries`` applies
         only to GET and HEAD requests after transient connectivity, timeout,
-        rate-limit, or service-availability failures.
+        rate-limit, or service-availability failures. ``batch_size`` is the
+        positive integer default used by plural row mutations.
         """
         if not isinstance(token, str) or not token.strip():
             raise ValueError("token must be a non-empty database token string.")
@@ -75,6 +76,10 @@ class Baserow:
             or read_retries < 0
         ):
             raise ValueError("read_retries must be a non-negative integer.")
+        if isinstance(batch_size, bool) or not isinstance(batch_size, int):
+            raise TypeError("batch_size must be a positive integer.")
+        if batch_size <= 0:
+            raise ValueError("batch_size must be greater than zero.")
 
         self.url = normalized_url
         self.batch_size = batch_size
@@ -89,7 +94,10 @@ class Baserow:
         return f"Baserow client for base url {self.url}"
 
     def get_table(self, table_id: int) -> Table:
-        """Return a new Table whose field schema is loaded lazily."""
+        """Return a new Table for a positive integer ID.
+
+        The Table's field schema is loaded lazily.
+        """
         return Table(table_id, self)
 
     def get_tables(self) -> list[Table]:
@@ -115,7 +123,11 @@ class Baserow:
             name = table_data.get("name")
             database_id = table_data.get("database_id")
             order = table_data.get("order")
-            if isinstance(table_id, bool) or not isinstance(table_id, int):
+            if (
+                isinstance(table_id, bool)
+                or not isinstance(table_id, int)
+                or table_id <= 0
+            ):
                 raise BaserowResponseError(
                     f"Table-discovery item {index} has an invalid table ID.",
                     method="GET",
@@ -212,21 +224,22 @@ class Baserow:
 
         if not 200 <= response.status_code < 300:
             error_code, description = self._get_error_details(response)
+            diagnostic_url = self._safe_url_for_diagnostics(url)
             fallback_message = self.ERROR_MESSAGES.get(
                 response.status_code,
                 "Baserow returned an unsuccessful response from {url}.",
-            ).format(url=url)
-            error_message = description or error_code or fallback_message
+            ).format(url=diagnostic_url)
             logger.error(
-                "Baserow request failed with HTTP %s: %s",
+                "Baserow %s request to %s failed with HTTP %s.",
+                method,
+                diagnostic_url,
                 response.status_code,
-                error_message,
             )
             raise BaserowHTTPError(
                 response.status_code,
-                error_message,
+                fallback_message,
                 method=method,
-                url=url,
+                url=diagnostic_url,
                 error_code=error_code,
                 description=description,
             )
@@ -248,6 +261,12 @@ class Baserow:
             parsed_url.hostname.lower(),
             parsed_url.port or default_port,
         )
+
+    @staticmethod
+    def _safe_url_for_diagnostics(url: str) -> str:
+        """Return a request URL without query values or fragments."""
+        parsed_url = urlsplit(url)
+        return parsed_url._replace(query="", fragment="").geturl()
 
     def _build_url(self, endpoint: str) -> str:
         if not isinstance(endpoint, str) or not endpoint:
@@ -314,9 +333,10 @@ class Baserow:
         is_safe_read = method in self._SAFE_RETRY_METHODS
         retry_limit = self.read_retries if is_safe_read else 0
         retry_number = 0
+        diagnostic_url = self._safe_url_for_diagnostics(url)
 
         while True:
-            logger.debug("Making Baserow %s request to %s", method, url)
+            logger.debug("Making Baserow %s request to %s", method, diagnostic_url)
             try:
                 request_arguments: dict[str, Any] = {
                     "method": method,
@@ -337,7 +357,9 @@ class Baserow:
                     self._wait_before_retry(None, retry_number)
                     continue
                 raise BaserowTimeoutError(
-                    f"Request to {url} timed out.", method=method, url=url
+                    f"Request to {diagnostic_url} timed out.",
+                    method=method,
+                    url=diagnostic_url,
                 ) from error
             except requests.exceptions.ConnectionError as error:
                 if retry_number < retry_limit:
@@ -345,15 +367,15 @@ class Baserow:
                     self._wait_before_retry(None, retry_number)
                     continue
                 raise BaserowConnectionError(
-                    f"Could not connect to Baserow at {url}.",
+                    f"Could not connect to Baserow at {diagnostic_url}.",
                     method=method,
-                    url=url,
+                    url=diagnostic_url,
                 ) from error
             except requests.exceptions.RequestException as error:
                 raise BaserowRequestError(
-                    f"Request to {url} could not be completed.",
+                    f"Request to {diagnostic_url} could not be completed.",
                     method=method,
-                    url=url,
+                    url=diagnostic_url,
                 ) from error
 
             if (
@@ -400,10 +422,11 @@ class Baserow:
     def _parse_response(
         response: requests.Response, method: str, url: str
     ) -> Any:
+        diagnostic_url = Baserow._safe_url_for_diagnostics(url)
         if response.status_code == 204:
             return response.status_code
         if not response.text:
-            logger.warning("No response body received from %s", url)
+            logger.warning("No response body received from %s", diagnostic_url)
             return None
         try:
             return response.json()
@@ -411,8 +434,8 @@ class Baserow:
             content_type = response.headers.get("Content-Type", "").lower()
             if "json" in content_type:
                 raise BaserowResponseError(
-                    f"Baserow returned an invalid JSON response from {url}.",
+                    f"Baserow returned an invalid JSON response from {diagnostic_url}.",
                     method=method,
-                    url=url,
+                    url=diagnostic_url,
                 ) from error
             return response.text

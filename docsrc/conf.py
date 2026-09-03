@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Baserow API Package"
 copyright = f"2024-{datetime.now().year}, James P Witte"
 author = "James P Witte"
-release = "0.1.0b5"
+release = "0.2.0b1"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
