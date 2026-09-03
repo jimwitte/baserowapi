@@ -1,1 +1,1 @@
-Requests~=2.31
+Requests~=2.34
