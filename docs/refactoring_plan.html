@@ -570,34 +570,85 @@ generation succeeds.</p></li>
 </section>
 <section id="phase-8-compatibility-documentation-and-beta-release">
 <h2>Phase 8: Compatibility, documentation, and beta release<a class="headerlink" href="#phase-8-compatibility-documentation-and-beta-release" title="Link to this heading"></a></h2>
+<p>Status: planned on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. Implementation has not begun.</p>
 <section id="id25">
 <h3>Goal<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
-<p>Verify the complete conceptual model and prepare one deliberate beta migration.</p>
+<p>Close the remaining public-boundary, diagnostic, packaging, and documentation
+gaps, then prepare one deliberate beta migration from a clean release commit.</p>
 </section>
 <section id="id26">
 <h3>Work<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Run the full offline suite and the serial hosted integration suite.</p></li>
-<li><p>Exercise the generated API documentation’s representative field and filter
-forms against the disposable tables.</p></li>
-<li><p>Update user documentation, docstrings, examples, public API reference, and
-changelog to describe the implemented behavior rather than the plan.</p></li>
-<li><p>Regenerate tracked Sphinx output.</p></li>
-<li><p>Update the package version, Sphinx release, and changelog consistently to the
-working target <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> after the implementation and migration scope is
-complete.</p></li>
-<li><p>Build wheel and source distributions, check them, and install the wheel in a
-clean Python 3.12 environment.</p></li>
+<li><p>Keep user-supplied query, filter, search, payload, and phone-number values out
+of client-generated logs and default exception messages. Log the HTTP method
+and a safe origin and path without query values. Preserve structured Baserow
+error fields for callers to inspect explicitly, but do not automatically log
+a hosted error description that may repeat submitted data. Add log and
+exception tests that use recognizable sentinel values.</p></li>
+<li><p>Require table IDs and the client default batch size to be positive,
+non-boolean integers. Convert the integration environment’s table ID from its
+string representation at the configuration boundary. Align annotations,
+documentation, and negative tests with these contracts.</p></li>
+<li><p>Validate successful field-schema responses before constructing Fields. The
+response must be a list of objects with the stable metadata needed by the
+client, including a positive field ID, non-empty name and type, and valid
+order. Preserve extra metadata and continue accepting unknown non-empty type
+strings through <code class="docutils literal notranslate"><span class="pre">GenericField</span></code>. Cover malformed responses while preserving
+<code class="docutils literal notranslate"><span class="pre">FieldDataRetrievalError</span></code> chaining.</p></li>
+<li><p>Retain <code class="docutils literal notranslate"><span class="pre">GenericField</span></code> and the unknown-type fallback. Describe
+<code class="docutils literal notranslate"><span class="pre">GenericField.TYPE</span> <span class="pre">==</span> <span class="pre">&quot;generic&quot;</span></code> as an internal sentinel because the
+repository has no evidence that hosted Baserow returns a <code class="docutils literal notranslate"><span class="pre">generic</span></code> field
+type. Keep the explicit registry entry for this beta to avoid unnecessary
+compatibility churn.</p></li>
+<li><p>Make the included source-distribution tests runnable from declarations in the
+archive. Include both requirements files, retain the Python, JSON, Markdown,
+and WebP test assets, and verify the extracted source distribution after
+installing its declared development dependencies.</p></li>
+<li><p>Rewrite the semantic inventory as a description of the current contract.
+Remove intermediate labels such as “proposed focus”, “Phase 6 row model”,
+and “implemented through Phase 7.5”, correct remaining prose errors, and
+retain historical evidence only where it explains a current decision.</p></li>
+<li><p>Remove the unused <code class="docutils literal notranslate"><span class="pre">Row.logger</span></code> and logging import, and correct the historical
+changelog date typo <code class="docutils literal notranslate"><span class="pre">2024--8-06</span></code>.</p></li>
+<li><p>Run the full offline suite and the serial hosted integration suite. Exercise
+the generated API documentation’s representative field and filter forms
+against the disposable tables.</p></li>
+<li><p>Update user documentation, docstrings, examples, public API reference,
+migration guidance, and changelog to describe the implemented behavior.
+Regenerate the tracked Sphinx output with warnings treated as errors.</p></li>
+<li><p>Update the package version and Sphinx release to <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code> after the
+implementation and migration scope is complete. Confirm that <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>,
+Sphinx configuration, generated documentation, distribution filenames, and
+installed package metadata all report the same version.</p></li>
+<li><p>Explicitly stage every intended addition, deletion, fixture, and generated
+documentation change. Require a clean Git status, then build wheel and source
+distributions from a clean checkout of the release commit. Check both
+distributions and install the wheel in a clean Python 3.12 environment.</p></li>
 </ul>
 </section>
 <section id="id27">
 <h3>Exit criteria<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Offline and hosted suites pass without parallel execution.</p></li>
+<li><p>Client-generated logs and default exception messages omit sentinel query and
+payload values while structured Baserow error details remain available for
+explicit inspection.</p></li>
+<li><p>Invalid table IDs and default batch sizes fail during configuration, and
+malformed field-schema responses fail with a clear, chained package error.</p></li>
+<li><p>Offline and hosted suites pass without parallel execution, and the
+warning-strict documentation build passes.</p></li>
 <li><p>Every public contract in the documentation has a corresponding test or an
 explicitly identified hosted compatibility dependency.</p></li>
-<li><p>The migration guide covers every intentional breaking change.</p></li>
-<li><p>Distribution verification succeeds before any tag or publication request.</p></li>
+<li><p>The semantic inventory describes the released behavior without requiring
+knowledge of the completed refactoring phases. The migration guide covers
+every intentional breaking change.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setup.py</span></code>, Sphinx configuration, generated documentation, distribution
+filenames, and installed metadata all report <code class="docutils literal notranslate"><span class="pre">0.2.0b1</span></code>.</p></li>
+<li><p>The extracted source distribution contains its declared test dependencies
+and required fixtures, and its offline suite passes in a clean Python 3.12
+environment.</p></li>
+<li><p>The release commit has a clean Git status and distribution verification
+succeeds from its clean checkout before any separate tag or publication
+request.</p></li>
 </ul>
 </section>
 </section>
@@ -614,9 +665,6 @@ phase:</p>
 <li><p>report deferred risks separately rather than expanding the phase; and</p></li>
 <li><p>review the next phase before beginning it.</p></li>
 </ol>
-<p>The first implementation phase should not begin by deleting RowValue classes.
-The semantic replacement and characterization tests must exist before the old
-authority is removed.</p>
 </section>
 </section>
 

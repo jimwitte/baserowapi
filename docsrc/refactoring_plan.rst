@@ -420,34 +420,86 @@ Exit criteria
 Phase 8: Compatibility, documentation, and beta release
 --------------------------------------------------------
 
+Status: planned on branch ``release/0.2.0b1``. Implementation has not begun.
+
 Goal
 ~~~~
 
-Verify the complete conceptual model and prepare one deliberate beta migration.
+Close the remaining public-boundary, diagnostic, packaging, and documentation
+gaps, then prepare one deliberate beta migration from a clean release commit.
 
 Work
 ~~~~
 
-* Run the full offline suite and the serial hosted integration suite.
-* Exercise the generated API documentation's representative field and filter
-  forms against the disposable tables.
-* Update user documentation, docstrings, examples, public API reference, and
-  changelog to describe the implemented behavior rather than the plan.
-* Regenerate tracked Sphinx output.
-* Update the package version, Sphinx release, and changelog consistently to the
-  working target ``0.2.0b1`` after the implementation and migration scope is
-  complete.
-* Build wheel and source distributions, check them, and install the wheel in a
-  clean Python 3.12 environment.
+* Keep user-supplied query, filter, search, payload, and phone-number values out
+  of client-generated logs and default exception messages. Log the HTTP method
+  and a safe origin and path without query values. Preserve structured Baserow
+  error fields for callers to inspect explicitly, but do not automatically log
+  a hosted error description that may repeat submitted data. Add log and
+  exception tests that use recognizable sentinel values.
+* Require table IDs and the client default batch size to be positive,
+  non-boolean integers. Convert the integration environment's table ID from its
+  string representation at the configuration boundary. Align annotations,
+  documentation, and negative tests with these contracts.
+* Validate successful field-schema responses before constructing Fields. The
+  response must be a list of objects with the stable metadata needed by the
+  client, including a positive field ID, non-empty name and type, and valid
+  order. Preserve extra metadata and continue accepting unknown non-empty type
+  strings through ``GenericField``. Cover malformed responses while preserving
+  ``FieldDataRetrievalError`` chaining.
+* Retain ``GenericField`` and the unknown-type fallback. Describe
+  ``GenericField.TYPE == "generic"`` as an internal sentinel because the
+  repository has no evidence that hosted Baserow returns a ``generic`` field
+  type. Keep the explicit registry entry for this beta to avoid unnecessary
+  compatibility churn.
+* Make the included source-distribution tests runnable from declarations in the
+  archive. Include both requirements files, retain the Python, JSON, Markdown,
+  and WebP test assets, and verify the extracted source distribution after
+  installing its declared development dependencies.
+* Rewrite the semantic inventory as a description of the current contract.
+  Remove intermediate labels such as "proposed focus", "Phase 6 row model",
+  and "implemented through Phase 7.5", correct remaining prose errors, and
+  retain historical evidence only where it explains a current decision.
+* Remove the unused ``Row.logger`` and logging import, and correct the historical
+  changelog date typo ``2024--8-06``.
+* Run the full offline suite and the serial hosted integration suite. Exercise
+  the generated API documentation's representative field and filter forms
+  against the disposable tables.
+* Update user documentation, docstrings, examples, public API reference,
+  migration guidance, and changelog to describe the implemented behavior.
+  Regenerate the tracked Sphinx output with warnings treated as errors.
+* Update the package version and Sphinx release to ``0.2.0b1`` after the
+  implementation and migration scope is complete. Confirm that ``setup.py``,
+  Sphinx configuration, generated documentation, distribution filenames, and
+  installed package metadata all report the same version.
+* Explicitly stage every intended addition, deletion, fixture, and generated
+  documentation change. Require a clean Git status, then build wheel and source
+  distributions from a clean checkout of the release commit. Check both
+  distributions and install the wheel in a clean Python 3.12 environment.
 
 Exit criteria
 ~~~~~~~~~~~~~
 
-* Offline and hosted suites pass without parallel execution.
+* Client-generated logs and default exception messages omit sentinel query and
+  payload values while structured Baserow error details remain available for
+  explicit inspection.
+* Invalid table IDs and default batch sizes fail during configuration, and
+  malformed field-schema responses fail with a clear, chained package error.
+* Offline and hosted suites pass without parallel execution, and the
+  warning-strict documentation build passes.
 * Every public contract in the documentation has a corresponding test or an
   explicitly identified hosted compatibility dependency.
-* The migration guide covers every intentional breaking change.
-* Distribution verification succeeds before any tag or publication request.
+* The semantic inventory describes the released behavior without requiring
+  knowledge of the completed refactoring phases. The migration guide covers
+  every intentional breaking change.
+* ``setup.py``, Sphinx configuration, generated documentation, distribution
+  filenames, and installed metadata all report ``0.2.0b1``.
+* The extracted source distribution contains its declared test dependencies
+  and required fixtures, and its offline suite passes in a clean Python 3.12
+  environment.
+* The release commit has a clean Git status and distribution verification
+  succeeds from its clean checkout before any separate tag or publication
+  request.
 
 Working method for each phase
 -----------------------------
@@ -462,7 +514,3 @@ phase:
 #. update user documentation only for behavior actually implemented;
 #. report deferred risks separately rather than expanding the phase; and
 #. review the next phase before beginning it.
-
-The first implementation phase should not begin by deleting RowValue classes.
-The semantic replacement and characterization tests must exist before the old
-authority is removed.
