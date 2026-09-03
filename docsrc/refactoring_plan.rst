@@ -112,8 +112,8 @@ Exit criteria
 * Existing public Row and Table behavior remains available unless a reviewed
   defect requires an earlier correction.
 
-Phase 3: Add identity-bearing values and file upload
-----------------------------------------------------
+Phase 3: Preserve structured value IDs and add file upload
+----------------------------------------------------------
 
 Status: implemented on branch ``release/0.2.0b1`` and verified against hosted
 ``baserow.io`` on 2026-09-01. Upload responses use ``original_name`` while
@@ -316,6 +316,107 @@ Exit criteria
   Table loads current hosted schema when its fields are first accessed.
 * Table discovery is verified against hosted database-token permissions.
 
+Phase 7.5: Tighten row contracts and remove residual duplication
+-----------------------------------------------------------------
+
+Status: complete on branch ``release/0.2.0b1``. On 2026-09-02, the Python 3.12
+suite passed with 197 offline tests and 37 serial hosted tests. A subsequent
+review identified the bounded corrections assigned to Phase 7.8.
+
+Goal
+~~~~
+
+Resolve the bounded review findings left between transport consolidation and
+release preparation without expanding the conceptual model.
+
+Work
+~~~~
+
+* Split row retrieval into fixed ``get_rows`` list and ``iter_rows`` iterator
+  contracts, remove legacy return-type switches and arbitrary query keyword
+  arguments, and validate every pagination response before yielding rows.
+* Make singular delete and move operations Table primitives used by Row
+  conveniences. Keep an updated or moved Row synchronized with the response.
+* Require batch deletion to receive a non-empty list of valid row IDs, validate
+  all input before the first request, and expose partial progress after a later
+  chunk fails.
+* Make compatible-filter collections immutable and consolidate identical
+  knowledge on the nearest common Field base.
+* Consolidate shared select-option lookup mechanics without merging the
+  different single-select and multiple-select wire contracts.
+* Expand the public API snapshot to cover signatures and return-contract
+  boundaries affected by the refactor.
+* Replace whole-table integration cleanup with per-test tracking and deletion
+  of only resources created by that test.
+* Remove stale documentation output and the unused ``pytz`` dependency.
+
+Exit criteria
+~~~~~~~~~~~~~
+
+* List and streaming row retrieval have distinct, tested signatures and reject
+  malformed hosted page shapes consistently.
+* Singular Row operations delegate through Table and batch deletion has the
+  same preflight and partial-failure guarantees as other batch writes.
+* Filter compatibility is exposed through immutable tuples with no duplicated
+  per-instance list construction.
+* Integration cleanup never discovers or deletes unrelated table contents.
+* Offline and hosted suites pass serially and warning-strict documentation
+  generation succeeds.
+
+Phase 7.8: Stabilize contracts and test infrastructure
+-------------------------------------------------------
+
+Status: complete on branch ``release/0.2.0b1``. On 2026-09-02, all 215 offline
+tests and 37 serial hosted tests passed under Python 3.12. The warning-strict
+Sphinx 9.1.0 build also passed.
+
+Goal
+~~~~
+
+Correct the release-blocking edge cases and remove small sources of misleading
+or duplicated behavior found in the review after Phase 7.5.
+
+Work
+~~~~
+
+* Record row IDs completed before a partial batch-add failure so integration
+  cleanup can delete them.
+* Define and validate integer contracts for row-query view, page-size, and
+  result-limit parameters.
+* Test public parameter names, kinds, and defaults without depending on how
+  Python renders type annotations. Test the iterator contract without requiring
+  a particular iterator implementation.
+* Reuse the existing batch-progress exception implementation for deletion.
+* Remove the unused linked-table integration fixture and configuration value;
+  link fields obtain their related table ID from hosted field metadata.
+* Replace dense user-facing terminology with direct descriptions of returned
+  values and Field behavior.
+* Remove Field constructors and validation overrides that only repeat inherited
+  behavior.
+* Require batch-delete responses to return HTTP 204 before recording completed
+  row IDs, and remove redundant field-name exception logging.
+* Remove obsolete local release outputs and unused or incorrectly named test
+  support files before release verification.
+* Correct the documented hosted test schema and settle the remaining generic
+  fallback and base-field registry remnants.
+
+Exit criteria
+~~~~~~~~~~~~~
+
+* Partial batch-add failure IDs are recorded by the integration resource
+  tracker and covered by an offline regression test.
+* ``view_id`` and ``size`` accept only positive integers; ``limit`` accepts only
+  non-negative integers and zero performs no request.
+* Public API tests survive annotation-only refactoring while still protecting
+  parameter order, names, kinds, defaults, and observed return contracts.
+* Row mutation progress has one implementation and integration configuration
+  has one accurate documented source of truth.
+* No behavior-free Field override identified by the review remains.
+* Batch deletion cannot overstate confirmed IDs after an unexpected response,
+  and release verification cannot include stale distributions.
+* Offline and hosted suites pass serially and warning-strict documentation
+  generation succeeds.
+
 Phase 8: Compatibility, documentation, and beta release
 --------------------------------------------------------
 
@@ -330,12 +431,6 @@ Work
 * Run the full offline suite and the serial hosted integration suite.
 * Exercise the generated API documentation's representative field and filter
   forms against the disposable tables.
-* Review the remaining Row operation split: ``Row.update`` delegates through
-  ``Table.update_row``, while ``Row.delete`` and ``Row.move`` construct their
-  endpoints and call the shared Baserow request boundary directly. Decide
-  whether Table delegation would clarify Baserow-specific behavior or merely
-  add forwarding methods for symmetry; document the decision before changing
-  the public API.
 * Update user documentation, docstrings, examples, public API reference, and
   changelog to describe the implemented behavior rather than the plan.
 * Regenerate tracked Sphinx output.

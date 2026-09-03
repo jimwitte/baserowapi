@@ -31,9 +31,6 @@ def test_update_single_row(all_fields_table, single_row_data):
     assert updated_row["Active"] is False, "Active status was not updated correctly."
     assert updated_row["Number"] == "84.00", "Number was not updated correctly."
 
-    # Step 6: Clean up by deleting the row
-    all_fields_table.delete_rows([created_row.id])
-
 def test_update_single_row_requires_explicit_values(all_fields_table, single_row_data):
     # Step 1: Create a single row
     input_data = {
@@ -58,10 +55,6 @@ def test_update_single_row_requires_explicit_values(all_fields_table, single_row
     assert updated_row['Active'] is False, 'Active status was not updated correctly.'
     assert updated_row['Number'] == '84.00', 'Number was not updated correctly.'
 
-    # Step 6: Clean up by deleting the row
-    all_fields_table.delete_rows([created_row.id])
-
-
 def test_delete_single_row(all_fields_table, single_row_data):
     # Step 1: Create multiple rows
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=3)
@@ -83,12 +76,6 @@ def test_delete_single_row(all_fields_table, single_row_data):
     remaining_row_ids = {row.id for row in remaining_rows}
     assert row_to_delete_id not in remaining_row_ids, f"Row with ID {row_to_delete_id} was not deleted."
 
-    # Step 5: Clean up by deleting the remaining rows
-    remaining_row_ids = [row.id for row in remaining_rows]
-    if remaining_row_ids:
-        all_fields_table.delete_rows(remaining_row_ids)
-
-
 def test_move_row_to_last_position(all_fields_table, single_row_data):
     # Step 1: Create multiple rows
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=3)
@@ -109,12 +96,6 @@ def test_move_row_to_last_position(all_fields_table, single_row_data):
     # Step 4: Verify that the moved row is now the last row
     last_row_id = all_rows[-1].id
     assert last_row_id == row_to_move_id, f"Expected row ID {row_to_move_id} to be last, but got {last_row_id}."
-
-    # Step 5: Clean up by deleting the remaining rows
-    remaining_row_ids = [row.id for row in all_rows]
-    if remaining_row_ids:
-        all_fields_table.delete_rows(remaining_row_ids)
-
 
 def test_move_row_before_another_row(all_fields_table, single_row_data):
     # Step 1: Create multiple rows
@@ -144,8 +125,3 @@ def test_move_row_before_another_row(all_fields_table, single_row_data):
     assert row_ids_in_order == expected_order, (
         f"Expected order of rows: {expected_order}, but got: {row_ids_in_order}"
     )
-
-    # Step 6: Clean up by deleting the remaining rows
-    remaining_row_ids = [row.id for row in all_rows]
-    if remaining_row_ids:
-        all_fields_table.delete_rows(remaining_row_ids)

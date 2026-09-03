@@ -1,2 +1,2 @@
 include pytest.ini
-recursive-include tests *.py *.md *.jpg *.png
+recursive-include tests *.py *.md *.json *.webp

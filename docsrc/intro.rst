@@ -12,7 +12,6 @@ Package Dependencies
 The `baserowapi` relies on the following Python packages:
 
 - **Requests**: Utilized for making HTTP calls.
-- **pytz**: Required for timezone-related operations.
 
 Link to Source and Licensing
 ----------------------------

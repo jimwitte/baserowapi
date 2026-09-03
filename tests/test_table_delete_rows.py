@@ -7,7 +7,7 @@ from .helper_functions.generate_identical_rows import generate_identical_rows
 pytestmark = pytest.mark.integration
 
 
-def test_delete_row(all_fields_table, single_row_data):
+def test_delete_one_id_with_batch_method(all_fields_table, single_row_data):
     # Create a row to delete
     input_data = {
         key: value["input"]

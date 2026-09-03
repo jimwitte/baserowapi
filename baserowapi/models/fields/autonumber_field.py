@@ -5,7 +5,7 @@ class AutonumberField(Field):
     """A read-only Baserow-assigned row number."""
 
     TYPE = "autonumber"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "equal",
         "not_equal",
         "contains",
@@ -16,11 +16,7 @@ class AutonumberField(Field):
         "lower_than",
         "lower_than_or_equal",
         "is_even_and_whole",
-    ]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    )
 
     @property
     def is_read_only(self) -> bool:

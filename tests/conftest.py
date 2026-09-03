@@ -8,6 +8,7 @@ import pytest
 from dotenv import load_dotenv
 
 from baserowapi import Baserow
+from baserowapi.exceptions import BaserowHTTPError, RowAddError, RowDeleteError
 from baserowapi.models.row import Row
 from baserowapi.models.table import Table
 
@@ -82,30 +83,62 @@ def all_fields_table(baserow_client):
     return baserow_client.get_table(table_id)
 
 
+def _is_missing_row_error(error):
+    current = error
+    while current is not None:
+        if isinstance(current, BaserowHTTPError) and current.status_code == 404:
+            return True
+        current = current.__cause__
+    return False
+
+
+def _record_added_rows(add_rows, created_row_ids, *args, **kwargs):
+    """Record successful rows, including completed chunks from a failed batch."""
+    try:
+        rows = add_rows(*args, **kwargs)
+    except RowAddError as error:
+        created_row_ids.extend(error.completed_row_ids)
+        raise
+    created_row_ids.extend(row.id for row in rows)
+    return rows
+
+
 @pytest.fixture(autouse=True)
-def cleanup_integration_rows(request):
+def cleanup_integration_rows(request, monkeypatch):
     if request.node.get_closest_marker("integration") is None:
         yield
         return
 
     table = request.getfixturevalue("all_fields_table")
-    existing_row_ids = {row.id for row in table.get_rows()}
+    created_row_ids = []
+    original_add_row = table.add_row
+    original_add_rows = table.add_rows
+
+    def tracked_add_row(*args, **kwargs):
+        row = original_add_row(*args, **kwargs)
+        created_row_ids.append(row.id)
+        return row
+
+    def tracked_add_rows(*args, **kwargs):
+        return _record_added_rows(
+            original_add_rows, created_row_ids, *args, **kwargs
+        )
+
+    monkeypatch.setattr(table, "add_row", tracked_add_row)
+    monkeypatch.setattr(table, "add_rows", tracked_add_rows)
 
     try:
         yield
     finally:
-        created_row_ids = [
-            row.id for row in table.get_rows() if row.id not in existing_row_ids
-        ]
-        if created_row_ids:
-            table.delete_rows(created_row_ids)
-
-
-@pytest.fixture(scope="session")
-def link_field_table(baserow_client):
-    link_table_id = os.getenv("LINK_TABLE_ID")  # Set this in your .env file
-    return baserow_client.get_table(link_table_id)
-
+        cleanup_errors = []
+        for row_id in dict.fromkeys(reversed(created_row_ids)):
+            try:
+                table.delete_row(row_id)
+            except RowDeleteError as error:
+                if not _is_missing_row_error(error):
+                    cleanup_errors.append(error)
+        if cleanup_errors:
+            raise cleanup_errors[0]
 
 @pytest.fixture
 def single_row_data(all_fields_table):

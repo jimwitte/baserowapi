@@ -52,10 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -96,6 +99,8 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Represents a field in Baserow and provides methods to interact with its properties.</span>
 <span class="sd">    """</span>
+
+    <span class="n">_COMPATIBLE_FILTERS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -196,6 +201,11 @@
             <span class="k">return</span> <span class="n">FilterCompatibility</span><span class="o">.</span><span class="n">UNSUPPORTED</span>
         <span class="k">return</span> <span class="n">FilterCompatibility</span><span class="o">.</span><span class="n">UNKNOWN</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return immutable advisory filter names documented for this Field."""</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Field.format_for_api">
 <a class="viewcode-back" href="../../../../baserowapi.html#baserowapi.models.fields.Field.format_for_api">[docs]</a>

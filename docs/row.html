@@ -60,10 +60,13 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -116,8 +119,9 @@ and pending state cannot silently diverge.</p>
 </section>
 <section id="updating-and-deleting">
 <h2>Updating and deleting<a class="headerlink" href="#updating-and-deleting" title="Link to this heading"></a></h2>
-<p>Pass an explicit mapping to <code class="docutils literal notranslate"><span class="pre">update</span></code>. The method returns the server’s updated
-<code class="docutils literal notranslate"><span class="pre">Row</span></code> and refreshes the existing object’s response data.</p>
+<p>Pass an explicit mapping to <code class="docutils literal notranslate"><span class="pre">update</span></code>. <code class="docutils literal notranslate"><span class="pre">update</span></code> and <code class="docutils literal notranslate"><span class="pre">move</span></code> refresh the
+existing object from the hosted response and return that same <code class="docutils literal notranslate"><span class="pre">Row</span></code> instance.
+All three methods delegate to the corresponding singular <code class="docutils literal notranslate"><span class="pre">Table</span></code> operation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">updated_row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Notes"</span><span class="p">:</span> <span class="s2">"Updated on the server"</span><span class="p">})</span>
 
 <span class="c1"># Place the row before row 4, or omit before_id to move it to the end.</span>
@@ -127,6 +131,8 @@ and pending state cannot silently diverge.</p>
 <span class="n">deleted</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">delete</span></code> returns <code class="docutils literal notranslate"><span class="pre">True</span></code> after Baserow accepts the deletion. A deleted Row
+object is not marked locally; callers should discard it.</p>
 <p>For multiple rows, use <code class="docutils literal notranslate"><span class="pre">Table.update_rows</span></code> with a list of mappings containing
 explicit <code class="docutils literal notranslate"><span class="pre">id</span></code> values. Batch updates do not accept <code class="docutils literal notranslate"><span class="pre">Row</span></code> objects.</p>
 </section>

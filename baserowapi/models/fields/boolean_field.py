@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 import logging
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError
@@ -13,7 +13,7 @@ class BooleanField(Field):
     """
 
     TYPE = "boolean"
-    _COMPATIBLE_FILTERS = ["boolean", "empty", "not_empty"]
+    _COMPATIBLE_FILTERS = ("boolean", "empty", "not_empty")
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
@@ -28,16 +28,6 @@ class BooleanField(Field):
         """
         super().__init__(name, field_data, client)
         self.logger = logging.getLogger(__name__)
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this BooleanField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
 
     def validate_value(self, value: bool) -> None:
         """

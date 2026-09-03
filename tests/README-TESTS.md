@@ -39,6 +39,7 @@ by the offline suite are documented in `tests/fixtures/README.md`.
 - **Last modified**: Date/Time - The last modified date and time.
 - **Created on**: Date/Time - The creation date and time.
 - **EU Date**: Date/Time - Date and time field in EU format.
+- **ISO Date**: Date - A date-only field in ISO format.
 
 #### URL and Email Fields
 - **URL**: URL - A URL field.
@@ -57,7 +58,7 @@ by the offline suite are documented in `tests/fixtures/README.md`.
 
 #### Link and Count Fields
 - **TableLink**: Link - A field that links to rows in another table.
-- **myCount**: Count - A read-only field that returns the number of relations in a linked table.
+- **Count**: Count - A read-only field that returns the number of relations in a linked table.
 
 #### Lookup and Collaborator Fields
 - **Lookup**: Lookup - A field connected to a link to table field, returning an array of values and row ids from the chosen lookup field in the linked table.

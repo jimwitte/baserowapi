@@ -3,9 +3,7 @@
 import logging
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Optional
-
-from baserowapi.exceptions import RowDeleteError, RowMoveError
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 if TYPE_CHECKING:
     from baserowapi.baserow import Baserow as Client
@@ -85,30 +83,11 @@ class Row:
         return self
 
     def delete(self) -> bool:
-        """Delete this row from Baserow."""
-        try:
-            endpoint = f"/api/database/rows/table/{self.table_id}/{self.id}/"
-            response_code = self.client.make_api_request(endpoint, method="DELETE")
-            if response_code != 204:
-                raise RowDeleteError(
-                    f"Unexpected status code received: {response_code}"
-                )
-            return True
-        except RowDeleteError:
-            raise
-        except Exception as error:
-            raise RowDeleteError(f"Failed to delete row with ID {self.id}.") from error
+        """Delete this row through its Table."""
+        return self.table.delete_row(self.id)
 
-    def move(self, before_id: Optional[int] = None) -> "Row":
-        """Move this row before another row, or to the end when omitted."""
-        try:
-            endpoint = (
-                f"/api/database/rows/table/{self.table_id}/{self.id}/move/"
-                "?user_field_names=true"
-            )
-            if before_id is not None:
-                endpoint += f"&before_id={before_id}"
-            response = self.client.make_api_request(endpoint, method="PATCH")
-            return self.table._row_from_response(response)
-        except Exception as error:
-            raise RowMoveError(f"Failed to move row with ID {self.id}.") from error
+    def move(self, before_id: Optional[Union[int, str]] = None) -> "Row":
+        """Move this row through its Table and synchronize this object."""
+        moved = self.table.move_row(self.id, before_id=before_id)
+        self._replace_data(moved._row_data)
+        return self

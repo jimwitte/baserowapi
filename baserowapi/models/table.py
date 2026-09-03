@@ -1,6 +1,6 @@
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any, Generator
+from typing import TYPE_CHECKING, List, Union, Optional, Dict, Any
 from baserowapi.exceptions import (
     BaserowResponseError,
     FieldDataRetrievalError,
@@ -8,6 +8,7 @@ from baserowapi.exceptions import (
     RowAddError,
     RowUpdateError,
     RowDeleteError,
+    RowMoveError,
 )
 from baserowapi.models.filter import Filter
 from baserowapi.models.row import Row
@@ -117,7 +118,7 @@ class Table:
 
         Given the data for a field, this method determines the most suitable
         class to represent the field, using the field's type as a key to look it up.
-        If the field's type isn't recognized, it defaults to the base Field class.
+        If the field's type isn't recognized, it defaults to ``GenericField``.
 
         :param field_data: A dictionary containing field data, especially the 'type' key.
         :type field_data: dict
@@ -125,9 +126,7 @@ class Table:
         :rtype: type
         """
         field_type = field_data.get("type")
-        return Table.FIELD_TYPE_CLASS_MAP.get(
-            field_type, GenericField
-        )  # Default to base Field class if type not found
+        return Table.FIELD_TYPE_CLASS_MAP.get(field_type, GenericField)
 
     @property
     def fields(self) -> Mapping[str, Field]:
@@ -231,13 +230,7 @@ class Table:
         :rtype: List[str]
         :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.
         """
-        try:
-            return list(self.fields)
-        except Exception as e:
-            self.logger.error(
-                f"Failed to get field names for table {self.id}. Error: {e}"
-            )
-            raise
+        return list(self.fields)
 
     def _build_request_url(
         self,
@@ -249,7 +242,6 @@ class Table:
         filters: Optional[List[Filter]] = None,
         view_id: Optional[int] = None,
         size: Optional[int] = None,
-        **kwargs: Any,
     ) -> str:
         """
         Constructs the URL for the Baserow API request based on the given parameters.
@@ -266,18 +258,18 @@ class Table:
         :type filter_type: str, optional
         :param filters: A list containing Filter objects to be applied.
         :type filters: list[Filter], optional
-        :param view_id: ID of the view to consider its filters and sorts.
+        :param view_id: Positive integer ID of the view whose filters and sorts apply.
         :type view_id: int, optional
-        :param size: The number of rows per page in the response.
+        :param size: A positive integer number of rows per response page.
         :type size: int, optional
-        :param kwargs: Additional parameters for the API request.
-        :type kwargs: Any
-
         :return: The constructed request URL.
         :rtype: str
 
         :raises ValueError: If filter_type is not 'AND' or 'OR'.
         """
+        view_id = self._validated_query_integer("view_id", view_id)
+        size = self._validated_query_integer("size", size)
+
         base_url = f"/api/database/rows/table/{self.id}/?user_field_names=true"
         query_params_parts = []
 
@@ -300,6 +292,24 @@ class Table:
         full_request_url = f"{base_url}&{query_params}" if query_params else base_url
         self.logger.debug(f"Built request URL: '{full_request_url}'")
         return full_request_url
+
+    @staticmethod
+    def _validated_query_integer(
+        name: str,
+        value: Optional[int],
+        *,
+        allow_zero: bool = False,
+    ) -> Optional[int]:
+        """Validate a numeric row-query parameter without coercion."""
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(f"{name} must be an integer or None.")
+        minimum = 0 if allow_zero else 1
+        if value < minimum:
+            qualifier = "non-negative" if allow_zero else "positive"
+            raise ValueError(f"{name} must be a {qualifier} integer.")
+        return value
 
     def _append_query_param(
         self,
@@ -343,25 +353,27 @@ class Table:
         ]
         return {"filter_type": filter_type, "filters": filter_dicts, "groups": []}
 
-    def _parse_row_data(self, response_data: Dict[str, Any]) -> List[Row]:
-        """
-        Parses the raw data from the API response and transforms it into a list of Row objects.
+    def _parse_row_page(self, response_data: Any) -> tuple[List[Row], Optional[str]]:
+        """Validate one paginated Baserow response before exposing its rows."""
+        if not isinstance(response_data, Mapping):
+            raise BaserowResponseError("A row-list response must be an object.")
+        if "results" not in response_data or not isinstance(
+            response_data["results"], list
+        ):
+            raise BaserowResponseError(
+                "A row-list response must contain a 'results' list."
+            )
+        if "next" not in response_data:
+            raise BaserowResponseError("A row-list response is missing 'next'.")
+        next_url = response_data["next"]
+        if next_url is not None and not isinstance(next_url, str):
+            raise BaserowResponseError(
+                "A row-list response 'next' value must be a URL string or null."
+            )
+        rows = [self._row_from_response(row_data) for row_data in response_data["results"]]
+        return rows, next_url
 
-        :param response_data: The raw response data from the Baserow API.
-        :type response_data: dict[str, Any]
-        :return: List of Row objects.
-        :rtype: list[Row]
-        """
-        if not response_data or "results" not in response_data:
-            self.logger.warning("Received invalid or empty response data from the API.")
-            return []
-
-        return [
-            Row(row_data=row_data, table=self, client=self.client)
-            for row_data in response_data["results"]
-        ]
-
-    def row_generator(
+    def iter_rows(
         self,
         include: Optional[List[str]] = None,
         exclude: Optional[List[str]] = None,
@@ -372,8 +384,7 @@ class Table:
         view_id: Optional[int] = None,
         size: Optional[int] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
-    ) -> Generator[Row, None, None]:
+    ) -> Iterator[Row]:
         """
         Generator function to retrieve rows from the table in a paginated manner,
         optionally limiting the number of rows returned.
@@ -390,20 +401,21 @@ class Table:
         :type filter_type: str, optional
         :param filters: A list containing Filter objects to be applied.
         :type filters: list[Filter], optional
-        :param view_id: ID of the view to consider its filters and sorts.
+        :param view_id: Positive integer ID of the view whose filters and sorts apply.
         :type view_id: int, optional
-        :param size: The number of rows per page in the response.
+        :param size: A positive integer number of rows per response page.
         :type size: int, optional
-        :param limit: The maximum number of rows to return.
+        :param limit: A non-negative maximum number of rows; zero performs no request.
         :type limit: int, optional
-        :param kwargs: Additional parameters for the API request.
-        :type kwargs: dict
-
         :yield: Yields Row objects as they are fetched, up to the specified limit.
-        :rtype: Generator[Row, None, None]
+        :rtype: Iterator[Row]
         :raises RowFetchError: If any error occurs during the process.
         :raises ValueError: If parameters are not valid.
         """
+        limit = self._validated_query_integer("limit", limit, allow_zero=True)
+        if limit == 0:
+            return
+
         request_url = self._build_request_url(
             include=include,
             exclude=exclude,
@@ -413,7 +425,6 @@ class Table:
             filters=filters,
             view_id=view_id,
             size=size,
-            **kwargs,
         )
 
         yielded_rows = 0  # Tracks the number of rows yielded
@@ -422,17 +433,16 @@ class Table:
             self.logger.debug(f"Fetching data from URL: {request_url}")
             try:
                 response_data = self.client.make_api_request(request_url)
-                rows = self._parse_row_data(response_data)
+                rows, request_url = self._parse_row_page(response_data)
 
                 for row in rows:
                     yield row
                     yielded_rows += 1
 
-                    if limit and yielded_rows >= limit:
+                    if limit is not None and yielded_rows >= limit:
                         self.logger.debug(f"Reached the limit of {limit} rows.")
                         return
 
-                request_url = response_data.get("next", None)
                 if request_url:
                     self.logger.debug(f"Next page URL: {request_url}")
                 else:
@@ -452,9 +462,7 @@ class Table:
         view_id: Optional[int] = None,
         size: Optional[int] = None,
         limit: Optional[int] = None,
-        iterator: bool = False,
-        **kwargs: Any,
-    ) -> Union[List[Row], Generator[Row, None, None]]:
+    ) -> List[Row]:
         """
         Retrieves rows from the table using provided parameters, with an optional limit on the number of rows.
 
@@ -470,40 +478,31 @@ class Table:
         :type filter_type: str, optional
         :param filters: A list containing Filter objects to be applied.
         :type filters: list[Filter], optional
-        :param view_id: ID of the view to consider its filters and sorts.
+        :param view_id: Positive integer ID of the view whose filters and sorts apply.
         :type view_id: int, optional
-        :param size: The number of rows per page in the response.
+        :param size: A positive integer number of rows per response page.
         :type size: int, optional
-        :param limit: The maximum number of rows to return.
+        :param limit: A non-negative maximum number of rows; zero performs no request.
         :type limit: int, optional
-        :param iterator: If True, returns a generator of Row objects. If False, returns a list of Row objects.
-        :type iterator: bool, optional
-        :param kwargs: Additional parameters for the API request.
-        :type kwargs: dict
-
-        :return: A list or generator of Row objects, depending on the iterator parameter.
-        :rtype: Union[List[Row], Generator[Row, None, None]]
+        :return: A list of Row objects.
+        :rtype: list[Row]
 
         :raises RowFetchError: If rows cannot be retrieved or parsed.
         :raises ValueError: If parameters are not valid.
         """
-        generator = self.row_generator(
-            include=include,
-            exclude=exclude,
-            search=search,
-            order_by=order_by,
-            filter_type=filter_type,
-            filters=filters,
-            view_id=view_id,
-            size=size,
-            limit=limit,
-            **kwargs,
+        return list(
+            self.iter_rows(
+                include=include,
+                exclude=exclude,
+                search=search,
+                order_by=order_by,
+                filter_type=filter_type,
+                filters=filters,
+                view_id=view_id,
+                size=size,
+                limit=limit,
+            )
         )
-
-        if iterator:
-            return generator
-        else:
-            return list(generator)
 
     def get_row(self, row_id: Union[int, str]) -> Row:
         """
@@ -758,72 +757,73 @@ class Table:
 
     def delete_rows(
         self,
-        rows_data: Union[List[Union[Row, int]], Generator[Union[Row, int], None, None]],
+        row_ids: List[Union[int, str]],
         batch_size: Optional[int] = None,
     ) -> bool:
-        """
-        Deletes multiple rows from the table using the Baserow batch-delete endpoint.
-
-        This method accepts a list or generator of Row objects or integers. For each item:
-        - If it's a Row object, the method extracts its ID for deletion.
-        - If it's an integer, it represents the ID of the row to be deleted.
-
-        :param rows_data: A list or generator of Row objects or integers. Row objects represent
-                        the rows to be deleted, while integers represent the row IDs
-                        to be deleted.
-        :type rows_data: list[Union[Row, int]] or Generator[Union[Row, int], None, None]
-
-        :param batch_size: The number of rows to include in each batch request when deleting multiple rows.
-                        Defaults to None, in which case the client's batch_size will be used.
-        :type batch_size: int, optional
-
-        :return: True if rows are successfully deleted, otherwise an exception is raised.
-        :rtype: bool
-
-        :raises ValueError: If parameters are not valid.
-        :raises TypeError: If an item in rows_data is neither an integer nor a Row object.
-        :raises RowDeleteError: If rows cannot be deleted.
-        """
-
-        # Handle Generator input by converting it to a list
-        if isinstance(rows_data, Generator):
-            rows_data = list(rows_data)
-
-        # Convert Row objects to their respective IDs and validate integer inputs
-        row_ids = []
-        for item in rows_data:
-            if isinstance(item, Row):
-                row_ids.append(item.id)
-            elif isinstance(item, int):
-                if item <= 0:
-                    raise ValueError(
-                        f"Invalid row ID: {item}. Row IDs should be positive integers."
-                    )
-                row_ids.append(item)
-            else:
-                raise TypeError(
-                    f"Unsupported type {type(item)} in rows_data. Expected Row object or positive integer."
-                )
-
+        """Delete a non-empty list of explicit row IDs in request chunks."""
+        if not isinstance(row_ids, list):
+            raise TypeError("delete_rows expects a list of row IDs.")
         if not row_ids:
-            raise ValueError("The rows_data list is empty. Nothing to delete.")
+            raise ValueError("row_ids must contain at least one row ID.")
 
-        def _delete_rows_chunk(chunk):
-            """
-            Helper function to delete a chunk of rows.
-            """
-            endpoint = f"/api/database/rows/table/{self.id}/batch-delete/"
-            self.client.make_api_request(endpoint, method="POST", data={"items": chunk})
+        validated_ids = [self._validated_row_id(row_id) for row_id in row_ids]
+        batch_size = self._validated_batch_size(batch_size)
+        endpoint = f"/api/database/rows/table/{self.id}/batch-delete/"
+        completed_ids: List[int] = []
+        for offset in range(0, len(validated_ids), batch_size):
+            chunk = validated_ids[offset : offset + batch_size]
+            batch_number = offset // batch_size + 1
+            try:
+                response = self.client.make_api_request(
+                    endpoint, method="POST", data={"items": chunk}
+                )
+                if response != 204:
+                    raise BaserowResponseError(
+                        "A successful batch deletion must return HTTP 204."
+                    )
+                completed_ids.extend(chunk)
+            except Exception as error:
+                raise RowDeleteError(
+                    f"Failed to delete batch {batch_number} from table {self.id}; "
+                    f"{len(completed_ids)} row(s) were already deleted.",
+                    failed_batch_number=batch_number,
+                    completed_row_ids=completed_ids,
+                ) from error
+        return True
 
+    def delete_row(self, row_id: Union[int, str]) -> bool:
+        """Delete one row by ID."""
+        validated_id = self._validated_row_id(row_id)
+        endpoint = f"/api/database/rows/table/{self.id}/{validated_id}/"
         try:
-            # Batch delete rows using the specified batch size
-            if batch_size is None:
-                batch_size = self.client.batch_size
-
-            for i in range(0, len(row_ids), batch_size):
-                chunk = row_ids[i : i + batch_size]
-                _delete_rows_chunk(chunk)
+            response = self.client.make_api_request(endpoint, method="DELETE")
+            if response != 204:
+                raise BaserowResponseError(
+                    "A successful single-row deletion must return HTTP 204."
+                )
             return True
-        except Exception as e:
-            self.logger.error(f"Failed to delete rows from table {self.id}. Error: {e}")
-            raise RowDeleteError(f"Failed to delete rows: {e}") from e
+        except Exception as error:
+            raise RowDeleteError(
+                f"Failed to delete row {validated_id} from table {self.id}."
+            ) from error
+
+    def move_row(
+        self,
+        row_id: Union[int, str],
+        before_id: Optional[Union[int, str]] = None,
+    ) -> Row:
+        """Move one row before another row, or to the end when omitted."""
+        validated_id = self._validated_row_id(row_id)
+        endpoint = (
+            f"/api/database/rows/table/{self.id}/{validated_id}/move/"
+            "?user_field_names=true"
+        )
+        if before_id is not None:
+            endpoint += f"&before_id={self._validated_row_id(before_id)}"
+        try:
+            response = self.client.make_api_request(endpoint, method="PATCH")
+            return self._row_from_response(response)
+        except Exception as error:
+            raise RowMoveError(
+                f"Failed to move row {validated_id} in table {self.id}."
+            ) from error

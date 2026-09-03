@@ -68,7 +68,7 @@ def test_domain_exception_groups_are_consistent():
     )
     assert all(
         issubclass(exception_class, RowWriteError)
-        for exception_class in (RowAddError, RowUpdateError)
+        for exception_class in (RowAddError, RowDeleteError, RowUpdateError)
     )
     assert all(
         issubclass(exception_class, FilterError)

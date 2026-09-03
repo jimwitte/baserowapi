@@ -31,12 +31,26 @@ def test_intended_root_exports_are_recorded():
 
 
 @pytest.mark.parametrize(
-    "qualified_name,expected_parameters",
-    load_snapshot()["parameters"].items(),
+    "qualified_name,expected_contract",
+    load_snapshot()["signatures"].items(),
 )
-def test_intended_public_signatures_are_recorded(
-    qualified_name, expected_parameters
-):
+def test_intended_public_signatures_are_recorded(qualified_name, expected_contract):
     callable_object = resolve_qualified_attribute(qualified_name)
+    parameters = inspect.signature(callable_object).parameters
+    expected_names = expected_contract["required"] + list(
+        expected_contract["optional"]
+    )
 
-    assert list(inspect.signature(callable_object).parameters) == expected_parameters
+    assert list(parameters) == expected_names
+    assert all(
+        parameter.kind.name == expected_contract["kind"]
+        for parameter in parameters.values()
+    )
+    assert all(
+        parameters[name].default is inspect.Parameter.empty
+        for name in expected_contract["required"]
+    )
+    assert {
+        name: parameters[name].default
+        for name in expected_contract["optional"]
+    } == expected_contract["optional"]

@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Field semantic inventory" href="semantic_inventory.html" />
+    <link rel="next" title="Code Structure" href="code.html" />
     <link rel="prev" title="Working with Select Fields" href="selectfields.html" />
 </head>
 
@@ -59,10 +59,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#migration-from-0-1">Migration from 0.1</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -110,7 +113,9 @@ a static client-side compatibility gate.</p>
 <h2>Compatibility Knowledge<a class="headerlink" href="#compatibility-knowledge" title="Link to this heading"></a></h2>
 <p>Field metadata does not include a complete, stable compatibility matrix, and
 hosted <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> is not version-pinned. Each Field therefore reports the
-package’s current knowledge as advisory information:</p>
+package’s current knowledge as advisory information. <code class="docutils literal notranslate"><span class="pre">compatible_filters</span></code> is
+an immutable tuple, shared by fields in the same semantic family where their
+compatibility is identical:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilterCompatibility</span>
 
 <span class="n">status</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">'Name'</span><span class="p">]</span><span class="o">.</span><span class="n">filter_compatibility</span><span class="p">(</span><span class="s1">'starts_with'</span><span class="p">)</span>
@@ -148,7 +153,7 @@ single supported JSON-tree encoding.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="selectfields.html" class="btn btn-neutral float-left" title="Working with Select Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="semantic_inventory.html" class="btn btn-neutral float-right" title="Field semantic inventory" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="code.html" class="btn btn-neutral float-right" title="Code Structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

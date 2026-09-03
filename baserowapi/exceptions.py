@@ -81,9 +81,9 @@ class RowFetchError(RowError):
 
 
 class RowWriteError(RowError):
-    """Base class for create and update failures.
+    """Base class for row mutation failures with optional batch progress.
 
-    Batch writes are not atomic. When an earlier request chunk succeeded before
+    Batch mutations are not atomic. When an earlier request chunk succeeded before
     a later chunk failed, ``completed_row_ids`` identifies the rows known to
     have been written and ``failed_batch_number`` identifies the one-based
     request chunk that failed.
@@ -111,8 +111,12 @@ class RowUpdateError(RowWriteError):
     """Raised when updating rows fails."""
 
 
-class RowDeleteError(RowError):
-    """Raised when deleting rows fails."""
+class RowDeleteError(RowWriteError):
+    """Raised when deleting rows fails.
+
+    Batch deletion is not atomic. ``completed_row_ids`` identifies IDs sent in
+    earlier request chunks that Baserow confirmed before the failed chunk.
+    """
 
 
 class RowMoveError(RowError):

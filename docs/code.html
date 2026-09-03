@@ -10,7 +10,7 @@
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
-  
+
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=18948dd3"></script>
@@ -20,17 +20,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Full Class and Function docs" href="baserowapi.html" />
-    <link rel="prev" title="Semantic refactoring plan" href="refactoring_plan.html" /> 
+    <link rel="prev" title="Working with Filters" href="filters.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
-          
-          
+
+
           <a href="index.html" class="icon icon-home">
             Baserow API Package
           </a>
@@ -55,17 +55,20 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Code Structure</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#baserow-class">Baserow Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#table-class">Table Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#row-class">Row Class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#identity-bearing-values">Identity-bearing Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structured-baserow-values">Structured Baserow Values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#filter-objects">Filter Objects</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -91,7 +94,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="code-structure">
 <h1>Code Structure<a class="headerlink" href="#code-structure" title="Link to this heading"></a></h1>
 <p>The public workflow is <code class="docutils literal notranslate"><span class="pre">Baserow</span></code> to <code class="docutils literal notranslate"><span class="pre">Table</span></code> to <code class="docutils literal notranslate"><span class="pre">Row</span></code>. Fields hold schema
@@ -118,8 +121,8 @@ Table’s Fields. Indexing and <code class="docutils literal notranslate"><span 
 exposes the original Baserow values. Rows do not stage mutations. <code class="docutils literal notranslate"><span class="pre">update</span></code>,
 <code class="docutils literal notranslate"><span class="pre">move</span></code>, and <code class="docutils literal notranslate"><span class="pre">delete</span></code> are thin conveniences over Table operations.</p>
 </section>
-<section id="identity-bearing-values">
-<h2>Identity-bearing Values<a class="headerlink" href="#identity-bearing-values" title="Link to this heading"></a></h2>
+<section id="structured-baserow-values">
+<h2>Structured Baserow Values<a class="headerlink" href="#structured-baserow-values" title="Link to this heading"></a></h2>
 <p>Select options, linked rows, files, collaborators, and lookup results use small
 independent records that preserve Baserow IDs and raw metadata. These records
 contain no HTTP behavior and can be passed back to the corresponding writable
@@ -137,7 +140,7 @@ unknown operators to reach the service.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="refactoring_plan.html" class="btn btn-neutral float-left" title="Semantic refactoring plan" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="filters.html" class="btn btn-neutral float-left" title="Working with Filters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="baserowapi.html" class="btn btn-neutral float-right" title="Full Class and Function docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -152,7 +155,7 @@ unknown operators to reach the service.</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -163,7 +166,7 @@ unknown operators to reach the service.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

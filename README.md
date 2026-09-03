@@ -30,4 +30,3 @@ This project is licensed under the GNU GENERAL PUBLIC LICENSE, version 3.
 ## Dependencies
 
 * Requests
-* pytz

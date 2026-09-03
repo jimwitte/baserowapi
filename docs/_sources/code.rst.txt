@@ -29,8 +29,8 @@ Table's Fields. Indexing and ``values`` expose decoded values; ``raw_values``
 exposes the original Baserow values. Rows do not stage mutations. ``update``,
 ``move``, and ``delete`` are thin conveniences over Table operations.
 
-Identity-bearing Values
------------------------
+Structured Baserow Values
+-------------------------
 
 Select options, linked rows, files, collaborators, and lookup results use small
 independent records that preserve Baserow IDs and raw metadata. These records

@@ -4,8 +4,12 @@ Table Class
 The ``Table`` class provides an interface to interact with a Baserow table. Through this class, users can perform CRUD operations on rows, query table information, retrieve field properties, and utilize various filtering and sorting options. Below, we showcase the properties and methods available in the ``Table`` class along with examples of common use cases.
 
 **Important Note**: Baserow returns paged row results. ``get_rows()`` follows
-those pages and returns a list by default; pass ``iterator=True`` to consume a
-generator instead.
+those pages and returns a list. Use ``iter_rows()`` to consume rows lazily.
+Both methods require every page to contain a ``results`` list and a ``next``
+URL or ``None``; malformed hosted responses raise ``RowFetchError``.
+``view_id`` and ``size`` must be positive integers. ``limit`` must be a
+non-negative integer; a zero limit returns no rows without contacting Baserow.
+Boolean values are rejected for all three parameters.
 
 Row write contracts
 -------------------
@@ -27,6 +31,14 @@ Batch requests are processed sequentially and are not atomic across chunks. A
 exposes ``failed_batch_number``, ``completed_count``, and
 ``completed_row_ids``. The client does not automatically retry or roll back
 mutating requests.
+
+Deletion follows the same explicit split. ``delete_row(row_id)`` deletes one
+row. ``delete_rows(row_ids)`` requires a non-empty list of row IDs, validates
+the complete input before sending anything, and reports completed IDs through
+``RowDeleteError`` if a later batch fails. ``move_row(row_id, before_id)``
+moves one row before another, or to the end when ``before_id`` is omitted.
+Both deletion endpoints must return HTTP 204 before the client confirms the
+affected row IDs.
 
 Properties
 ----------
@@ -75,8 +87,8 @@ Methods and Usage
     for row in table.get_rows():
         print(row['Name'])
 
-    # Fetching all rows as a generator (efficient for large datasets)
-    for row in table.get_rows(iterator=True):
+    # Streaming all rows (efficient for large datasets)
+    for row in table.iter_rows():
         print(row['Name'])
 
     # Fetching rows with filters
@@ -147,15 +159,15 @@ Methods and Usage
     # Update the rows
     updated_rows = table.update_rows(rows_data)
 
-    # Deleting rows
+    # Move one row before another
+    moved_row = table.move_row(added_row.id, before_id=updated_rows[0].id)
+
+    # Delete one row
+    table.delete_row(moved_row.id)
+
+    # Delete multiple rows
     row_ids = [1, 2]
-
-    # Delete the rows
-    success = table.delete_rows(row_ids)
-
-    # Confirm the deletion
-    if success:
-        print(f"Deleted rows with IDs: {row_ids}")
+    table.delete_rows(row_ids)
 
 Migration from 0.1
 ------------------
@@ -191,3 +203,18 @@ Batch updates previously accepted Row objects. Pass explicit mappings instead:
     updated_rows = table.update_rows([
         {"id": row.id, "Notes": "Updated"},
     ])
+
+Row retrieval no longer switches return types through ``iterator=True`` and
+does not accept arbitrary query keyword arguments. Use the fixed methods:
+
+.. code-block:: python
+
+    # 0.1
+    rows = table.get_rows(iterator=True)
+
+    # 0.2
+    rows = table.iter_rows()
+
+Batch deletion similarly requires an explicit list of row IDs. Pass a single
+ID to ``delete_row`` rather than passing a scalar, generator, or Row object to
+``delete_rows``.

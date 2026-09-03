@@ -52,10 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -83,8 +86,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.url_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.base_text_class</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseTextClass</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.base_text_class</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseTextClass</span>
 
 
 <div class="viewcode-block" id="UrlField">
@@ -97,42 +99,7 @@
 <span class="sd">    :vartype TYPE: str</span>
 <span class="sd">    """</span>
 
-    <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"url"</span>
-    <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">"equal"</span><span class="p">,</span>
-        <span class="s2">"not_equal"</span><span class="p">,</span>
-        <span class="s2">"contains"</span><span class="p">,</span>
-        <span class="s2">"contains_not"</span><span class="p">,</span>
-        <span class="s2">"contains_word"</span><span class="p">,</span>
-        <span class="s2">"doesnt_contain_word"</span><span class="p">,</span>
-        <span class="s2">"starts_with"</span><span class="p">,</span>
-        <span class="s2">"length_is_lower_than"</span><span class="p">,</span>
-        <span class="s2">"empty"</span><span class="p">,</span>
-        <span class="s2">"not_empty"</span><span class="p">,</span>
-    <span class="p">]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Initialize a UrlField object.</span>
-
-<span class="sd">        :param name: The name of the field.</span>
-<span class="sd">        :type name: str</span>
-<span class="sd">        :param field_data: A dictionary containing the field's data and attributes.</span>
-<span class="sd">        :type field_data: Dict[str, Any]</span>
-<span class="sd">        :param client: The Baserow API client. Defaults to None.</span>
-<span class="sd">        :type client: Optional[Any]</span>
-<span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the list of compatible filters for this UrlField.</span>
-
-<span class="sd">        :return: The list of compatible filters.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span></div>
+    <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"url"</span></div>
 
 </pre></div>
 

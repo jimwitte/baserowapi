@@ -13,18 +13,14 @@ class TableLinkField(Field):
     """Baserow metadata and complete-set semantics for a link-row field."""
 
     TYPE = "link_row"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "link_row_has",
         "link_row_has_not",
         "link_row_contains",
         "link_row_not_contains",
         "empty",
         "not_empty",
-    ]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    )
 
     @property
     def link_row_table_id(self) -> Optional[int]:

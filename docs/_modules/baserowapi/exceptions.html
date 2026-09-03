@@ -52,10 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -192,9 +195,9 @@
 <div class="viewcode-block" id="RowWriteError">
 <a class="viewcode-back" href="../../baserowapi.html#baserowapi.exceptions.RowWriteError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RowWriteError</span><span class="p">(</span><span class="n">RowError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Base class for create and update failures.</span>
+<span class="w">    </span><span class="sd">"""Base class for row mutation failures with optional batch progress.</span>
 
-<span class="sd">    Batch writes are not atomic. When an earlier request chunk succeeded before</span>
+<span class="sd">    Batch mutations are not atomic. When an earlier request chunk succeeded before</span>
 <span class="sd">    a later chunk failed, ``completed_row_ids`` identifies the rows known to</span>
 <span class="sd">    have been written and ``failed_batch_number`` identifies the one-based</span>
 <span class="sd">    request chunk that failed.</span>
@@ -231,8 +234,12 @@
 
 <div class="viewcode-block" id="RowDeleteError">
 <a class="viewcode-back" href="../../baserowapi.html#baserowapi.exceptions.RowDeleteError">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RowDeleteError</span><span class="p">(</span><span class="n">RowError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Raised when deleting rows fails."""</span></div>
+<span class="k">class</span><span class="w"> </span><span class="nc">RowDeleteError</span><span class="p">(</span><span class="n">RowWriteError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when deleting rows fails.</span>
+
+<span class="sd">    Batch deletion is not atomic. ``completed_row_ids`` identifies IDs sent in</span>
+<span class="sd">    earlier request chunks that Baserow confirmed before the failed chunk.</span>
+<span class="sd">    """</span></div>
 
 
 

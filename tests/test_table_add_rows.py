@@ -29,10 +29,6 @@ def test_create_row(all_fields_table, single_row_data):
                 new_row[field] == value["expected"]
             ), f"Field {field} expected {value['expected']} but got {new_row[field]}"
 
-    # Cleanup: Delete the row after the test
-    all_fields_table.delete_rows([new_row.id])
-
-
 def test_create_multiple_identical_rows(all_fields_table, single_row_data):
     # Generate identical data for 10 rows using the helper function
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=10)
@@ -65,6 +61,3 @@ def test_create_multiple_identical_rows(all_fields_table, single_row_data):
                 assert (
                     new_row[field] == value["expected"]
                 ), f"Field {field} in row {i+1} expected {value['expected']} but got {new_row[field]}"
-
-    # Cleanup: Delete all the rows after the test using the correct id attribute
-    all_fields_table.delete_rows([row.id for row in created_rows])

@@ -13,7 +13,39 @@ DateValue = Union[str, date, datetime, None]
 class BaseDateField(Field):
     """Common Baserow semantics for date and datetime fields."""
 
-    TYPE = "base_date"
+    _COMPATIBLE_FILTERS = (
+        "date_is",
+        "date_is_not",
+        "date_is_before",
+        "date_is_on_or_before",
+        "date_is_after",
+        "date_is_on_or_after",
+        "date_is_within",
+        "date_equal",
+        "date_not_equal",
+        "date_equals_today",
+        "date_before_today",
+        "date_after_today",
+        "date_within_days",
+        "date_within_weeks",
+        "date_within_months",
+        "date_equals_days_ago",
+        "date_equals_months_ago",
+        "date_equals_years_ago",
+        "date_equals_week",
+        "date_equals_month",
+        "date_equals_year",
+        "date_equals_day_of_month",
+        "date_before",
+        "date_before_or_equal",
+        "date_after",
+        "date_after_or_equal",
+        "date_after_days_ago",
+        "contains",
+        "contains_not",
+        "empty",
+        "not_empty",
+    )
     _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
     _DATETIME_PATTERN = re.compile(
         r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"

@@ -30,8 +30,9 @@ and pending state cannot silently diverge.
 Updating and deleting
 ---------------------
 
-Pass an explicit mapping to ``update``. The method returns the server's updated
-``Row`` and refreshes the existing object's response data.
+Pass an explicit mapping to ``update``. ``update`` and ``move`` refresh the
+existing object from the hosted response and return that same ``Row`` instance.
+All three methods delegate to the corresponding singular ``Table`` operation.
 
 .. code-block:: python
 
@@ -42,6 +43,9 @@ Pass an explicit mapping to ``update``. The method returns the server's updated
     moved_to_end = row.move()
 
     deleted = row.delete()
+
+``delete`` returns ``True`` after Baserow accepts the deletion. A deleted Row
+object is not marked locally; callers should discard it.
 
 For multiple rows, use ``Table.update_rows`` with a list of mappings containing
 explicit ``id`` values. Batch updates do not accept ``Row`` objects.

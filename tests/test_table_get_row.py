@@ -20,10 +20,6 @@ def test_get_row_by_id(all_fields_table, single_row_data):
         if not value["read_only"]:
             assert fetched_row[field] == value["expected"], f"Field {field} does not match expected value."
     
-    # Step 4: Clean up by deleting the row
-    all_fields_table.delete_rows([created_row.id])
-
-
 def test_get_non_existent_row_raises_error(all_fields_table):
     # Step 1: Define a non-existent row ID (e.g., a large number unlikely to be in the table)
     non_existent_row_id = 999999

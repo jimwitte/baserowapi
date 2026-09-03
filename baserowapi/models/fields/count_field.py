@@ -1,29 +1,12 @@
-from typing import Any, Optional
+from typing import Optional
 
 from baserowapi.models.fields.number_field import NumberField
 
 
 class CountField(NumberField):
-    """A read-only Baserow relation count with number-result semantics."""
+    """A read-only relation count returned as a Baserow decimal string."""
 
     TYPE = "count"
-    _COMPATIBLE_FILTERS = [
-        "equal",
-        "not_equal",
-        "contains",
-        "contains_not",
-        "starts_with",
-        "higher_than",
-        "higher_than_or_equal",
-        "lower_than",
-        "lower_than_or_equal",
-        "is_even_and_whole",
-        "empty",
-        "not_empty",
-    ]
-
-    def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
-        super().__init__(name, field_data, client)
 
     @property
     def is_read_only(self) -> bool:

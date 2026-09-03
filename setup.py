@@ -5,7 +5,6 @@ setup(
     version="0.1.0b5",
     packages=find_packages(exclude=("tests", "tests.*")),
     install_requires=[
-        "pytz>=2023.3.post1",
         "Requests~=2.31"
     ],
     author="James P Witte",

@@ -9,16 +9,12 @@ class MultipleCollaboratorsField(Field):
     """Baserow collaborator identity and assignment semantics."""
 
     TYPE = "multiple_collaborators"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "multiple_collaborators_has",
         "multiple_collaborators_has_not",
         "empty",
         "not_empty",
-    ]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    )
 
     @property
     def notify_user_when_added(self) -> bool:

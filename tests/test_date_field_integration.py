@@ -25,10 +25,6 @@ def test_date_field_parse_value(all_fields_table, single_row_data):
     expected_date = datetime(2024, 3, 17)
     assert parsed == expected_date.date()
 
-    # Step 5: Clean up by deleting the row
-    all_fields_table.delete_rows([created_row.id])
-
-
 def test_date_field_format_value(all_fields_table, single_row_data):
     # Step 1: Create a single row with a specific US Date Time
     single_row_data["US Date Time"]["input"] = "2024-08-02T22:51:00Z"
@@ -47,6 +43,3 @@ def test_date_field_format_value(all_fields_table, single_row_data):
     assert us_date_time_formatted == expected_format, (
         f"Expected formatted date '{expected_format}', but got '{us_date_time_formatted}'"
     )
-
-    # Step 4: Clean up by deleting the row
-    all_fields_table.delete_rows([created_row.id])

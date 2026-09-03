@@ -1,7 +1,4 @@
 import pytest
-from baserowapi.exceptions import (
-    RowDeleteError,
-)
 from .helper_functions.generate_identical_rows import generate_identical_rows
 
 pytestmark = pytest.mark.integration
@@ -35,10 +32,6 @@ def test_update_row(all_fields_table, single_row_data):
         updated_row["Notes"] == "Updated sample note for testing"
     ), "Notes field was not updated correctly."
 
-    # Clean up by deleting the row
-    all_fields_table.delete_rows([new_row.id])
-
-
 def test_update_multiple_rows(all_fields_table, single_row_data):
     # Generate data for multiple rows
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=5)
@@ -65,12 +58,6 @@ def test_update_multiple_rows(all_fields_table, single_row_data):
         updated_row = all_fields_table.get_row(row.id)
         assert updated_row["Active"] is False, "Active field was not updated correctly."
         assert updated_row["Notes"] == "Bulk update note", "Notes field was not updated correctly."
-
-    # Clean up by deleting the rows that still exist
-    remaining_row_ids = [row.id for row in created_rows]
-    if remaining_row_ids:
-        all_fields_table.delete_rows(remaining_row_ids)
-
 
 def test_update_and_delete_with_missing_rows(all_fields_table, single_row_data):
     # Generate data for multiple rows
@@ -99,8 +86,3 @@ def test_update_and_delete_with_missing_rows(all_fields_table, single_row_data):
             updated_row = all_fields_table.get_row(row.id)
             assert updated_row["Active"] is False, "Active field was not updated correctly."
             assert updated_row["Notes"] == "Update note after deletion", "Notes field was not updated correctly."
-
-    # Cleanup: Delete only the remaining rows
-    rows_remaining = [row.id for row in created_rows if row not in rows_to_delete]
-    if rows_remaining:
-        all_fields_table.delete_rows(rows_remaining)

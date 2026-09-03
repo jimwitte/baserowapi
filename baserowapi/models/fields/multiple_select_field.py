@@ -1,6 +1,12 @@
 from typing import Any, Optional
 
 from baserowapi.exceptions import FieldValidationError, FieldValueError
+from baserowapi.models.fields._select_options import (
+    decode_option,
+    decode_options,
+    find_option,
+    resolve_option,
+)
 from baserowapi.models.fields.field import Field
 from baserowapi.models.values import SelectOption
 
@@ -9,7 +15,7 @@ class MultipleSelectField(Field):
     """Baserow metadata and value semantics for a multiple-select field."""
 
     TYPE = "multiple_select"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "contains",
         "contains_not",
         "contains_word",
@@ -18,7 +24,7 @@ class MultipleSelectField(Field):
         "multiple_select_has_not",
         "empty",
         "not_empty",
-    ]
+    )
 
     def __init__(self, name: str, field_data: dict[str, Any], client=None) -> None:
         super().__init__(name, field_data, client)
@@ -28,59 +34,18 @@ class MultipleSelectField(Field):
             )
 
     @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
-
-    @staticmethod
-    def _decode_option(raw_value: dict[str, Any]) -> SelectOption:
-        if not isinstance(raw_value, dict):
-            raise FieldValueError("A Baserow select option must be an object.")
-        option_id = raw_value.get("id")
-        value = raw_value.get("value")
-        if option_id is not None and (
-            isinstance(option_id, bool) or not isinstance(option_id, int)
-        ):
-            raise FieldValueError("A Baserow select option ID must be an integer.")
-        if value is not None and not isinstance(value, str):
-            raise FieldValueError("A Baserow select option value must be a string.")
-        return SelectOption(
-            id=option_id,
-            value=value,
-            color=raw_value.get("color"),
-            raw=dict(raw_value),
-        )
-
-    @property
     def options(self) -> list[SelectOption]:
         """Return the configured options without discarding IDs or metadata."""
-        return [
-            self._decode_option(option)
-            for option in self.field_data["select_options"]
-        ]
+        return decode_options(self.field_data["select_options"])
 
     def _get_option_by_id_or_value(
         self, value: int | str
     ) -> Optional[SelectOption]:
-        for option in self.options:
-            if option.id == value or option.value == value:
-                return option
-        return None
+        return find_option(self.options, value)
 
     def resolve_option(self, label: str) -> SelectOption:
         """Resolve one option by label, rejecting missing or duplicate labels."""
-        if not isinstance(label, str):
-            raise FieldValidationError("A select option label must be a string.")
-        matches = [option for option in self.options if option.value == label]
-        if not matches:
-            raise FieldValidationError(
-                f"No option with label {label!r} exists for field {self.name!r}."
-            )
-        if len(matches) > 1:
-            raise FieldValidationError(
-                f"Label {label!r} is ambiguous for field {self.name!r}; "
-                f"it matches {len(matches)} options."
-            )
-        return matches[0]
+        return resolve_option(self.options, label, field_name=self.name)
 
     def decode_value(self, raw_value: Any) -> list[SelectOption]:
         if raw_value is None:
@@ -95,7 +60,7 @@ class MultipleSelectField(Field):
             if isinstance(item, SelectOption):
                 decoded.append(item)
             elif isinstance(item, dict):
-                decoded.append(self._decode_option(item))
+                decoded.append(decode_option(item))
             elif isinstance(item, bool):
                 raise FieldValueError("A select option ID cannot be a boolean.")
             elif isinstance(item, int):

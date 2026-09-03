@@ -9,8 +9,9 @@
     or timezone-aware Python `datetime` objects. The client no longer guesses
     two-digit years, normalizes slash-separated dates, assumes midnight or UTC,
     strips time values, or uses the executing machine's timezone implicitly.
-  - Select, linked-row, file, collaborator, and lookup reads now return
-    identity-bearing records instead of labels or raw dictionaries.
+  - Select, linked-row, file, collaborator, and lookup reads now return records
+    that retain Baserow IDs and raw metadata instead of only labels or raw
+    dictionaries.
   - Replaced `TableLinkField.get_options()` with `get_linked_rows()`, which
     preserves row IDs.
   - Select field `options` now returns `SelectOption` records; the redundant
@@ -23,8 +24,8 @@
     `update_row()` return one Row, while `add_rows()` and `update_rows()` accept
     non-empty lists and return lists. `add_rows(mapping)` is no longer accepted.
   - Removed `FieldList`, `RowValueList`, all per-type RowValue classes, their
-    package exports, and RowValue-specific exceptions. Field classes are now the
-    sole value-semantic dispatch.
+    package exports, and RowValue-specific exceptions. Field classes now
+    decode, validate, and encode values without a second dispatch layer.
   - `Table.fields` and `Table.writable_fields` now return ordered, read-only
     mappings. Iterating them yields field names; use `.values()` for Fields.
   - `Row.values` now returns an ordered, read-only mapping of decoded values;
@@ -41,6 +42,12 @@
     `parse_response` transport helpers.
   - Client session and default-header state are now private. Absolute low-level
     request URLs must match the configured Baserow origin.
+  - Row retrieval now has fixed return contracts: `Table.get_rows()` returns a
+    list and `Table.iter_rows()` returns an iterator. Removed `iterator`,
+    `row_generator`, and arbitrary row-query keyword arguments.
+  - `Table.delete_rows()` now accepts only a non-empty list of row IDs. Use
+    `delete_row()` for one ID; Row objects, scalar IDs, and generators are no
+    longer accepted by the batch method.
 - **Field Semantics:**
   - Added field-owned `decode_value`, `validate_value`, and `encode_value`
     operations. `format_for_api` remains as a compatibility alias.
@@ -58,13 +65,16 @@
     returned-object, comma-separated, and empty forms supported by each field.
   - Added dedicated read-only `UUIDField` and `AutonumberField` support while
     preserving hosted string and integer read representations.
-  - Count fields now reuse number-result semantics. Formula button objects and
-    unknown computed result shapes remain raw and lossless.
+  - Count fields preserve Baserow decimal strings and report number-field filter
+    compatibility. Formula button objects and unknown computed result shapes
+    remain raw and lossless.
 - **Filters:**
   - Added advisory `FilterCompatibility` results for supported, unsupported,
     and unknown field/operator combinations.
   - Updated configured field compatibility lists from the generated Baserow API
     documentation. Unknown operators still pass through to hosted Baserow.
+  - Made `Field.compatible_filters` immutable and consolidated identical
+    compatibility knowledge on common field bases.
 - **Files:**
   - Added `Baserow.upload_file()` and `Baserow.upload_file_via_url()`, returning
     unattached `BaserowFile` records.
@@ -74,6 +84,8 @@
   - Added `FieldValueError` for explicit field conversion failures.
   - Row add and update failures now report the failed batch number and IDs of
     rows completed by earlier non-atomic request chunks.
+  - Row deletion failures now provide the same failed-batch and completed-row
+    progress information.
 - **Client and Discovery:**
   - Consolidated ordinary calls, pagination, and file uploads behind
     `Baserow.make_api_request`, with private URL, header, execution, and response
@@ -100,6 +112,18 @@
   - Password reads preserve hosted `true` or `null` values. Added
     `PasswordField.is_set()` for explicit boolean interpretation and retained
     the hosted string, `true`, and `null` write forms.
+  - Added strict validation of paginated row response shapes, including
+    required `results` and `next` members.
+  - Added structural validation for `view_id`, page `size`, and result `limit`.
+    A zero limit returns no rows without making a request.
+- **Row Operations:**
+  - Added singular `Table.delete_row()` and `Table.move_row()` primitives.
+    `Row.delete()` and `Row.move()` delegate to them; moving refreshes and
+    returns the existing Row instance.
+  - Batch deletion validates every row ID before sending its first request and
+    reports earlier completed IDs if a later chunk fails.
+  - Batch deletion now confirms a chunk only after Baserow returns HTTP 204, so
+    partial-failure progress cannot include IDs from an unexpected response.
 - **Testing and Documentation:**
   - Added credential-free scalar field tests and recorded hosted compatibility
     probes for nullability, numeric precision, and timezone-offset writes.
@@ -113,6 +137,16 @@
     coverage, migration guidance, and updated architecture documentation.
   - Added request-boundary, retry, logging-isolation, discovery-response, and
     independent Table schema-cache tests, plus hosted table discovery coverage.
+  - Replaced integration-test whole-table snapshots with per-test tracking and
+    cleanup of only rows created by that test, including rows completed before
+    a later batch-add request fails.
+  - Expanded the public API signature snapshot and removed the unused `pytz`
+    dependency.
+  - Made the API snapshot independent of annotation spelling and removed the
+    unused `LINK_TABLE_ID` integration setting.
+  - Removed obsolete test media and stale local release outputs, corrected the
+    remaining upload fixture's WebP filename, and kept JSON test fixtures in
+    source distributions.
 
 
 #### 2026-09-01: 0.1.0b5

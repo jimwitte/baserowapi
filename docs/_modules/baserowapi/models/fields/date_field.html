@@ -52,10 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -83,7 +86,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.fields.date_field</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.fields.base_date_field</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDateField</span>
 
@@ -99,40 +102,6 @@
 <span class="sd">    """</span>
 
     <span class="n">TYPE</span> <span class="o">=</span> <span class="s2">"date"</span>
-    <span class="n">_COMPATIBLE_FILTERS</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">"date_is"</span><span class="p">,</span>
-        <span class="s2">"date_is_not"</span><span class="p">,</span>
-        <span class="s2">"date_is_before"</span><span class="p">,</span>
-        <span class="s2">"date_is_on_or_before"</span><span class="p">,</span>
-        <span class="s2">"date_is_after"</span><span class="p">,</span>
-        <span class="s2">"date_is_on_or_after"</span><span class="p">,</span>
-        <span class="s2">"date_is_within"</span><span class="p">,</span>
-        <span class="s2">"date_equal"</span><span class="p">,</span>
-        <span class="s2">"date_not_equal"</span><span class="p">,</span>
-        <span class="s2">"date_equals_today"</span><span class="p">,</span>
-        <span class="s2">"date_before_today"</span><span class="p">,</span>
-        <span class="s2">"date_after_today"</span><span class="p">,</span>
-        <span class="s2">"date_within_days"</span><span class="p">,</span>
-        <span class="s2">"date_within_weeks"</span><span class="p">,</span>
-        <span class="s2">"date_within_months"</span><span class="p">,</span>
-        <span class="s2">"date_equals_days_ago"</span><span class="p">,</span>
-        <span class="s2">"date_equals_months_ago"</span><span class="p">,</span>
-        <span class="s2">"date_equals_years_ago"</span><span class="p">,</span>
-        <span class="s2">"date_equals_week"</span><span class="p">,</span>
-        <span class="s2">"date_equals_month"</span><span class="p">,</span>
-        <span class="s2">"date_equals_year"</span><span class="p">,</span>
-        <span class="s2">"date_equals_day_of_month"</span><span class="p">,</span>
-        <span class="s2">"date_before"</span><span class="p">,</span>
-        <span class="s2">"date_before_or_equal"</span><span class="p">,</span>
-        <span class="s2">"date_after"</span><span class="p">,</span>
-        <span class="s2">"date_after_or_equal"</span><span class="p">,</span>
-        <span class="s2">"date_after_days_ago"</span><span class="p">,</span>
-        <span class="s2">"contains"</span><span class="p">,</span>
-        <span class="s2">"contains_not"</span><span class="p">,</span>
-        <span class="s2">"empty"</span><span class="p">,</span>
-        <span class="s2">"not_empty"</span><span class="p">,</span>
-    <span class="p">]</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Initialize a DateField object.</span>
@@ -145,17 +114,7 @@
 <span class="sd">        :type client: Optional[Any]</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_data</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compatible_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Get the list of compatible filters for this DateField.</span>
-
-<span class="sd">        :return: The list of compatible filters.</span>
-<span class="sd">        :rtype: List[str]</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMPATIBLE_FILTERS</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 </pre></div>
 

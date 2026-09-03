@@ -43,8 +43,8 @@ Row
    :show-inheritance:
    :noindex:
 
-Identity-bearing Values
------------------------------------
+Structured Baserow Values
+-------------------------
 
 .. automodule:: baserowapi.models.values
    :members:

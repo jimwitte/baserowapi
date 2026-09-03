@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError
 
@@ -6,18 +6,18 @@ from baserowapi.exceptions import FieldValidationError
 class BaseTextClass(Field):
     """A base class for text-based fields in Baserow."""
 
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        """
-        Initialize a BaseTextClass object.
-
-        :param name: The name of the field.
-        :type name: str
-        :param field_data: A dictionary containing the field's attributes.
-        :type field_data: Dict[str, Any]
-        :param client: The Baserow API client. Defaults to None.
-        :type client: Optional[Any]
-        """
-        super().__init__(name, field_data, client)
+    _COMPATIBLE_FILTERS = (
+        "equal",
+        "not_equal",
+        "contains",
+        "contains_not",
+        "contains_word",
+        "doesnt_contain_word",
+        "starts_with",
+        "length_is_lower_than",
+        "empty",
+        "not_empty",
+    )
 
     def validate_value(self, value: Any) -> None:
         """

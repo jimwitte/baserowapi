@@ -23,13 +23,13 @@ def test_upload_file_returns_unattached_file_for_explicit_assignment(
     baserow_client, all_fields_table, single_row_data
 ):
     created_row = empty_file_row(all_fields_table, single_row_data)
-    file_path = Path(__file__).with_name("bike.png")
+    file_path = Path(__file__).with_name("bike.webp")
 
     uploaded = baserow_client.upload_file(file_path)
 
     assert isinstance(uploaded, BaserowFile)
     assert uploaded.name
-    assert uploaded.original_name == "bike.png"
+    assert uploaded.original_name == "bike.webp"
     assert created_row["FileField"] == []
 
     created_row.update({"FileField": [uploaded]})
@@ -42,7 +42,7 @@ def test_upload_via_url_returns_unattached_file_for_explicit_assignment(
     baserow_client, all_fields_table, single_row_data
 ):
     created_row = empty_file_row(all_fields_table, single_row_data)
-    source = baserow_client.upload_file(Path(__file__).with_name("bike.png"))
+    source = baserow_client.upload_file(Path(__file__).with_name("bike.webp"))
 
     imported = baserow_client.upload_file_via_url(source.url)
 

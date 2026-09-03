@@ -52,10 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -83,9 +86,9 @@
            <div itemprop="articleBody">
              
   <h1>Source code for baserowapi.models.table</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaserowResponseError</span><span class="p">,</span>
     <span class="n">FieldDataRetrievalError</span><span class="p">,</span>
@@ -93,6 +96,7 @@
     <span class="n">RowAddError</span><span class="p">,</span>
     <span class="n">RowUpdateError</span><span class="p">,</span>
     <span class="n">RowDeleteError</span><span class="p">,</span>
+    <span class="n">RowMoveError</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.filter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Filter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">baserowapi.models.row</span><span class="w"> </span><span class="kn">import</span> <span class="n">Row</span>
@@ -204,7 +208,7 @@
 
 <span class="sd">        Given the data for a field, this method determines the most suitable</span>
 <span class="sd">        class to represent the field, using the field's type as a key to look it up.</span>
-<span class="sd">        If the field's type isn't recognized, it defaults to the base Field class.</span>
+<span class="sd">        If the field's type isn't recognized, it defaults to ``GenericField``.</span>
 
 <span class="sd">        :param field_data: A dictionary containing field data, especially the 'type' key.</span>
 <span class="sd">        :type field_data: dict</span>
@@ -212,9 +216,7 @@
 <span class="sd">        :rtype: type</span>
 <span class="sd">        """</span>
         <span class="n">field_type</span> <span class="o">=</span> <span class="n">field_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Table</span><span class="o">.</span><span class="n">FIELD_TYPE_CLASS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">field_type</span><span class="p">,</span> <span class="n">GenericField</span>
-        <span class="p">)</span>  <span class="c1"># Default to base Field class if type not found</span>
+        <span class="k">return</span> <span class="n">Table</span><span class="o">.</span><span class="n">FIELD_TYPE_CLASS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_type</span><span class="p">,</span> <span class="n">GenericField</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">]:</span>
@@ -318,13 +320,7 @@
 <span class="sd">        :rtype: List[str]</span>
 <span class="sd">        :raises FieldDataRetrievalError: If the table fields cannot be retrieved or parsed.</span>
 <span class="sd">        """</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Failed to get field names for table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-            <span class="k">raise</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_request_url</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -336,7 +332,6 @@
         <span class="n">filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Filter</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">view_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Constructs the URL for the Baserow API request based on the given parameters.</span>
@@ -353,18 +348,18 @@
 <span class="sd">        :type filter_type: str, optional</span>
 <span class="sd">        :param filters: A list containing Filter objects to be applied.</span>
 <span class="sd">        :type filters: list[Filter], optional</span>
-<span class="sd">        :param view_id: ID of the view to consider its filters and sorts.</span>
+<span class="sd">        :param view_id: Positive integer ID of the view whose filters and sorts apply.</span>
 <span class="sd">        :type view_id: int, optional</span>
-<span class="sd">        :param size: The number of rows per page in the response.</span>
+<span class="sd">        :param size: A positive integer number of rows per response page.</span>
 <span class="sd">        :type size: int, optional</span>
-<span class="sd">        :param kwargs: Additional parameters for the API request.</span>
-<span class="sd">        :type kwargs: Any</span>
-
 <span class="sd">        :return: The constructed request URL.</span>
 <span class="sd">        :rtype: str</span>
 
 <span class="sd">        :raises ValueError: If filter_type is not 'AND' or 'OR'.</span>
 <span class="sd">        """</span>
+        <span class="n">view_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_query_integer</span><span class="p">(</span><span class="s2">"view_id"</span><span class="p">,</span> <span class="n">view_id</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_query_integer</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+
         <span class="n">base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/?user_field_names=true"</span>
         <span class="n">query_params_parts</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -387,6 +382,24 @@
         <span class="n">full_request_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base_url</span><span class="si">}</span><span class="s2">&amp;</span><span class="si">{</span><span class="n">query_params</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">query_params</span> <span class="k">else</span> <span class="n">base_url</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Built request URL: '</span><span class="si">{</span><span class="n">full_request_url</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">full_request_url</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validated_query_integer</span><span class="p">(</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">allow_zero</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Validate a numeric row-query parameter without coercion."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be an integer or None."</span><span class="p">)</span>
+        <span class="n">minimum</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">allow_zero</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">minimum</span><span class="p">:</span>
+            <span class="n">qualifier</span> <span class="o">=</span> <span class="s2">"non-negative"</span> <span class="k">if</span> <span class="n">allow_zero</span> <span class="k">else</span> <span class="s2">"positive"</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a </span><span class="si">{</span><span class="n">qualifier</span><span class="si">}</span><span class="s2"> integer."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_append_query_param</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -430,27 +443,29 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"filter_type"</span><span class="p">:</span> <span class="n">filter_type</span><span class="p">,</span> <span class="s2">"filters"</span><span class="p">:</span> <span class="n">filter_dicts</span><span class="p">,</span> <span class="s2">"groups"</span><span class="p">:</span> <span class="p">[]}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_row_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Parses the raw data from the API response and transforms it into a list of Row objects.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_row_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Validate one paginated Baserow response before exposing its rows."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response_data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span><span class="s2">"A row-list response must be an object."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"results"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">response_data</span><span class="p">[</span><span class="s2">"results"</span><span class="p">],</span> <span class="nb">list</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="s2">"A row-list response must contain a 'results' list."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"next"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span><span class="s2">"A row-list response is missing 'next'."</span><span class="p">)</span>
+        <span class="n">next_url</span> <span class="o">=</span> <span class="n">response_data</span><span class="p">[</span><span class="s2">"next"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">next_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_url</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                <span class="s2">"A row-list response 'next' value must be a URL string or null."</span>
+            <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="n">response_data</span><span class="p">[</span><span class="s2">"results"</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">rows</span><span class="p">,</span> <span class="n">next_url</span>
 
-<span class="sd">        :param response_data: The raw response data from the Baserow API.</span>
-<span class="sd">        :type response_data: dict[str, Any]</span>
-<span class="sd">        :return: List of Row objects.</span>
-<span class="sd">        :rtype: list[Row]</span>
-<span class="sd">        """</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">response_data</span> <span class="ow">or</span> <span class="s2">"results"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response_data</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Received invalid or empty response data from the API."</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">[]</span>
-
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">Row</span><span class="p">(</span><span class="n">row_data</span><span class="o">=</span><span class="n">row_data</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="n">response_data</span><span class="p">[</span><span class="s2">"results"</span><span class="p">]</span>
-        <span class="p">]</span>
-
-<div class="viewcode-block" id="Table.row_generator">
-<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.row_generator">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">row_generator</span><span class="p">(</span>
+<div class="viewcode-block" id="Table.iter_rows">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.iter_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -461,8 +476,7 @@
         <span class="n">view_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generator function to retrieve rows from the table in a paginated manner,</span>
 <span class="sd">        optionally limiting the number of rows returned.</span>
@@ -479,20 +493,21 @@
 <span class="sd">        :type filter_type: str, optional</span>
 <span class="sd">        :param filters: A list containing Filter objects to be applied.</span>
 <span class="sd">        :type filters: list[Filter], optional</span>
-<span class="sd">        :param view_id: ID of the view to consider its filters and sorts.</span>
+<span class="sd">        :param view_id: Positive integer ID of the view whose filters and sorts apply.</span>
 <span class="sd">        :type view_id: int, optional</span>
-<span class="sd">        :param size: The number of rows per page in the response.</span>
+<span class="sd">        :param size: A positive integer number of rows per response page.</span>
 <span class="sd">        :type size: int, optional</span>
-<span class="sd">        :param limit: The maximum number of rows to return.</span>
+<span class="sd">        :param limit: A non-negative maximum number of rows; zero performs no request.</span>
 <span class="sd">        :type limit: int, optional</span>
-<span class="sd">        :param kwargs: Additional parameters for the API request.</span>
-<span class="sd">        :type kwargs: dict</span>
-
 <span class="sd">        :yield: Yields Row objects as they are fetched, up to the specified limit.</span>
-<span class="sd">        :rtype: Generator[Row, None, None]</span>
+<span class="sd">        :rtype: Iterator[Row]</span>
 <span class="sd">        :raises RowFetchError: If any error occurs during the process.</span>
 <span class="sd">        :raises ValueError: If parameters are not valid.</span>
 <span class="sd">        """</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_query_integer</span><span class="p">(</span><span class="s2">"limit"</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">allow_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="n">request_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request_url</span><span class="p">(</span>
             <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span>
             <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span>
@@ -502,7 +517,6 @@
             <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
             <span class="n">view_id</span><span class="o">=</span><span class="n">view_id</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">yielded_rows</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Tracks the number of rows yielded</span>
@@ -511,17 +525,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fetching data from URL: </span><span class="si">{</span><span class="n">request_url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">response_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">request_url</span><span class="p">)</span>
-                <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_row_data</span><span class="p">(</span><span class="n">response_data</span><span class="p">)</span>
+                <span class="n">rows</span><span class="p">,</span> <span class="n">request_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_row_page</span><span class="p">(</span><span class="n">response_data</span><span class="p">)</span>
 
                 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">row</span>
                     <span class="n">yielded_rows</span> <span class="o">+=</span> <span class="mi">1</span>
 
-                    <span class="k">if</span> <span class="n">limit</span> <span class="ow">and</span> <span class="n">yielded_rows</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">yielded_rows</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reached the limit of </span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2"> rows."</span><span class="p">)</span>
                         <span class="k">return</span>
 
-                <span class="n">request_url</span> <span class="o">=</span> <span class="n">response_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"next"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">request_url</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Next page URL: </span><span class="si">{</span><span class="n">request_url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -544,9 +557,7 @@
         <span class="n">view_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">iterator</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">],</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Row</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieves rows from the table using provided parameters, with an optional limit on the number of rows.</span>
 
@@ -562,40 +573,31 @@
 <span class="sd">        :type filter_type: str, optional</span>
 <span class="sd">        :param filters: A list containing Filter objects to be applied.</span>
 <span class="sd">        :type filters: list[Filter], optional</span>
-<span class="sd">        :param view_id: ID of the view to consider its filters and sorts.</span>
+<span class="sd">        :param view_id: Positive integer ID of the view whose filters and sorts apply.</span>
 <span class="sd">        :type view_id: int, optional</span>
-<span class="sd">        :param size: The number of rows per page in the response.</span>
+<span class="sd">        :param size: A positive integer number of rows per response page.</span>
 <span class="sd">        :type size: int, optional</span>
-<span class="sd">        :param limit: The maximum number of rows to return.</span>
+<span class="sd">        :param limit: A non-negative maximum number of rows; zero performs no request.</span>
 <span class="sd">        :type limit: int, optional</span>
-<span class="sd">        :param iterator: If True, returns a generator of Row objects. If False, returns a list of Row objects.</span>
-<span class="sd">        :type iterator: bool, optional</span>
-<span class="sd">        :param kwargs: Additional parameters for the API request.</span>
-<span class="sd">        :type kwargs: dict</span>
-
-<span class="sd">        :return: A list or generator of Row objects, depending on the iterator parameter.</span>
-<span class="sd">        :rtype: Union[List[Row], Generator[Row, None, None]]</span>
+<span class="sd">        :return: A list of Row objects.</span>
+<span class="sd">        :rtype: list[Row]</span>
 
 <span class="sd">        :raises RowFetchError: If rows cannot be retrieved or parsed.</span>
 <span class="sd">        :raises ValueError: If parameters are not valid.</span>
 <span class="sd">        """</span>
-        <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_generator</span><span class="p">(</span>
-            <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span>
-            <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span>
-            <span class="n">search</span><span class="o">=</span><span class="n">search</span><span class="p">,</span>
-            <span class="n">order_by</span><span class="o">=</span><span class="n">order_by</span><span class="p">,</span>
-            <span class="n">filter_type</span><span class="o">=</span><span class="n">filter_type</span><span class="p">,</span>
-            <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
-            <span class="n">view_id</span><span class="o">=</span><span class="n">view_id</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
-            <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">iterator</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">generator</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span>
+                <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span>
+                <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span>
+                <span class="n">search</span><span class="o">=</span><span class="n">search</span><span class="p">,</span>
+                <span class="n">order_by</span><span class="o">=</span><span class="n">order_by</span><span class="p">,</span>
+                <span class="n">filter_type</span><span class="o">=</span><span class="n">filter_type</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">view_id</span><span class="o">=</span><span class="n">view_id</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+                <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Table.get_row">
@@ -868,75 +870,82 @@
 <a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.delete_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">delete_rows</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">rows_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Row</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]],</span>
+        <span class="n">row_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Deletes multiple rows from the table using the Baserow batch-delete endpoint.</span>
-
-<span class="sd">        This method accepts a list or generator of Row objects or integers. For each item:</span>
-<span class="sd">        - If it's a Row object, the method extracts its ID for deletion.</span>
-<span class="sd">        - If it's an integer, it represents the ID of the row to be deleted.</span>
-
-<span class="sd">        :param rows_data: A list or generator of Row objects or integers. Row objects represent</span>
-<span class="sd">                        the rows to be deleted, while integers represent the row IDs</span>
-<span class="sd">                        to be deleted.</span>
-<span class="sd">        :type rows_data: list[Union[Row, int]] or Generator[Union[Row, int], None, None]</span>
-
-<span class="sd">        :param batch_size: The number of rows to include in each batch request when deleting multiple rows.</span>
-<span class="sd">                        Defaults to None, in which case the client's batch_size will be used.</span>
-<span class="sd">        :type batch_size: int, optional</span>
-
-<span class="sd">        :return: True if rows are successfully deleted, otherwise an exception is raised.</span>
-<span class="sd">        :rtype: bool</span>
-
-<span class="sd">        :raises ValueError: If parameters are not valid.</span>
-<span class="sd">        :raises TypeError: If an item in rows_data is neither an integer nor a Row object.</span>
-<span class="sd">        :raises RowDeleteError: If rows cannot be deleted.</span>
-<span class="sd">        """</span>
-
-        <span class="c1"># Handle Generator input by converting it to a list</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_data</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
-            <span class="n">rows_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rows_data</span><span class="p">)</span>
-
-        <span class="c1"># Convert Row objects to their respective IDs and validate integer inputs</span>
-        <span class="n">row_ids</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">rows_data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Row</span><span class="p">):</span>
-                <span class="n">row_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">item</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Invalid row ID: </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">. Row IDs should be positive integers."</span>
-                    <span class="p">)</span>
-                <span class="n">row_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Unsupported type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> in rows_data. Expected Row object or positive integer."</span>
-                <span class="p">)</span>
-
+<span class="w">        </span><span class="sd">"""Delete a non-empty list of explicit row IDs in request chunks."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"delete_rows expects a list of row IDs."</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">row_ids</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The rows_data list is empty. Nothing to delete."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"row_ids must contain at least one row ID."</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_delete_rows_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">"""</span>
-<span class="sd">            Helper function to delete a chunk of rows.</span>
-<span class="sd">            """</span>
-            <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch-delete/"</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"items"</span><span class="p">:</span> <span class="n">chunk</span><span class="p">})</span>
+        <span class="n">validated_ids</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_id</span> <span class="ow">in</span> <span class="n">row_ids</span><span class="p">]</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_batch_size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/batch-delete/"</span>
+        <span class="n">completed_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">validated_ids</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">validated_ids</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">batch_number</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">//</span> <span class="n">batch_size</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span>
+                    <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"items"</span><span class="p">:</span> <span class="n">chunk</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="mi">204</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                        <span class="s2">"A successful batch deletion must return HTTP 204."</span>
+                    <span class="p">)</span>
+                <span class="n">completed_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Failed to delete batch </span><span class="si">{</span><span class="n">batch_number</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">; "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">completed_ids</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) were already deleted."</span><span class="p">,</span>
+                    <span class="n">failed_batch_number</span><span class="o">=</span><span class="n">batch_number</span><span class="p">,</span>
+                    <span class="n">completed_row_ids</span><span class="o">=</span><span class="n">completed_ids</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
+
+<div class="viewcode-block" id="Table.delete_row">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.delete_row">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Delete one row by ID."""</span>
+        <span class="n">validated_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2">/"</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Batch delete rows using the specified batch size</span>
-            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_size</span>
-
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_ids</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
-                <span class="n">chunk</span> <span class="o">=</span> <span class="n">row_ids</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
-                <span class="n">_delete_rows_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"DELETE"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="mi">204</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BaserowResponseError</span><span class="p">(</span>
+                    <span class="s2">"A successful single-row deletion must return HTTP 204."</span>
+                <span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to delete rows from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to delete rows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RowDeleteError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Failed to delete row </span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
+
+
+<div class="viewcode-block" id="Table.move_row">
+<a class="viewcode-back" href="../../../baserowapi.html#baserowapi.models.table.Table.move_row">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">move_row</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">row_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">before_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Row</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Move one row before another row, or to the end when omitted."""</span>
+        <span class="n">validated_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"/api/database/rows/table/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2">/move/"</span>
+            <span class="s2">"?user_field_names=true"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">before_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">endpoint</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&amp;before_id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_validated_row_id</span><span class="p">(</span><span class="n">before_id</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">make_api_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"PATCH"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RowMoveError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Failed to move row </span><span class="si">{</span><span class="n">validated_id</span><span class="si">}</span><span class="s2"> in table </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
 </div>
 
 </pre></div>

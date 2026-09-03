@@ -19,7 +19,6 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Code Structure" href="code.html" />
     <link rel="prev" title="Field semantic inventory" href="semantic_inventory.html" /> 
 </head>
 
@@ -43,7 +42,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start with Baserow API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="client.html">Baserow Client Class</a></li>
@@ -55,6 +54,11 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Semantic refactoring plan</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#purpose">Purpose</a></li>
@@ -71,7 +75,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#id3">Exit criteria</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#phase-3-add-identity-bearing-values-and-file-upload">Phase 3: Add identity-bearing values and file upload</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#phase-3-preserve-structured-value-ids-and-add-file-upload">Phase 3: Preserve structured value IDs and add file upload</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id4">Goal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id5">Work</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id6">Exit criteria</a></li>
@@ -101,17 +105,27 @@
 <li class="toctree-l3"><a class="reference internal" href="#id18">Exit criteria</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#phase-8-compatibility-documentation-and-beta-release">Phase 8: Compatibility, documentation, and beta release</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#phase-7-5-tighten-row-contracts-and-remove-residual-duplication">Phase 7.5: Tighten row contracts and remove residual duplication</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id19">Goal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id20">Work</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id21">Exit criteria</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-7-8-stabilize-contracts-and-test-infrastructure">Phase 7.8: Stabilize contracts and test infrastructure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id22">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id23">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id24">Exit criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-8-compatibility-documentation-and-beta-release">Phase 8: Compatibility, documentation, and beta release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id25">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id26">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id27">Exit criteria</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#working-method-for-each-phase">Working method for each phase</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
 </ul>
 
         </div>
@@ -249,8 +263,8 @@ defect requires an earlier correction.</p></li>
 </ul>
 </section>
 </section>
-<section id="phase-3-add-identity-bearing-values-and-file-upload">
-<h2>Phase 3: Add identity-bearing values and file upload<a class="headerlink" href="#phase-3-add-identity-bearing-values-and-file-upload" title="Link to this heading"></a></h2>
+<section id="phase-3-preserve-structured-value-ids-and-add-file-upload">
+<h2>Phase 3: Preserve structured value IDs and add file upload<a class="headerlink" href="#phase-3-preserve-structured-value-ids-and-add-file-upload" title="Link to this heading"></a></h2>
 <p>Status: implemented on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code> and verified against hosted
 <code class="docutils literal notranslate"><span class="pre">baserow.io</span></code> on 2026-09-01. Upload responses use <code class="docutils literal notranslate"><span class="pre">original_name</span></code> while
 attached row-file responses can use <code class="docutils literal notranslate"><span class="pre">visible_name</span></code>; both endpoint shapes are
@@ -453,24 +467,119 @@ Table loads current hosted schema when its fields are first accessed.</p></li>
 </ul>
 </section>
 </section>
-<section id="phase-8-compatibility-documentation-and-beta-release">
-<h2>Phase 8: Compatibility, documentation, and beta release<a class="headerlink" href="#phase-8-compatibility-documentation-and-beta-release" title="Link to this heading"></a></h2>
+<section id="phase-7-5-tighten-row-contracts-and-remove-residual-duplication">
+<h2>Phase 7.5: Tighten row contracts and remove residual duplication<a class="headerlink" href="#phase-7-5-tighten-row-contracts-and-remove-residual-duplication" title="Link to this heading"></a></h2>
+<p>Status: complete on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. On 2026-09-02, the Python 3.12
+suite passed with 197 offline tests and 37 serial hosted tests. A subsequent
+review identified the bounded corrections assigned to Phase 7.8.</p>
 <section id="id19">
 <h3>Goal<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
-<p>Verify the complete conceptual model and prepare one deliberate beta migration.</p>
+<p>Resolve the bounded review findings left between transport consolidation and
+release preparation without expanding the conceptual model.</p>
 </section>
 <section id="id20">
 <h3>Work<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
 <ul class="simple">
+<li><p>Split row retrieval into fixed <code class="docutils literal notranslate"><span class="pre">get_rows</span></code> list and <code class="docutils literal notranslate"><span class="pre">iter_rows</span></code> iterator
+contracts, remove legacy return-type switches and arbitrary query keyword
+arguments, and validate every pagination response before yielding rows.</p></li>
+<li><p>Make singular delete and move operations Table primitives used by Row
+conveniences. Keep an updated or moved Row synchronized with the response.</p></li>
+<li><p>Require batch deletion to receive a non-empty list of valid row IDs, validate
+all input before the first request, and expose partial progress after a later
+chunk fails.</p></li>
+<li><p>Make compatible-filter collections immutable and consolidate identical
+knowledge on the nearest common Field base.</p></li>
+<li><p>Consolidate shared select-option lookup mechanics without merging the
+different single-select and multiple-select wire contracts.</p></li>
+<li><p>Expand the public API snapshot to cover signatures and return-contract
+boundaries affected by the refactor.</p></li>
+<li><p>Replace whole-table integration cleanup with per-test tracking and deletion
+of only resources created by that test.</p></li>
+<li><p>Remove stale documentation output and the unused <code class="docutils literal notranslate"><span class="pre">pytz</span></code> dependency.</p></li>
+</ul>
+</section>
+<section id="id21">
+<h3>Exit criteria<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>List and streaming row retrieval have distinct, tested signatures and reject
+malformed hosted page shapes consistently.</p></li>
+<li><p>Singular Row operations delegate through Table and batch deletion has the
+same preflight and partial-failure guarantees as other batch writes.</p></li>
+<li><p>Filter compatibility is exposed through immutable tuples with no duplicated
+per-instance list construction.</p></li>
+<li><p>Integration cleanup never discovers or deletes unrelated table contents.</p></li>
+<li><p>Offline and hosted suites pass serially and warning-strict documentation
+generation succeeds.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-7-8-stabilize-contracts-and-test-infrastructure">
+<h2>Phase 7.8: Stabilize contracts and test infrastructure<a class="headerlink" href="#phase-7-8-stabilize-contracts-and-test-infrastructure" title="Link to this heading"></a></h2>
+<p>Status: complete on branch <code class="docutils literal notranslate"><span class="pre">release/0.2.0b1</span></code>. On 2026-09-02, all 215 offline
+tests and 37 serial hosted tests passed under Python 3.12. The warning-strict
+Sphinx 9.1.0 build also passed.</p>
+<section id="id22">
+<h3>Goal<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<p>Correct the release-blocking edge cases and remove small sources of misleading
+or duplicated behavior found in the review after Phase 7.5.</p>
+</section>
+<section id="id23">
+<h3>Work<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Record row IDs completed before a partial batch-add failure so integration
+cleanup can delete them.</p></li>
+<li><p>Define and validate integer contracts for row-query view, page-size, and
+result-limit parameters.</p></li>
+<li><p>Test public parameter names, kinds, and defaults without depending on how
+Python renders type annotations. Test the iterator contract without requiring
+a particular iterator implementation.</p></li>
+<li><p>Reuse the existing batch-progress exception implementation for deletion.</p></li>
+<li><p>Remove the unused linked-table integration fixture and configuration value;
+link fields obtain their related table ID from hosted field metadata.</p></li>
+<li><p>Replace dense user-facing terminology with direct descriptions of returned
+values and Field behavior.</p></li>
+<li><p>Remove Field constructors and validation overrides that only repeat inherited
+behavior.</p></li>
+<li><p>Require batch-delete responses to return HTTP 204 before recording completed
+row IDs, and remove redundant field-name exception logging.</p></li>
+<li><p>Remove obsolete local release outputs and unused or incorrectly named test
+support files before release verification.</p></li>
+<li><p>Correct the documented hosted test schema and settle the remaining generic
+fallback and base-field registry remnants.</p></li>
+</ul>
+</section>
+<section id="id24">
+<h3>Exit criteria<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Partial batch-add failure IDs are recorded by the integration resource
+tracker and covered by an offline regression test.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">view_id</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> accept only positive integers; <code class="docutils literal notranslate"><span class="pre">limit</span></code> accepts only
+non-negative integers and zero performs no request.</p></li>
+<li><p>Public API tests survive annotation-only refactoring while still protecting
+parameter order, names, kinds, defaults, and observed return contracts.</p></li>
+<li><p>Row mutation progress has one implementation and integration configuration
+has one accurate documented source of truth.</p></li>
+<li><p>No behavior-free Field override identified by the review remains.</p></li>
+<li><p>Batch deletion cannot overstate confirmed IDs after an unexpected response,
+and release verification cannot include stale distributions.</p></li>
+<li><p>Offline and hosted suites pass serially and warning-strict documentation
+generation succeeds.</p></li>
+</ul>
+</section>
+</section>
+<section id="phase-8-compatibility-documentation-and-beta-release">
+<h2>Phase 8: Compatibility, documentation, and beta release<a class="headerlink" href="#phase-8-compatibility-documentation-and-beta-release" title="Link to this heading"></a></h2>
+<section id="id25">
+<h3>Goal<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<p>Verify the complete conceptual model and prepare one deliberate beta migration.</p>
+</section>
+<section id="id26">
+<h3>Work<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<ul class="simple">
 <li><p>Run the full offline suite and the serial hosted integration suite.</p></li>
 <li><p>Exercise the generated API documentation’s representative field and filter
 forms against the disposable tables.</p></li>
-<li><p>Review the remaining Row operation split: <code class="docutils literal notranslate"><span class="pre">Row.update</span></code> delegates through
-<code class="docutils literal notranslate"><span class="pre">Table.update_row</span></code>, while <code class="docutils literal notranslate"><span class="pre">Row.delete</span></code> and <code class="docutils literal notranslate"><span class="pre">Row.move</span></code> construct their
-endpoints and call the shared Baserow request boundary directly. Decide
-whether Table delegation would clarify Baserow-specific behavior or merely
-add forwarding methods for symmetry; document the decision before changing
-the public API.</p></li>
 <li><p>Update user documentation, docstrings, examples, public API reference, and
 changelog to describe the implemented behavior rather than the plan.</p></li>
 <li><p>Regenerate tracked Sphinx output.</p></li>
@@ -481,8 +590,8 @@ complete.</p></li>
 clean Python 3.12 environment.</p></li>
 </ul>
 </section>
-<section id="id21">
-<h3>Exit criteria<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<section id="id27">
+<h3>Exit criteria<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Offline and hosted suites pass without parallel execution.</p></li>
 <li><p>Every public contract in the documentation has a corresponding test or an
@@ -516,7 +625,6 @@ authority is removed.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="semantic_inventory.html" class="btn btn-neutral float-left" title="Field semantic inventory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="code.html" class="btn btn-neutral float-right" title="Code Structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

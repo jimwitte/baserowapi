@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 import logging
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError
@@ -13,14 +13,14 @@ class RatingField(Field):
     """
 
     TYPE = "rating"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "equal",
         "not_equal",
         "higher_than",
         "higher_than_or_equal",
         "lower_than",
         "lower_than_or_equal",
-    ]
+    )
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
@@ -63,16 +63,6 @@ class RatingField(Field):
             raise FieldValidationError(
                 f"Expected a string for style but got {type(self.style)}"
             )
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this RatingField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
 
     def validate_value(self, value: int) -> None:
         """

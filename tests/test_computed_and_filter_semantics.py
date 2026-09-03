@@ -3,11 +3,10 @@ from uuid import UUID
 import pytest
 
 import baserowapi
-from baserowapi import Filter, FilterCompatibility
+from baserowapi import EmailField, Filter, FilterCompatibility, LongTextField
 from baserowapi.exceptions import FieldValueError
 from baserowapi.models.fields import (
     AutonumberField,
-    CountField,
     GenericField,
     NumberField,
     UUIDField,
@@ -105,6 +104,26 @@ def test_filter_compatibility_is_advisory_and_three_state(characterized_table):
         unknown_field.filter_compatibility("equal")
         is FilterCompatibility.UNKNOWN
     )
+
+
+def test_compatible_filter_collections_are_immutable_and_shared_by_semantic_family(
+    characterized_table,
+):
+    text_filters = characterized_table.fields["Name"].compatible_filters
+    date_filters = characterized_table.fields["Date Time"].compatible_filters
+    number_filters = characterized_table.fields["Number"].compatible_filters
+
+    assert isinstance(text_filters, tuple)
+    with pytest.raises(AttributeError):
+        text_filters.append("mutated")
+    assert LongTextField(
+        "Notes", {"id": 201, "name": "Notes", "type": "long_text"}
+    ).compatible_filters == text_filters
+    assert EmailField(
+        "Email", {"id": 202, "name": "Email", "type": "email"}
+    ).compatible_filters == text_filters
+    assert characterized_table.fields["Date Only"].compatible_filters == date_filters
+    assert characterized_table.fields["Count"].compatible_filters == number_filters
 
 
 def test_filter_has_one_json_tree_encoding_and_unknown_operators_pass_through(

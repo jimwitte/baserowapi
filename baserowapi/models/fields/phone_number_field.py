@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 import logging
 import re
 from baserowapi.models.fields.field import Field
@@ -14,7 +14,7 @@ class PhoneNumberField(Field):
     """
 
     TYPE = "phone_number"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "equal",
         "not_equal",
         "contains",
@@ -23,7 +23,7 @@ class PhoneNumberField(Field):
         "length_is_lower_than",
         "empty",
         "not_empty",
-    ]
+    )
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
@@ -39,16 +39,6 @@ class PhoneNumberField(Field):
         super().__init__(name, field_data, client)
         self.valid_characters = re.compile(r"^[0-9 Nx,._+*()#=;/-]{1,100}$")
         self.logger = logging.getLogger(__name__)
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this PhoneNumberField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
 
     def validate_value(self, value: str) -> None:
         """

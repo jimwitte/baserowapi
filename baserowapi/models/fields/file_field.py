@@ -9,17 +9,13 @@ class FileField(Field):
     """Baserow file-object and assignment semantics."""
 
     TYPE = "file"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "filename_contains",
         "has_file_type",
         "files_lower_than",
         "empty",
         "not_empty",
-    ]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    )
 
     @staticmethod
     def _decode_file(raw_value: Any) -> BaserowFile:

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from baserowapi.models.fields.field import Field
 
 
@@ -11,8 +11,6 @@ class FormulaField(Field):
     """
 
     TYPE = "formula"
-    _COMPATIBLE_FILTERS = []
-
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initializes a FormulaField object.
@@ -31,16 +29,6 @@ class FormulaField(Field):
         self._formula_type = field_data.get("formula_type")
         self._error = field_data.get("error")
         self._array_formula_type = field_data.get("array_formula_type")
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this FormulaField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
 
     @property
     def formula(self) -> Optional[str]:

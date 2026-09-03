@@ -16,7 +16,15 @@ Baserowapi: API wrapper for Baserow
    linkedfields
    selectfields
    filters
-   semantic_inventory
-   refactoring_plan
    code
    baserowapi
+
+Maintainer documentation
+------------------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Design and maintenance:
+
+   semantic_inventory
+   refactoring_plan

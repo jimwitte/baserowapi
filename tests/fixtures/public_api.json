@@ -35,49 +35,48 @@
     "UUIDField",
     "UrlField"
   ],
-  "parameters": {
-    "Baserow.__init__": [
-      "self",
-      "url",
-      "token",
-      "batch_size",
-      "timeout",
-      "read_retries"
-    ],
-    "Baserow.make_api_request": [
-      "self",
-      "endpoint",
-      "method",
-      "data",
-      "headers",
-      "timeout",
-      "files"
-    ],
-    "Baserow.get_tables": ["self"],
-    "Baserow.upload_file": ["self", "file_path"],
-    "Baserow.upload_file_via_url": ["self", "url"],
-    "Table.get_rows": [
-      "self",
-      "include",
-      "exclude",
-      "search",
-      "order_by",
-      "filter_type",
-      "filters",
-      "view_id",
-      "size",
-      "limit",
-      "iterator",
-      "kwargs"
-    ],
-    "Table.add_rows": ["self", "rows_data", "batch_size"],
-    "Table.add_row": ["self", "values"],
-    "Table.update_rows": ["self", "rows_data", "batch_size"],
-    "Table.update_row": ["self", "row_id", "values"],
-    "Table.delete_rows": ["self", "rows_data", "batch_size"],
-    "Row.update": ["self", "values"],
-    "Row.delete": ["self"],
-    "Row.move": ["self", "before_id"],
-    "Row.to_dict": ["self"]
+  "signatures": {
+    "Baserow.__init__": {
+      "required": ["self"],
+      "optional": {"url": "https://api.baserow.io", "token": null, "batch_size": 10, "timeout": 10, "read_retries": 2},
+      "kind": "POSITIONAL_OR_KEYWORD"
+    },
+    "Baserow.get_table": {"required": ["self", "table_id"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Baserow.get_tables": {"required": ["self"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Baserow.make_api_request": {
+      "required": ["self", "endpoint"],
+      "optional": {"method": "GET", "data": null, "headers": null, "timeout": null, "files": null},
+      "kind": "POSITIONAL_OR_KEYWORD"
+    },
+    "Baserow.upload_file": {"required": ["self", "file_path"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Baserow.upload_file_via_url": {"required": ["self", "url"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.get_rows": {
+      "required": ["self"],
+      "optional": {"include": null, "exclude": null, "search": null, "order_by": null, "filter_type": null, "filters": null, "view_id": null, "size": null, "limit": null},
+      "kind": "POSITIONAL_OR_KEYWORD"
+    },
+    "Table.iter_rows": {
+      "required": ["self"],
+      "optional": {"include": null, "exclude": null, "search": null, "order_by": null, "filter_type": null, "filters": null, "view_id": null, "size": null, "limit": null},
+      "kind": "POSITIONAL_OR_KEYWORD"
+    },
+    "Table.get_row": {"required": ["self", "row_id"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.add_rows": {"required": ["self", "rows_data"], "optional": {"batch_size": null}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.add_row": {"required": ["self", "values"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.update_rows": {"required": ["self", "rows_data"], "optional": {"batch_size": null}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.update_row": {"required": ["self", "row_id", "values"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.delete_rows": {"required": ["self", "row_ids"], "optional": {"batch_size": null}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.delete_row": {"required": ["self", "row_id"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Table.move_row": {"required": ["self", "row_id"], "optional": {"before_id": null}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Row.update": {"required": ["self", "values"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Row.delete": {"required": ["self"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Row.move": {"required": ["self"], "optional": {"before_id": null}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Row.to_dict": {"required": ["self"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Field.decode_value": {"required": ["self", "raw_value"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Field.validate_value": {"required": ["self", "value"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Field.encode_value": {"required": ["self", "value"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Field.format_for_api": {"required": ["self", "value"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Field.filter_compatibility": {"required": ["self", "operator"], "optional": {}, "kind": "POSITIONAL_OR_KEYWORD"},
+    "Filter.__init__": {"required": ["self", "field_name", "value"], "optional": {"operator": "equal"}, "kind": "POSITIONAL_OR_KEYWORD"}
   }
 }

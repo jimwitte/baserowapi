@@ -20,7 +20,7 @@ help:
 
 # Target to move contents of _build/html to the docs directory
 move-html:
-	rsync -a $(BUILDDIR)/html/ ../docs/ && rm -rf $(BUILDDIR)/html
+	rsync -a --delete $(BUILDDIR)/html/ ../docs/ && rm -rf $(BUILDDIR)/html
 
 # HTML target: build the HTML documentation and move to docs directory
 html: 

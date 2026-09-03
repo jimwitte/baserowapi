@@ -1,4 +1,4 @@
-"""Small records for identity-bearing values returned by Baserow."""
+"""Small records that retain Baserow IDs and raw value metadata."""
 
 from dataclasses import dataclass, field
 from typing import Any, Optional

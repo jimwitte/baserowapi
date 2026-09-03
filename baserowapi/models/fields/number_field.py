@@ -1,5 +1,5 @@
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 import logging
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError
@@ -14,7 +14,7 @@ class NumberField(Field):
     """
 
     TYPE = "number"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "equal",
         "not_equal",
         "contains",
@@ -27,7 +27,7 @@ class NumberField(Field):
         "is_even_and_whole",
         "empty",
         "not_empty",
-    ]
+    )
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
@@ -48,16 +48,6 @@ class NumberField(Field):
 
         # Check if negative numbers are allowed for this field
         self.number_negative = field_data.get("number_negative", True)
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this NumberField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS
 
     @property
     def decimal_places(self) -> int:

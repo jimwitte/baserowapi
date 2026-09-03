@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 from baserowapi.models.fields.field import Field
 from baserowapi.exceptions import FieldValidationError, FieldValueError
 
@@ -12,9 +12,6 @@ class PasswordField(Field):
     """
 
     TYPE = "password"
-
-    def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
-        super().__init__(name, field_data, client)
 
     def validate_value(self, value: Any) -> None:
         """

@@ -47,9 +47,6 @@ def test_get_all_rows(all_fields_table, single_row_data):
     for row_id in created_row_ids:
         assert row_id in fetched_row_ids, f"Row with ID {row_id} was not returned by get_rows()."
 
-    # Step 5: Clean up by deleting the rows
-    all_fields_table.delete_rows(created_row_ids)
-
 def test_get_rows_empty_table(all_fields_table):
     # Step 1: Ensure the table is empty by fetching all rows
     fetched_rows = all_fields_table.get_rows()
@@ -69,18 +66,12 @@ def test_get_rows_with_include_fields(all_fields_table, single_row_data):
         {key: value["input"] for key, value in row.items() if not value["read_only"]}
         for row in multiple_rows_data
     ])
-    created_row_ids = [row.id for row in created_rows]
-
     # Step 3: Fetch rows with the 'include' parameter (e.g., 'Name' and 'Active')
     fetched_rows = all_fields_table.get_rows(include=['Name', 'Active'])
 
     # Step 4: Verify that only the included fields are returned
     for row in fetched_rows:
         assert list(row.values) == ['Name', 'Active'], f"Expected fields ['Name', 'Active'], but got {list(row.values)}"
-
-    # Step 5: Clean up by deleting the rows
-    all_fields_table.delete_rows(created_row_ids)
-
 
 def test_get_rows_with_exclude_fields(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows
@@ -92,8 +83,6 @@ def test_get_rows_with_exclude_fields(all_fields_table, single_row_data):
         {key: value["input"] for key, value in row.items() if not value["read_only"]}
         for row in multiple_rows_data
     ])
-    created_row_ids = [row.id for row in created_rows]
-
     # Step 3: Fetch rows with the 'exclude' parameter (e.g., 'Name' and 'Active')
     fetched_rows = all_fields_table.get_rows(exclude=['Name', 'Active'])
 
@@ -101,10 +90,6 @@ def test_get_rows_with_exclude_fields(all_fields_table, single_row_data):
     for row in fetched_rows:
         assert 'Name' not in row.values, "Field 'Name' should not be included in the results"
         assert 'Active' not in row.values, "Field 'Active' should not be included in the results"
-
-    # Step 5: Clean up by deleting the rows
-    all_fields_table.delete_rows(created_row_ids)
-
 
 def test_get_rows_with_limit(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows
@@ -116,17 +101,11 @@ def test_get_rows_with_limit(all_fields_table, single_row_data):
         {key: value["input"] for key, value in row.items() if not value["read_only"]}
         for row in multiple_rows_data
     ])
-    created_row_ids = [row.id for row in created_rows]
-
     # Step 3: Fetch rows with the 'limit' parameter (e.g., limit=1)
     limited_rows = all_fields_table.get_rows(limit=1)
 
     # Step 4: Verify that only the limited number of rows are returned
     assert len(limited_rows) == 1, f"Expected 1 row, but got {len(limited_rows)}"
-
-    # Step 5: Clean up by deleting the rows
-    all_fields_table.delete_rows(created_row_ids)
-
 
 def test_get_rows_with_search(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows
@@ -144,8 +123,6 @@ def test_get_rows_with_search(all_fields_table, single_row_data):
         {key: value["input"] for key, value in row.items() if not value["read_only"]}
         for row in multiple_rows_data
     ])
-    created_row_ids = [row.id for row in created_rows]
-
     # Step 3: Fetch rows with the 'search' parameter
     search_text = "Sample note for testing"
     expected_row_ids = {
@@ -166,10 +143,6 @@ def test_get_rows_with_search(all_fields_table, single_row_data):
 
     for row in search_results:
         assert search_text in row["Notes"], f"Search text '{search_text}' not found in Notes for row {row.id}"
-
-    # Step 5: Clean up by deleting the rows
-    all_fields_table.delete_rows(created_row_ids)
-
 
 def test_get_rows_with_order_by(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows with custom "Name" and "Notes" content
@@ -204,12 +177,6 @@ def test_get_rows_with_order_by(all_fields_table, single_row_data):
     assert ordered_rows[2]["Name"] == "Bob" and ordered_rows[2]["Notes"] == "Note A", "Third row ordering is incorrect."
     assert ordered_rows[3]["Name"] == "Bob" and ordered_rows[3]["Notes"] == "Note B", "Fourth row ordering is incorrect."
 
-    # Step 5: Clean up by deleting the rows
-    created_row_ids = [row.id for row in created_rows]
-    if created_row_ids:
-        all_fields_table.delete_rows(created_row_ids)
-
-
 def test_get_rows_with_filter(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows with varying "Name" values
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=4)
@@ -237,12 +204,6 @@ def test_get_rows_with_filter(all_fields_table, single_row_data):
     assert len(filtered_rows) == 2, f"Expected 2 rows, but got {len(filtered_rows)}"
     for row in filtered_rows:
         assert row["Name"] == "Grace", f"Expected row Name to be 'Grace', but got {row['Name']}"
-
-    # Step 6: Clean up by deleting the rows
-    created_row_ids = [row.id for row in created_rows]
-    if created_row_ids:
-        all_fields_table.delete_rows(created_row_ids)
-
 
 def test_get_rows_with_number_filter(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows with varying "Number" values
@@ -273,12 +234,6 @@ def test_get_rows_with_number_filter(all_fields_table, single_row_data):
 
     assert returned_numbers == expected_numbers, f"Expected numbers {expected_numbers}, but got {returned_numbers}"
 
-    # Step 6: Clean up by deleting the rows
-    created_row_ids = [row.id for row in created_rows]
-    if created_row_ids:
-        all_fields_table.delete_rows(created_row_ids)
-
-
 def test_get_rows_with_date_filter(all_fields_table, single_row_data):
     # Step 1: Generate data for multiple rows with varying "ISO Date" values
     multiple_rows_data = generate_identical_rows(single_row_data, num_rows=4)
@@ -307,8 +262,3 @@ def test_get_rows_with_date_filter(all_fields_table, single_row_data):
     returned_dates = {row["ISO Date"] for row in filtered_rows}
 
     assert returned_dates == expected_dates, f"Expected dates {expected_dates}, but got {returned_dates}"
-
-    # Step 6: Clean up by deleting the rows
-    created_row_ids = [row.id for row in created_rows]
-    if created_row_ids:
-        all_fields_table.delete_rows(created_row_ids)

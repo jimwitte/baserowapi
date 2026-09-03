@@ -1,10 +1,11 @@
 import json
-from types import GeneratorType
+from collections.abc import Iterator
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
 from baserowapi import Filter
+from baserowapi.exceptions import BaserowResponseError, RowFetchError
 
 
 pytestmark = pytest.mark.offline
@@ -37,17 +38,76 @@ def test_current_filter_tree_serialization(characterized_table):
     }
 
 
-def test_get_rows_iterator_switches_return_type(characterized_table):
+def test_get_rows_and_iter_rows_have_fixed_return_types(characterized_table):
     characterized_table.client.make_api_request.return_value = {
         "results": [],
         "next": None,
     }
 
-    iterator = characterized_table.get_rows(iterator=True)
+    iterator = characterized_table.iter_rows()
 
-    assert isinstance(iterator, GeneratorType)
+    assert isinstance(iterator, Iterator)
+    assert iter(iterator) is iterator
     assert list(iterator) == []
-    assert characterized_table.get_rows(iterator=False) == []
+    assert characterized_table.get_rows() == []
+
+
+def test_zero_limit_returns_no_rows_without_a_request(characterized_table):
+    assert list(characterized_table.iter_rows(limit=0)) == []
+    assert characterized_table.get_rows(limit=0) == []
+
+    characterized_table.client.make_api_request.assert_not_called()
+
+
+@pytest.mark.parametrize("parameter", ["view_id", "size"])
+@pytest.mark.parametrize("value", [0, -1])
+def test_positive_query_parameters_reject_zero_and_negative_values(
+    characterized_table, parameter, value
+):
+    with pytest.raises(ValueError, match=parameter):
+        characterized_table.get_rows(**{parameter: value})
+
+    characterized_table.client.make_api_request.assert_not_called()
+
+
+@pytest.mark.parametrize("parameter", ["view_id", "size", "limit"])
+@pytest.mark.parametrize("value", [True, 1.5, "2"])
+def test_numeric_query_parameters_reject_non_integer_values(
+    characterized_table, parameter, value
+):
+    with pytest.raises(TypeError, match=parameter):
+        characterized_table.get_rows(**{parameter: value})
+
+    characterized_table.client.make_api_request.assert_not_called()
+
+
+def test_negative_limit_is_rejected(characterized_table):
+    with pytest.raises(ValueError, match="limit"):
+        characterized_table.get_rows(limit=-1)
+
+    characterized_table.client.make_api_request.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        None,
+        {},
+        {"results": None, "next": None},
+        {"results": [], "next": 2},
+        {"results": [{"Name": "missing ID"}], "next": None},
+        {"results": [{"id": True}], "next": None},
+    ],
+)
+def test_malformed_row_pages_raise_instead_of_appearing_empty(
+    characterized_table, response
+):
+    characterized_table.client.make_api_request.return_value = response
+
+    with pytest.raises(RowFetchError) as raised:
+        characterized_table.get_rows()
+
+    assert isinstance(raised.value.__cause__, BaserowResponseError)
 
 
 def test_current_pagination_follows_server_next_url(characterized_table):

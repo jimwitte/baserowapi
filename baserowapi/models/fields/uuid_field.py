@@ -9,11 +9,7 @@ class UUIDField(Field):
     """A read-only persistent Baserow UUID."""
 
     TYPE = "uuid"
-    _COMPATIBLE_FILTERS = ["equal", "not_equal"]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    _COMPATIBLE_FILTERS = ("equal", "not_equal")
 
     @property
     def is_read_only(self) -> bool:

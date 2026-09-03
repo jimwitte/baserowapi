@@ -23,7 +23,9 @@ Compatibility Knowledge
 
 Field metadata does not include a complete, stable compatibility matrix, and
 hosted ``baserow.io`` is not version-pinned. Each Field therefore reports the
-package's current knowledge as advisory information:
+package's current knowledge as advisory information. ``compatible_filters`` is
+an immutable tuple, shared by fields in the same semantic family where their
+compatibility is identical:
 
 .. code-block:: python
 

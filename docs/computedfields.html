@@ -60,10 +60,13 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -108,8 +111,8 @@ button field verified for <code class="docutils literal notranslate"><span class
 </section>
 <section id="count-and-lookup">
 <h2>Count and Lookup<a class="headerlink" href="#count-and-lookup" title="Link to this heading"></a></h2>
-<p>Count uses number-result semantics, so ordinary reads preserve Baserow’s
-decimal string, such as <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>. A Lookup reads as <code class="docutils literal notranslate"><span class="pre">LookupEntry</span></code> records.
+<p>Count returns Baserow’s decimal string, such as <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>, and reports the same
+filter compatibility as a number field. A Lookup reads as <code class="docutils literal notranslate"><span class="pre">LookupEntry</span></code> records.
 Each entry retains its related row ID and raw metadata. The configured text
 lookup exposes an ordinary string as <code class="docutils literal notranslate"><span class="pre">entry.value</span></code>; unobserved inner result
 types remain raw.</p>

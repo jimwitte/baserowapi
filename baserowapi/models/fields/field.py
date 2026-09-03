@@ -10,6 +10,8 @@ class Field:
     Represents a field in Baserow and provides methods to interact with its properties.
     """
 
+    _COMPATIBLE_FILTERS: tuple[str, ...] = ()
+
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
         Initialize a Field object.
@@ -97,6 +99,11 @@ class Field:
         if operator in KNOWN_FILTER_OPERATORS:
             return FilterCompatibility.UNSUPPORTED
         return FilterCompatibility.UNKNOWN
+
+    @property
+    def compatible_filters(self) -> tuple[str, ...]:
+        """Return immutable advisory filter names documented for this Field."""
+        return tuple(self._COMPATIBLE_FILTERS)
 
     def format_for_api(self, value: Any) -> Any:
         """Compatibility alias for :meth:`encode_value`.

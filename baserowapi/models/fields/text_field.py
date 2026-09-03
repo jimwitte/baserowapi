@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 from baserowapi.models.fields.base_text_class import BaseTextClass
 
 
@@ -11,19 +11,6 @@ class TextField(BaseTextClass):
     """
 
     TYPE = "text"
-
-    _COMPATIBLE_FILTERS = [
-        "equal",
-        "not_equal",
-        "contains",
-        "contains_not",
-        "contains_word",
-        "doesnt_contain_word",
-        "starts_with",
-        "length_is_lower_than",
-        "empty",
-        "not_empty",
-    ]
 
     def __init__(self, name: str, field_data: Dict[str, Any], client=None) -> None:
         """
@@ -53,13 +40,3 @@ class TextField(BaseTextClass):
         :rtype: str
         """
         return self._text_default
-
-    @property
-    def compatible_filters(self) -> List[str]:
-        """
-        Get the list of compatible filters for this TextField.
-
-        :return: The list of compatible filters.
-        :rtype: List[str]
-        """
-        return self._COMPATIBLE_FILTERS

@@ -68,12 +68,23 @@ response values. ``row[name]`` decodes only the requested field. ``Row`` has no
 staged mutable state: persist changes with ``row.update(mapping)``. Batch
 updates accept mappings with explicit row IDs, not Row objects.
 
+Row query contracts are fixed: ``Table.get_rows`` returns ``list[Row]`` and
+``Table.iter_rows`` returns an iterator. Do not restore an iterator flag,
+``row_generator``, or arbitrary query keyword arguments. Validate every hosted
+page before yielding from it: ``results`` must be a list, ``next`` must be
+present and be a string or ``None``, and each result must be a valid row.
+``view_id`` and ``size`` require positive integers. ``limit`` requires a
+non-negative integer; zero returns no rows without making a request. Booleans
+are not valid numeric query inputs.
+
 Filter compatibility is advisory. ``Field.filter_compatibility`` distinguishes
 operators documented for the field, known operators not documented for it, and
 operators unknown to this package. Do not block normal row queries based on
 this advisory result: unknown operators must reach hosted Baserow. The JSON
 filter tree built by ``Table`` is the sole query encoding; do not restore the
 detached ``FilterValidator`` or ``Filter.query_string`` path.
+``Field.compatible_filters`` is an immutable tuple; define shared tuples on the
+nearest common Field base when a semantic family has identical compatibility.
 
 `docsrc/semantic_inventory.rst` records implementation evidence, current
 coverage, settled semantic decisions, and remaining evidence gaps. Treat settled
@@ -102,6 +113,15 @@ through the shared Field-owned encoder. Validate all input rows before sending
 the first batch chunk. Batch writes are not atomic across chunks: report prior
 completed row IDs on failure, and do not automatically retry or roll back
 mutating requests.
+
+``Table.delete_row`` and ``Table.move_row`` are the singular deletion and
+movement primitives; ``Row.delete`` and ``Row.move`` delegate to them.
+``Row.update`` and ``Row.move`` synchronize the existing Row from the hosted
+response and return that same instance. ``Table.delete_rows`` accepts only a
+non-empty list of row IDs, validates all IDs before its first request, and
+reports prior completed IDs on a later batch failure.
+Deletion is confirmed only after Baserow returns HTTP 204. Do not record a row
+ID as completed after any other response shape or status.
 
 ## Working rules
 
@@ -163,7 +183,6 @@ The tests read configuration from `.env` through these environment variables:
 * `BASEROW_URL`
 * `BASEROW_TOKEN`
 * `BASEROW_TABLE_ID`
-* `LINK_TABLE_ID`
 
 Run the suite serially from the repository root with:
 
@@ -173,9 +192,11 @@ python -m pytest -m integration
 
 Do not use pytest-xdist, parallel workers, or overlapping test runs. Several
 tests assume exclusive ownership of table contents and ordering. When modifying
-tests, record resources created by each test and clean them in fixture finalizers
-so cleanup still runs after failures. Prefer deleting recorded resource IDs over
-fetching and deleting all table rows.
+tests, create rows through the configured ``all_fields_table`` so the autouse
+resource tracker records their IDs and deletes only those IDs in its finalizer.
+The tracker must also record ``RowAddError.completed_row_ids`` after partial
+batch-add failure. Cleanup must still run after failures. Do not restore
+whole-table snapshot or delete-all cleanup.
 
 Hosted `baserow.io` is not version-pinned. Treat unexpected service behavior as
 a compatibility signal that must be investigated, not automatically as a
@@ -194,6 +215,9 @@ make -C docsrc html
 
 Keep the package version, Sphinx release, and changelog consistent for release
 work. Record breaking changes and meaningful public fixes in `changelog.txt`.
+Start release verification with clean `dist/`, `build/`, and package egg-info
+output directories so wildcard checks cannot include artifacts from an older
+release.
 Build wheel and source distributions through the PEP 517 backend with:
 
 ```sh

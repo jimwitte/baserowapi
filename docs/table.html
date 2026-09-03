@@ -61,10 +61,13 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -95,8 +98,12 @@
 <h1>Table Class<a class="headerlink" href="#table-class" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">Table</span></code> class provides an interface to interact with a Baserow table. Through this class, users can perform CRUD operations on rows, query table information, retrieve field properties, and utilize various filtering and sorting options. Below, we showcase the properties and methods available in the <code class="docutils literal notranslate"><span class="pre">Table</span></code> class along with examples of common use cases.</p>
 <p><strong>Important Note</strong>: Baserow returns paged row results. <code class="docutils literal notranslate"><span class="pre">get_rows()</span></code> follows
-those pages and returns a list by default; pass <code class="docutils literal notranslate"><span class="pre">iterator=True</span></code> to consume a
-generator instead.</p>
+those pages and returns a list. Use <code class="docutils literal notranslate"><span class="pre">iter_rows()</span></code> to consume rows lazily.
+Both methods require every page to contain a <code class="docutils literal notranslate"><span class="pre">results</span></code> list and a <code class="docutils literal notranslate"><span class="pre">next</span></code>
+URL or <code class="docutils literal notranslate"><span class="pre">None</span></code>; malformed hosted responses raise <code class="docutils literal notranslate"><span class="pre">RowFetchError</span></code>.
+<code class="docutils literal notranslate"><span class="pre">view_id</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> must be positive integers. <code class="docutils literal notranslate"><span class="pre">limit</span></code> must be a
+non-negative integer; a zero limit returns no rows without contacting Baserow.
+Boolean values are rejected for all three parameters.</p>
 <section id="row-write-contracts">
 <h2>Row write contracts<a class="headerlink" href="#row-write-contracts" title="Link to this heading"></a></h2>
 <p>Singular and plural writes are deliberately separate. <code class="docutils literal notranslate"><span class="pre">add_row(values)</span></code> and
@@ -114,6 +121,13 @@ before a request is sent.</p>
 exposes <code class="docutils literal notranslate"><span class="pre">failed_batch_number</span></code>, <code class="docutils literal notranslate"><span class="pre">completed_count</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">completed_row_ids</span></code>. The client does not automatically retry or roll back
 mutating requests.</p>
+<p>Deletion follows the same explicit split. <code class="docutils literal notranslate"><span class="pre">delete_row(row_id)</span></code> deletes one
+row. <code class="docutils literal notranslate"><span class="pre">delete_rows(row_ids)</span></code> requires a non-empty list of row IDs, validates
+the complete input before sending anything, and reports completed IDs through
+<code class="docutils literal notranslate"><span class="pre">RowDeleteError</span></code> if a later batch fails. <code class="docutils literal notranslate"><span class="pre">move_row(row_id,</span> <span class="pre">before_id)</span></code>
+moves one row before another, or to the end when <code class="docutils literal notranslate"><span class="pre">before_id</span></code> is omitted.
+Both deletion endpoints must return HTTP 204 before the client confirms the
+affected row IDs.</p>
 </section>
 <section id="properties">
 <h2>Properties<a class="headerlink" href="#properties" title="Link to this heading"></a></h2>
@@ -160,8 +174,8 @@ mutating requests.</p>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'Name'</span><span class="p">])</span>
 
-<span class="c1"># Fetching all rows as a generator (efficient for large datasets)</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">iterator</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="c1"># Streaming all rows (efficient for large datasets)</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'Name'</span><span class="p">])</span>
 
 <span class="c1"># Fetching rows with filters</span>
@@ -232,15 +246,15 @@ mutating requests.</p>
 <span class="c1"># Update the rows</span>
 <span class="n">updated_rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">rows_data</span><span class="p">)</span>
 
-<span class="c1"># Deleting rows</span>
+<span class="c1"># Move one row before another</span>
+<span class="n">moved_row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">move_row</span><span class="p">(</span><span class="n">added_row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">before_id</span><span class="o">=</span><span class="n">updated_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1"># Delete one row</span>
+<span class="n">table</span><span class="o">.</span><span class="n">delete_row</span><span class="p">(</span><span class="n">moved_row</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1"># Delete multiple rows</span>
 <span class="n">row_ids</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-
-<span class="c1"># Delete the rows</span>
-<span class="n">success</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">delete_rows</span><span class="p">(</span><span class="n">row_ids</span><span class="p">)</span>
-
-<span class="c1"># Confirm the deletion</span>
-<span class="k">if</span> <span class="n">success</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Deleted rows with IDs: </span><span class="si">{</span><span class="n">row_ids</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">delete_rows</span><span class="p">(</span><span class="n">row_ids</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -272,6 +286,18 @@ field names and <code class="docutils literal notranslate"><span class="pre">tab
 <span class="p">])</span>
 </pre></div>
 </div>
+<p>Row retrieval no longer switches return types through <code class="docutils literal notranslate"><span class="pre">iterator=True</span></code> and
+does not accept arbitrary query keyword arguments. Use the fixed methods:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 0.1</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">iterator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># 0.2</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Batch deletion similarly requires an explicit list of row IDs. Pass a single
+ID to <code class="docutils literal notranslate"><span class="pre">delete_row</span></code> rather than passing a scalar, generator, or Row object to
+<code class="docutils literal notranslate"><span class="pre">delete_rows</span></code>.</p>
 </section>
 </section>
 

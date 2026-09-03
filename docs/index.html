@@ -54,10 +54,13 @@
 <li class="toctree-l1"><a class="reference internal" href="linkedfields.html">Working with Linked Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectfields.html">Working with Select Fields</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filters.html">Working with Filters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring_plan.html">Semantic refactoring plan</a></li>
 </ul>
 
         </div>
@@ -146,6 +149,31 @@
 <li class="toctree-l2"><a class="reference internal" href="filters.html#migration-from-0-1">Migration from 0.1</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.html#baserow-class">Baserow Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code.html#table-class">Table Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code.html#row-class">Row Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code.html#structured-baserow-values">Structured Baserow Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code.html#filter-objects">Filter Objects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#baserow-client">Baserow Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#module-baserowapi.exceptions">Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#module-baserowapi.models.table">Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#fields">Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#row">Row</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#structured-baserow-values">Structured Baserow Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#filter">Filter</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="maintainer-documentation">
+<h2>Maintainer documentation<a class="headerlink" href="#maintainer-documentation" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Design and maintenance:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="semantic_inventory.html">Field semantic inventory</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="semantic_inventory.html#purpose-and-status">Purpose and status</a></li>
 <li class="toctree-l2"><a class="reference internal" href="semantic_inventory.html#support-levels">Support levels</a></li>
@@ -163,35 +191,20 @@
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#constraints">Constraints</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-1-establish-offline-characterization-tests">Phase 1: Establish offline characterization tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-2-introduce-the-field-semantic-interface">Phase 2: Introduce the Field semantic interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-3-add-identity-bearing-values-and-file-upload">Phase 3: Add identity-bearing values and file upload</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-3-preserve-structured-value-ids-and-add-file-upload">Phase 3: Preserve structured value IDs and add file upload</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-4-implement-computed-unknown-and-filter-semantics">Phase 4: Implement computed, unknown, and filter semantics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-5-unify-row-create-and-update-encoding">Phase 5: Unify row create and update encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-6-simplify-the-public-row-and-field-model">Phase 6: Simplify the public row and field model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-7-consolidate-transport-and-discovery">Phase 7: Consolidate transport and discovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-7-5-tighten-row-contracts-and-remove-residual-duplication">Phase 7.5: Tighten row contracts and remove residual duplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-7-8-stabilize-contracts-and-test-infrastructure">Phase 7.8: Stabilize contracts and test infrastructure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#phase-8-compatibility-documentation-and-beta-release">Phase 8: Compatibility, documentation, and beta release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refactoring_plan.html#working-method-for-each-phase">Working method for each phase</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">Code Structure</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="code.html#baserow-class">Baserow Class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="code.html#table-class">Table Class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="code.html#row-class">Row Class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="code.html#identity-bearing-values">Identity-bearing Values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="code.html#filter-objects">Filter Objects</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="baserowapi.html">Full Class and Function docs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#baserow-client">Baserow Client</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#module-baserowapi.exceptions">Exceptions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#module-baserowapi.models.table">Table</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#fields">Fields</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#row">Row</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#identity-bearing-values">Identity-bearing Values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baserowapi.html#filter">Filter</a></li>
-</ul>
-</li>
 </ul>
 </div>
+</section>
 </section>
 
 

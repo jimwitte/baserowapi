@@ -9,7 +9,7 @@ class LookupField(Field):
     """Baserow lookup metadata and identity-preserving result decoding."""
 
     TYPE = "lookup"
-    _COMPATIBLE_FILTERS = [
+    _COMPATIBLE_FILTERS = (
         "has_empty_value",
         "has_not_empty_value",
         "has_value_equal",
@@ -21,11 +21,7 @@ class LookupField(Field):
         "has_value_length_is_lower_than",
         "empty",
         "not_empty",
-    ]
-
-    @property
-    def compatible_filters(self) -> list[str]:
-        return self._COMPATIBLE_FILTERS
+    )
 
     @property
     def is_read_only(self) -> bool:

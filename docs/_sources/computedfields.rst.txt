@@ -22,8 +22,8 @@ Unknown result and error shapes are not collapsed into ``None``.
 Count and Lookup
 ----------------
 
-Count uses number-result semantics, so ordinary reads preserve Baserow's
-decimal string, such as ``"0"``. A Lookup reads as ``LookupEntry`` records.
+Count returns Baserow's decimal string, such as ``"0"``, and reports the same
+filter compatibility as a number field. A Lookup reads as ``LookupEntry`` records.
 Each entry retains its related row ID and raw metadata. The configured text
 lookup exposes an ordinary string as ``entry.value``; unobserved inner result
 types remain raw.

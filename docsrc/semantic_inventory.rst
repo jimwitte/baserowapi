@@ -92,7 +92,7 @@ below records the current pipeline.
    * - Read row
      - ``row[name]`` decodes the requested raw value through its Field;
        ``values`` and ``raw_values`` expose read-only mappings.
-     - Scalar and identity-bearing values have one semantic dispatch. Unknown
+     - Fields decode scalar and structured values in one place. Unknown
        fields and values remain raw and lossless.
      - Preserve Field ownership and explicit raw access.
    * - Create rows
@@ -242,7 +242,7 @@ encoders described in the write column.
      - ``SelectOption`` retaining ID, label, color, and raw metadata, or
        ``None``.
      - Option record, ID, label, returned option dictionary, or ``None``;
-       identity-bearing forms encode to IDs.
+       records returned by Baserow encode to their IDs.
      - Strong
      - The canonical option record preserves identity. ``resolve_option``
        optionally rejects missing or duplicate labels. Local filters omit
@@ -287,7 +287,7 @@ encoders described in the write column.
        formula types preserve the corresponding ordinary scalar representation.
    * - ``count``
      - Link-through metadata, numeric formula result, and read-only status.
-     - Baserow decimal string through number-result semantics.
+     - Baserow decimal string, using the same decoding as a number field.
      - Read-only.
      - Partial
      - It reuses ``NumberField`` behavior and the complete configured filter
@@ -421,10 +421,10 @@ Singular and batch row writes were verified against hosted ``baserow.io`` on
      - Their hosted shapes and filter behavior still need focused assertions.
    * - Direct scalar field semantics
      - Text-like pass-through, boolean, rating, number, date/datetime, generic
-       fallback, identity-bearing structured fields, Count, UUID, Autonumber,
+       fallback, structured values with retained IDs, Count, UUID, Autonumber,
        and the evidenced Formula/Lookup results.
-     - Unobserved computed result families and create/update encoding parity
-       remain for later evidence and Phase 5.
+     - Unobserved computed result families remain raw pending hosted evidence;
+       create/update encoding parity is covered.
 
 What should remain central
 --------------------------
@@ -455,27 +455,26 @@ and therefore preserve one semantic implementation.
 Settled design decisions
 ------------------------
 
-These decisions describe the intended contract for the refactor. Phases 2
-through 6 are implemented on ``release/0.2.0b1``; later sections remain design
-direction until their phase is completed.
+These decisions describe the implemented contract through Phase 7.5 on
+``release/0.2.0b1`` and remain the design direction for release work.
 
 Focus and authority
 ~~~~~~~~~~~~~~~~~~~
 
-``baserowapi`` will focus on the schema-aware database-token data API. It will
+``baserowapi`` focuses on the schema-aware database-token data API. It
 encode Baserow field, query, row, file, and error behavior without growing into
 a complete administration SDK or a general HTTP framework.
 
 Each Field is the single semantic authority for decoding a Baserow
 response, validating a supported input, encoding an API write, reporting
 read-only status, exposing advisory filter knowledge, and interpreting computed
-result metadata. Create, single-update, and batch-update operations will use the
+result metadata. Create, single-update, and batch-update operations use the
 same field encoder.
 
 Scalar representations
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Ordinary reads will preserve Baserow scalar representations:
+Ordinary reads preserve Baserow scalar representations:
 
 * Number values remain Baserow decimal strings, including significant trailing
   zeroes such as ``"42.00"``. Validation may use ``Decimal`` internally but will
@@ -486,29 +485,29 @@ Ordinary reads will preserve Baserow scalar representations:
   values to timezone-aware ``datetime``. Display formatting is also explicit
   and may apply field metadata such as ``date_force_timezone``.
 * Date writes accept ``None``, the appropriate Python ``date`` or timezone-aware
-  ``datetime``, and strict ISO strings. The core path will not guess two-digit
+  ``datetime``, and strict ISO strings. The core path does not guess two-digit
   years, accept locale-dependent slash formats, assume midnight, append an
   unjustified ``Z``, or silently use the executing machine's timezone.
 
 Documented inputs and validation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The core client will accept every input representation documented by Baserow.
+The core client accepts every input representation documented by Baserow.
 This includes IDs, labels, lists, comma-separated strings, and empty forms where
-the relevant field documentation permits them. The package will document
+the relevant field documentation permits them. The package documents
 Baserow's first-match behavior for ambiguous option labels and linked-row
 primary values instead of imposing a narrower contract.
 
 Optional strict helpers may resolve stable IDs and reject absent or ambiguous
-labels. Local validation will enforce stable structural rules but will not use a
+labels. Local validation enforces stable structural rules but does not use a
 stale local compatibility matrix to block behavior accepted by the unpinned
 hosted service. Convenience coercions not documented by Baserow must be
 explicit, deterministic helpers rather than implicit core behavior.
 
-Identity-bearing values
-~~~~~~~~~~~~~~~~~~~~~~~
+Structured values with retained IDs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Reads will use small, lossless domain objects when Baserow identity or structure
+Reads use small, lossless domain objects when Baserow identity or structure
 would otherwise be discarded. Initial concepts include:
 
 * a select option retaining ID, value, color, and raw metadata;
@@ -519,15 +518,15 @@ would otherwise be discarded. Initial concepts include:
   metadata; and
 * a lookup entry retaining related row ID, decoded value, and raw metadata.
 
-These will be independent value records, not a shared hierarchy or capability
-framework. They will use ordinary Python collections, contain no HTTP behavior,
-and remain suitable as write inputs. Scalar values will not be wrapped merely
+These are independent value records, not a shared hierarchy or capability
+framework. They use ordinary Python collections, contain no HTTP behavior,
+and remain suitable as write inputs. Scalar values are not wrapped merely
 for symmetry.
 
 Selects, links, files, and collaborators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Select and link writes will accept both the lossless domain objects and every
+Select and link writes accept both the lossless domain objects and every
 documented Baserow representation. IDs or returned objects are the recommended
 deterministic forms; labels and comma-separated strings retain Baserow's
 documented resolution behavior. Strict lookup helpers live on the relevant
@@ -538,29 +537,29 @@ relationship. Any add/remove convenience must make the resulting complete-set
 write explicit and document that it cannot provide an atomic concurrent update
 when the Baserow endpoint itself only replaces the set.
 
-File upload will be a Client operation that returns an unattached Baserow file
-object. Assignment to a row will be explicit, for example by passing the
-returned object in a file-field update. Append and replace behavior will be
+File upload is a Client operation that returns an unattached Baserow file
+object. Assignment to a row is explicit, for example by passing the
+returned object in a file-field update. Append and replace behavior is
 expressed by the list supplied to the row update rather than hidden RowValue
 state. Generic downloading of public file URLs and recursive directory upload
 do not belong in the semantic core; they may be separate utilities if retained.
 
-Collaborator values will preserve identity and raw returned metadata. The data
-client will assign documented collaborator values but will not take on user
+Collaborator values preserve identity and raw returned metadata. The data
+client assigns documented collaborator values but does not take on user
 invitations, permissions, or workspace administration.
 
 Computed fields
 ~~~~~~~~~~~~~~~
 
-Formula, lookup, count, rollup, and other computed fields will decode according
+Formula, lookup, count, rollup, and other computed fields decode according
 to result metadata such as ``formula_type`` and ``array_formula_type`` as well
-as their declared field type. They will reuse the corresponding scalar or
-identity-bearing representation. Count uses number semantics; computed dates
+as their declared field type. They reuse the corresponding scalar or structured
+representation. Count uses number-field decoding; computed dates
 use date semantics; computed select or linked values preserve identity.
 
 Computed fields remain read-only when their hosted metadata says so. Unknown
 result types, including unverified button, AI, and error states, remain raw
-until their representations are observed. The package will not collapse a
+until their representations are observed. The package does not collapse a
 formula error or unfamiliar result into ``None``.
 
 Unknown fields
@@ -569,10 +568,12 @@ Unknown fields
 Unknown hosted field types are expected compatibility cases. Their original API
 type and raw metadata remain inspectable. Reads return the raw value unchanged;
 writes pass values through unchanged only when hosted metadata marks the field
-writable. The package will not claim validation, formatting, or filter knowledge
-for an unknown type. Unknown types will not produce a warning for every field
-and row. The existing generic fallback may remain as a compatibility alias while
-the public concept is clarified.
+writable. The package does not claim validation, formatting, or filter knowledge
+for an unknown type. Unknown types do not produce a warning for every field
+and row. ``GenericField`` is the public fallback for unknown hosted types. The
+explicit ``"generic"`` registry entry is retained because
+``Table.FIELD_TYPE_CLASS_MAP`` is inspectable and documents that known type;
+the registry lookup also falls back to the same class for every unknown type.
 
 Filters
 ~~~~~~~
@@ -580,11 +581,13 @@ Filters
 Normal filter validation covers stable query structure and does not enforce the
 compatibility lists. Operator names and values pass through to Baserow.
 ``FilterCompatibility`` reports ``supported``, ``unsupported``, or ``unknown``
-as advisory package knowledge.
+as advisory package knowledge. ``Field.compatible_filters`` is an immutable
+tuple, with identical family knowledge defined once on the nearest common Field
+base.
 
 The JSON filter-tree representation used by row queries is authoritative. The
 detached ``FilterValidator`` and unused legacy ``Filter.query_string`` have been
-removed. Recursive groups will be supported only to the extent verified in
+removed. Recursive groups are supported only to the extent verified in
 current Baserow documentation and hosted behavior.
 
 Rows, containers, and transport
@@ -596,17 +599,28 @@ Field-decoded values, and ``Row.raw_values`` exposes the original Baserow
 values. The custom FieldList and RowValue containers and all per-type RowValue
 classes have been removed.
 
-``row.update({...})`` is the sole Row persistence operation. Row item assignment
+``row.update({...})`` is the Row update operation. Row item assignment
 and no-argument staged updates have been removed so raw, decoded, and pending
 state cannot diverge. Row operation conveniences remain thin delegates to the
 same Table primitives used for singular requests; batch updates require
 explicit mappings with row IDs.
 
+``Table.get_rows`` eagerly returns ``list[Row]`` and ``Table.iter_rows`` lazily
+returns an iterator. There is no return-type flag or arbitrary query-keyword
+escape hatch. Each hosted page must contain a results list and an explicit next
+URL or ``None`` before any rows from that page are exposed.
+
+``Table.delete_row`` and ``Table.move_row`` own their singular endpoints;
+``Row.delete`` and ``Row.move`` delegate to them. A moved Row is synchronized
+from the response and returned as the same instance. ``Table.delete_rows``
+accepts a non-empty list of row IDs, validates all of them before its first
+request, and reports completed IDs if a later non-atomic chunk fails.
+
 Each Table lazily loads and caches one field-schema snapshot. ``get_table``
-will remain uncached, so callers can construct a new Table after a schema change
+remains uncached, so callers can construct a new Table after a schema change
 made through the Baserow UI or a separate administrative client. Database
 tokens cannot mutate schema, and no current application requires in-place
-refresh semantics for existing Table and Row objects. The package will not add
+refresh semantics for existing Table and Row objects. The package does not add
 a schema-refresh method until that need and its Row behavior are demonstrated.
 
 ``Baserow.make_api_request`` is the single request boundary for authentication,
