@@ -1,7 +1,7 @@
 ### Changelog
 
 
-#### Unreleased: 0.2.0b1
+#### 2026-09-02: 0.2.0b1
 
 - **Breaking Changes:**
   - Date-only writes now require complete ISO dates or Python `date` objects.
